@@ -1,0 +1,233 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+}
+
+@theme inline {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-card: #0b0b0b;
+  --color-card-foreground: #ffffff;
+  --color-popover: #0b0b0b;
+  --color-popover-foreground: #ffffff;
+  --color-primary: oklch(0.85 0.15 180);
+  --color-primary-foreground: oklch(0.1 0 0);
+  --color-secondary: oklch(0.2 0.01 0);
+  --color-secondary-foreground: oklch(0.9 0 0);
+  --color-muted: oklch(0.18 0.005 0);
+  --color-muted-foreground: oklch(0.6 0 0);
+  --color-accent: oklch(0.7 0.2 25);
+  --color-accent-foreground: oklch(0.98 0 0);
+  --color-destructive: oklch(0.6 0.25 25);
+  --color-destructive-foreground: oklch(0.98 0 0);
+  --color-border: oklch(0.25 0.05 180);
+  --color-input: oklch(0.2 0.02 180);
+  --color-ring: oklch(0.7 0.15 180);
+  --color-chart-1: oklch(0.85 0.15 180);
+  --color-chart-2: oklch(0.7 0.2 25);
+  --color-chart-3: oklch(0.7 0.15 140);
+  --color-chart-4: oklch(0.8 0.1 80);
+  --color-chart-5: oklch(0.6 0.2 300);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --color-sidebar: oklch(0.08 0 0);
+  --color-sidebar-foreground: oklch(0.9 0 0);
+  --color-sidebar-primary: oklch(0.85 0.15 180);
+  --color-sidebar-primary-foreground: oklch(0.1 0 0);
+  --color-sidebar-accent: oklch(0.15 0.02 180);
+  --color-sidebar-accent-foreground: oklch(0.9 0 0);
+  --color-sidebar-border: oklch(0.2 0.05 180);
+  --color-sidebar-ring: oklch(0.7 0.15 180);
+
+  /* Custom cyberpunk colors */
+  --color-cyber-cyan: oklch(0.85 0.15 180);
+  --color-cyber-red: oklch(0.65 0.25 25);
+  --color-cyber-green: oklch(0.75 0.2 145);
+  --color-cyber-magenta: oklch(0.6 0.25 320);
+  --color-cyber-dark: oklch(0.05 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+  }
+  .container {
+    @apply mx-auto px-4;
+    max-width: 1400px;
+  }
+  .flex {
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+/* Google Fonts import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ===== CYBERPUNK / GLITCH ART STYLES ===== */
+
+/* CRT Scanline overlay */
+.crt-scanlines {
+  position: relative;
+}
+.crt-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 200, 0.015) 2px,
+    rgba(0, 255, 200, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Chromatic Aberration / RGB shift */
+.glitch-text {
+  position: relative;
+  display: inline-block;
+}
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.glitch-text::before {
+  color: oklch(0.85 0.15 180);
+  clip-path: inset(0 0 60% 0);
+  transform: translateX(-2px);
+  animation: glitch-shift 3s infinite alternate-reverse;
+}
+.glitch-text::after {
+  color: oklch(0.65 0.25 25);
+  clip-path: inset(60% 0 0 0);
+  transform: translateX(2px);
+  animation: glitch-shift 2.5s infinite alternate;
+}
+
+@keyframes glitch-shift {
+  0%, 90% { transform: translateX(0); }
+  92% { transform: translateX(-3px); }
+  94% { transform: translateX(3px); }
+  96% { transform: translateX(-1px); }
+  98% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+/* Glitch flicker animation */
+@keyframes glitch-flicker {
+  0%, 100% { opacity: 1; }
+  3% { opacity: 0.8; }
+  6% { opacity: 1; }
+  7% { opacity: 0.6; }
+  8% { opacity: 1; }
+  50% { opacity: 1; }
+  52% { opacity: 0.9; }
+  53% { opacity: 1; }
+}
+
+.glitch-flicker {
+  animation: glitch-flicker 4s infinite;
+}
+
+/* Terminal-style bracket decorations */
+.terminal-bracket::before {
+  content: '[ ';
+  color: oklch(0.75 0.2 145);
+  font-family: 'JetBrains Mono', monospace;
+}
+.terminal-bracket::after {
+  content: ' ]';
+  color: oklch(0.75 0.2 145);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Monospace subtext */
+.mono-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: oklch(0.75 0.2 145);
+  text-transform: uppercase;
+}
+
+/* Neon glow effects */
+.neon-cyan {
+  text-shadow: 0 0 7px oklch(0.85 0.15 180), 0 0 20px oklch(0.85 0.15 180 / 0.4);
+}
+.neon-red {
+  text-shadow: 0 0 7px oklch(0.65 0.25 25), 0 0 20px oklch(0.65 0.25 25 / 0.4);
+}
+
+/* Cyberpunk border glow */
+.cyber-border {
+  border: 1px solid oklch(0.85 0.15 180 / 0.3);
+  box-shadow: 0 0 5px oklch(0.85 0.15 180 / 0.1), inset 0 0 5px oklch(0.85 0.15 180 / 0.05);
+}
+.cyber-border:hover {
+  border-color: oklch(0.85 0.15 180 / 0.6);
+  box-shadow: 0 0 10px oklch(0.85 0.15 180 / 0.2), inset 0 0 10px oklch(0.85 0.15 180 / 0.1);
+}
+
+/* Horizontal displacement effect */
+.h-displace {
+  position: relative;
+}
+.h-displace::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.85 0.15 180 / 0.5), transparent);
+  transform: translateY(-50%);
+  animation: h-scan 8s linear infinite;
+}
+
+@keyframes h-scan {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Active button press */
+button:active {
+  transform: scale(0.97);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(0.08 0 0);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.05 180);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0.1 180);
+}
