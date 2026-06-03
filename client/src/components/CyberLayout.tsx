@@ -145,7 +145,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
             </div>
           ) : (
             <button
-              onClick={() => { window.location.href = getLoginUrl(); }}
+              onClick={() => { window.location.href = "/admin"; }}
               className="w-full px-3 py-2 text-sm rounded-md border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
             >
               管理者ログイン

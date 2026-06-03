@@ -1,12 +1,46 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp } from "lucide-react";
 
 type Tab = "categories" | "procedures" | "checklists" | "documents";
+
+function PasswordLoginForm() {
+  const [password, setPassword] = useState("");
+  const loginMutation = trpc.auth.loginWithPassword.useMutation({
+    onSuccess: () => {
+      toast.success("ログインしました");
+      window.location.reload();
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "ログインに失敗しました");
+    },
+  });
+
+  return (
+    <div className="cyber-border rounded-lg p-8 bg-card text-center space-y-4 max-w-sm mx-auto">
+      <h2 className="text-xl font-bold text-foreground">管理者ログイン</h2>
+      <p className="text-muted-foreground text-sm">// ADMIN_ACCESS</p>
+      <input
+        type="password"
+        placeholder="パスワードを入力"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && loginMutation.mutate({ password })}
+        className="w-full px-4 py-2 rounded bg-muted text-foreground border border-border focus:outline-none focus:border-primary"
+      />
+      <Button
+        className="w-full"
+        onClick={() => loginMutation.mutate({ password })}
+        disabled={loginMutation.isPending}
+      >
+        {loginMutation.isPending ? "ログイン中..." : "ログイン"}
+      </Button>
+    </div>
+  );
+}
 
 export default function AdminPanel() {
   const { user, loading } = useAuth();
@@ -22,15 +56,7 @@ export default function AdminPanel() {
   }
 
   if (!user) {
-    return (
-      <div className="cyber-border rounded-lg p-8 bg-card text-center space-y-4">
-        <h2 className="text-xl font-bold text-foreground">管理者ログインが必要です</h2>
-        <p className="text-muted-foreground">この機能にアクセスするにはログインしてください。</p>
-        <Button onClick={() => { window.location.href = getLoginUrl(); }}>
-          ログイン
-        </Button>
-      </div>
-    );
+    return <PasswordLoginForm />;
   }
 
   if (user.role !== "admin") {

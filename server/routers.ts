@@ -26,6 +26,36 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    loginWithPassword: publicProcedure.input(z.object({
+      password: z.string(),
+    })).mutation(async ({ input, ctx }) => {
+      const adminPassword = process.env.ADMIN_PASSWORD ?? "Telexistence2017";
+      if (input.password !== adminPassword) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "パスワードが違います" });
+      }
+      // Create or get admin user
+      let user = await db.getUserByOpenId("admin");
+      if (!user) {
+        await db.upsertUser({
+          openId: "admin",
+          name: "管理者",
+          email: null,
+          loginMethod: "password",
+          lastSignedIn: new Date(),
+        });
+        user = await db.getUserByOpenId("admin");
+      }
+      // Make admin
+      await db.updateUserRole("admin", "admin");
+      const { sdk } = await import("./_core/sdk");
+      const sessionToken = await sdk.createSessionToken("admin", {
+        name: "管理者",
+        expiresInMs: 365 * 24 * 60 * 60 * 1000,
+      });
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
+      return { success: true } as const;
+    }),
   }),
 
   // ===== CATEGORIES =====
