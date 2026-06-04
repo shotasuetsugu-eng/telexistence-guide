@@ -1,5 +1,5 @@
 import { eq, like, or, desc, asc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
 import {
   InsertUser, users,
   categories, InsertCategory,
