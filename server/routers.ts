@@ -306,7 +306,7 @@ export const appRouter = router({
 
   // ===== GOOGLE MAPS =====
   maps: router({
-    geocode: publicProcedure
+    geocode: protectedProcedure
       .input(z.object({ address: z.string().min(1) }))
       .query(async ({ input }) => {
         try {
@@ -322,7 +322,7 @@ export const appRouter = router({
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: String(e) });
         }
       }),
-    searchPlaces: publicProcedure
+    searchPlaces: protectedProcedure
       .input(z.object({ query: z.string().min(1), location: z.string().optional() }))
       .query(async ({ input }) => {
         try {
@@ -341,7 +341,7 @@ export const appRouter = router({
 
   // ===== GOOGLE DRIVE =====
   drive: router({
-    listFiles: publicProcedure
+    listFiles: protectedProcedure
       .input(z.object({ folderId: z.string().optional() }))
       .query(async ({ input }) => {
         const apiKey = ENV.googleDriveApiKey;
@@ -374,7 +374,7 @@ export const appRouter = router({
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: String(e) });
         }
       }),
-    getFolderInfo: publicProcedure
+    getFolderInfo: protectedProcedure
       .input(z.object({ folderId: z.string().optional() }))
       .query(async ({ input }) => {
         const apiKey = ENV.googleDriveApiKey;
@@ -400,7 +400,7 @@ export const appRouter = router({
 
   // ===== SLACK =====
   slack: router({
-    search: publicProcedure
+    search: protectedProcedure
       .input(z.object({ query: z.string().min(1), count: z.number().optional() }))
       .query(async ({ input }) => {
         const token = ENV.slackBotToken;
@@ -434,7 +434,7 @@ export const appRouter = router({
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: String(e) });
         }
       }),
-    listChannels: publicProcedure.query(async () => {
+    listChannels: protectedProcedure.query(async () => {
       const token = ENV.slackBotToken;
       if (!token) {
         return { channels: [], configured: false };

@@ -25,6 +25,9 @@
 
 ## 追加機能の設定
 
+Google Drive、Google Map、Slack検索はログイン済みユーザーだけが利用できます。
+未ログイン時はメニューに表示されず、APIも認証なしでは呼び出せません。
+
 ### Google Drive 連携
 
 1. [Google Cloud Console](https://console.cloud.google.com/) でプロジェクトを作成

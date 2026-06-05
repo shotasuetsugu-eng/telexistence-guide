@@ -1,3 +1,5 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { AccountLoading, AccountRequired } from "@/components/AccountRequired";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import {
@@ -62,14 +64,19 @@ function formatDate(dateStr?: string): string {
 }
 
 export default function Drive() {
+  const { user, loading: authLoading } = useAuth();
   const [folderId, setFolderId] = useState("");
   const [inputFolderId, setInputFolderId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const hasAccount = Boolean(user);
 
-  const { data: folderInfo } = trpc.drive.getFolderInfo.useQuery({ folderId: folderId || undefined });
+  const { data: folderInfo } = trpc.drive.getFolderInfo.useQuery(
+    { folderId: folderId || undefined },
+    { enabled: hasAccount }
+  );
   const { data, isLoading, error, refetch } = trpc.drive.listFiles.useQuery(
     { folderId: folderId || undefined },
-    { retry: false }
+    { enabled: hasAccount, retry: false }
   );
 
   const files = data?.files ?? [];
@@ -81,6 +88,9 @@ export default function Drive() {
     e.preventDefault();
     setFolderId(inputFolderId.trim());
   };
+
+  if (authLoading) return <AccountLoading />;
+  if (!user) return <AccountRequired label="Google Drive" />;
 
   return (
     <div className="space-y-6">

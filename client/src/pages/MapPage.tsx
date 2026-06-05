@@ -1,3 +1,5 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { AccountLoading, AccountRequired } from "@/components/AccountRequired";
 import { trpc } from "@/lib/trpc";
 import { MapView } from "@/components/Map";
 import { useState, useRef, useCallback } from "react";
@@ -14,6 +16,7 @@ type SearchResult = {
 };
 
 export default function MapPage() {
+  const { user, loading: authLoading } = useAuth();
   const [addressInput, setAddressInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [placeQuery, setPlaceQuery] = useState("");
@@ -21,17 +24,18 @@ export default function MapPage() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const hasAccount = Boolean(user);
 
   // Geocoding (address → coordinates)
   const { data: geocodeResult, isLoading: geocodeLoading, error: geocodeError } = trpc.maps.geocode.useQuery(
     { address: searchTerm },
-    { enabled: searchTerm.length > 0 }
+    { enabled: hasAccount && searchTerm.length > 0 }
   );
 
   // Place search
   const { data: placesResult, isLoading: placesLoading } = trpc.maps.searchPlaces.useQuery(
     { query: placeQuery },
-    { enabled: placeQuery.length > 0 }
+    { enabled: hasAccount && placeQuery.length > 0 }
   );
 
   const clearMarkers = () => {
@@ -77,6 +81,9 @@ export default function MapPage() {
     setPlaceQuery(addressInput.trim());
     setSearchTerm("");
   };
+
+  if (authLoading) return <AccountLoading />;
+  if (!user) return <AccountRequired label="マップ" />;
 
   // Auto-fly when geocode result arrives
   if (geocodeResult?.results?.[0] && searchTerm) {

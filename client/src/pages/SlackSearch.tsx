@@ -1,3 +1,5 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { AccountLoading, AccountRequired } from "@/components/AccountRequired";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { Search, MessageSquare, Hash, ExternalLink, AlertCircle, Clock } from "lucide-react";
@@ -29,13 +31,17 @@ function highlightQuery(text: string, query: string): React.ReactNode {
 }
 
 export default function SlackSearch() {
+  const { user, loading: authLoading } = useAuth();
   const [inputQuery, setInputQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const hasAccount = Boolean(user);
 
-  const { data: channelsData } = trpc.slack.listChannels.useQuery();
+  const { data: channelsData } = trpc.slack.listChannels.useQuery(undefined, {
+    enabled: hasAccount,
+  });
   const { data, isLoading, error } = trpc.slack.search.useQuery(
     { query: searchQuery, count: 30 },
-    { enabled: searchQuery.length > 0 }
+    { enabled: hasAccount && searchQuery.length > 0 }
   );
 
   const handleSearch = (e: React.FormEvent) => {
@@ -45,6 +51,16 @@ export default function SlackSearch() {
   };
 
   const messages = data?.messages ?? [];
+  const notConfigured = data?.configured === false || channelsData?.configured === false;
+  const notConfiguredMessage =
+    data?.configured === false
+      ? data.message
+      : channelsData?.configured === false
+        ? "SLACK_BOT_TOKENが未設定です"
+        : "";
+
+  if (authLoading) return <AccountLoading />;
+  if (!user) return <AccountRequired label="Slack検索" />;
 
   return (
     <div className="space-y-6">
@@ -57,11 +73,11 @@ export default function SlackSearch() {
       </div>
 
       {/* Not configured */}
-      {data?.configured === false && (
+      {notConfigured && (
         <div className="cyber-border rounded-lg p-6 bg-card text-center space-y-3">
           <AlertCircle className="h-10 w-10 text-accent mx-auto" />
           <h3 className="font-semibold text-foreground">Slack が未設定です</h3>
-          <p className="text-sm text-muted-foreground">{data.message}</p>
+          <p className="text-sm text-muted-foreground">{notConfiguredMessage}</p>
           <div className="text-left bg-muted/50 rounded-md p-3 text-xs font-mono space-y-1">
             <p className="text-primary">// .env に以下を設定してください</p>
             <p className="text-foreground">SLACK_BOT_TOKEN=<span className="text-accent">xoxb-your-token</span></p>
