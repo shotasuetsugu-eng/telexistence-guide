@@ -306,7 +306,7 @@ export const appRouter = router({
 
   // ===== GOOGLE MAPS =====
   maps: router({
-    geocode: protectedProcedure
+    geocode: publicProcedure
       .input(z.object({ address: z.string().min(1) }))
       .query(async ({ input }) => {
         try {
