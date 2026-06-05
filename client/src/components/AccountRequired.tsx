@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
+import { getLoginUrl } from "@/const";
 import { LockKeyhole } from "lucide-react";
-import { useLocation } from "wouter";
 
 type AccountRequiredProps = {
   label: string;
 };
 
 export function AccountRequired({ label }: AccountRequiredProps) {
-  const [, setLocation] = useLocation();
-
   return (
     <div className="cyber-border rounded-lg p-8 bg-card text-center space-y-4 max-w-md mx-auto">
       <LockKeyhole className="h-10 w-10 text-primary mx-auto" />
@@ -16,7 +14,9 @@ export function AccountRequired({ label }: AccountRequiredProps) {
       <p className="text-sm text-muted-foreground">
         {label}はアカウント付与済みのユーザーだけが利用できます。
       </p>
-      <Button onClick={() => setLocation("/admin")}>ログインページへ</Button>
+      <Button onClick={() => { window.location.href = getLoginUrl(); }}>
+        ログインする
+      </Button>
     </div>
   );
 }

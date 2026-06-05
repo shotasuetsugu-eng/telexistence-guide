@@ -39,7 +39,6 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = user?.role === "admin";
-  const hasAccount = Boolean(user);
 
   return (
     <div className="min-h-screen bg-background crt-scanlines">
@@ -82,29 +81,25 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          {hasAccount && (
-            <>
-              <div className="my-3 border-t border-sidebar-border" />
-              <p className="mono-sub px-3 py-2">INTEGRATIONS</p>
-              {integrationNavItems.map((item) => {
-                const isActive = location === item.path;
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => setLocation(item.path)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
-                      isActive
-                        ? "bg-primary/10 text-primary border border-primary/30 neon-cyan"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
-            </>
-          )}
+          <div className="my-3 border-t border-sidebar-border" />
+          <p className="mono-sub px-3 py-2">INTEGRATIONS</p>
+          {integrationNavItems.map((item) => {
+            const isActive = location === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => setLocation(item.path)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
+                  isActive
+                    ? "bg-primary/10 text-primary border border-primary/30 neon-cyan"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                }`}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            );
+          })}
 
           {isAdmin && (
             <>
@@ -196,27 +191,23 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
                 </button>
               );
             })}
-            {hasAccount && (
-              <>
-                <div className="my-2 border-t border-border" />
-                <p className="mono-sub px-4 py-1">INTEGRATIONS</p>
-                {integrationNavItems.map((item) => {
-                  const isActive = location === item.path;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => { setLocation(item.path); setMobileMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm ${
-                        isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span className="font-medium">{item.label}</span>
-                    </button>
-                  );
-                })}
-              </>
-            )}
+            <div className="my-2 border-t border-border" />
+            <p className="mono-sub px-4 py-1">INTEGRATIONS</p>
+            {integrationNavItems.map((item) => {
+              const isActive = location === item.path;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => { setLocation(item.path); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm ${
+                    isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              );
+            })}
             {isAdmin && adminNavItems.map((item) => {
               const isActive = location === item.path;
               return (
