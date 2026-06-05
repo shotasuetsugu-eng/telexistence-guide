@@ -56,7 +56,7 @@ export default function SlackSearch() {
     data?.configured === false
       ? data.message
       : channelsData?.configured === false
-        ? "SLACK_BOT_TOKENが未設定です"
+        ? "SLACK_BOT_TOKEN または SLACK_ALLOWED_CHANNELSが未設定です"
         : "";
 
   if (authLoading) return <AccountLoading />;
@@ -80,9 +80,10 @@ export default function SlackSearch() {
           <p className="text-sm text-muted-foreground">{notConfiguredMessage}</p>
           <div className="text-left bg-muted/50 rounded-md p-3 text-xs font-mono space-y-1">
             <p className="text-primary">// .env に以下を設定してください</p>
-            <p className="text-foreground">SLACK_BOT_TOKEN=<span className="text-accent">xoxb-your-token</span></p>
+            <p className="text-foreground">SLACK_BOT_TOKEN=<span className="text-accent">xoxp-your-user-token</span></p>
+            <p className="text-foreground">SLACK_ALLOWED_CHANNELS=<span className="text-accent">general,install-guide</span></p>
             <p className="text-muted-foreground mt-2">// Slack App の必要スコープ:</p>
-            <p className="text-foreground">search:read, channels:read</p>
+            <p className="text-foreground">User Token Scopes: search:read, channels:read</p>
           </div>
         </div>
       )}

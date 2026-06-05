@@ -15,4 +15,5 @@ export const ENV = {
   googleServiceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY ?? "",
   // Slack
   slackBotToken: process.env.SLACK_BOT_TOKEN ?? "",
+  slackAllowedChannels: process.env.SLACK_ALLOWED_CHANNELS ?? "",
 };
