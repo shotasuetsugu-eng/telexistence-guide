@@ -41,6 +41,7 @@ export const appRouter = router({
           name: "管理者",
           email: null,
           loginMethod: "password",
+          role: "admin",
           lastSignedIn: new Date(),
         });
         user = await db.getUserByOpenId("admin");

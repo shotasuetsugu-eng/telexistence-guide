@@ -14,6 +14,8 @@ import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
+type UpsertUser = Omit<InsertUser, "role"> & Partial<Pick<InsertUser, "role">>;
+
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -28,13 +30,13 @@ export async function getDb() {
 }
 
 // ===== USER =====
-export async function upsertUser(user: InsertUser): Promise<void> {
+export async function upsertUser(user: UpsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
   if (!db) { console.warn("[Database] Cannot upsert user: database not available"); return; }
   try {
-    const values: InsertUser = { openId: user.openId };
-    const updateSet: Record<string, unknown> = {};
+    const values: InsertUser = { openId: user.openId, role: user.role ?? "user" };
+    const updateSet: Partial<InsertUser> = {};
     const textFields = ["name", "email", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
     const assignNullable = (field: TextField) => {
@@ -56,7 +58,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     else if (user.openId === ENV.ownerOpenId) { values.role = 'admin'; updateSet.role = 'admin'; }
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
   } catch (error) { console.error("[Database] Failed to upsert user:", error); throw error; }
 }
 
@@ -90,8 +92,8 @@ export async function getCategoryById(id: number) {
 export async function createCategory(data: InsertCategory) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(categories).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(categories).values(data).returning({ id: categories.id });
+  return { id: result[0].id };
 }
 
 export async function updateCategory(id: number, data: Partial<InsertCategory>) {
@@ -129,8 +131,8 @@ export async function getProcedureById(id: number) {
 export async function createProcedure(data: InsertProcedure) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(procedures).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(procedures).values(data).returning({ id: procedures.id });
+  return { id: result[0].id };
 }
 
 export async function updateProcedure(id: number, data: Partial<InsertProcedure>) {
@@ -156,8 +158,8 @@ export async function getStepsByProcedure(procedureId: number) {
 export async function createProcedureStep(data: InsertProcedureStep) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(procedureSteps).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(procedureSteps).values(data).returning({ id: procedureSteps.id });
+  return { id: result[0].id };
 }
 
 export async function updateProcedureStep(id: number, data: Partial<InsertProcedureStep>) {
@@ -195,8 +197,8 @@ export async function getChecklistById(id: number) {
 export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(checklists).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(checklists).values(data).returning({ id: checklists.id });
+  return { id: result[0].id };
 }
 
 export async function updateChecklist(id: number, data: Partial<InsertChecklist>) {
@@ -222,8 +224,8 @@ export async function getItemsByChecklist(checklistId: number) {
 export async function createChecklistItem(data: InsertChecklistItem) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(checklistItems).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(checklistItems).values(data).returning({ id: checklistItems.id });
+  return { id: result[0].id };
 }
 
 export async function updateChecklistItem(id: number, data: Partial<InsertChecklistItem>) {
@@ -261,8 +263,8 @@ export async function getDocumentById(id: number) {
 export async function createDocument(data: InsertDocument) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(documents).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(documents).values(data).returning({ id: documents.id });
+  return { id: result[0].id };
 }
 
 export async function updateDocument(id: number, data: Partial<InsertDocument>) {
