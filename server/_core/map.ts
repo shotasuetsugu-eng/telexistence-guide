@@ -16,21 +16,31 @@ import { ENV } from "./env";
 type MapsConfig = {
   baseUrl: string;
   apiKey: string;
+  useProxy: boolean;
 };
 
 function getMapsConfig(): MapsConfig {
+  if (ENV.googleMapsApiKey) {
+    return {
+      baseUrl: "https://maps.googleapis.com",
+      apiKey: ENV.googleMapsApiKey,
+      useProxy: false,
+    };
+  }
+
   const baseUrl = ENV.forgeApiUrl;
   const apiKey = ENV.forgeApiKey;
 
   if (!baseUrl || !apiKey) {
     throw new Error(
-      "Google Maps proxy credentials missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
+      "Google Maps credentials missing: set GOOGLE_MAPS_API_KEY or BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
     );
   }
 
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
     apiKey,
+    useProxy: true,
   };
 }
 
@@ -56,10 +66,10 @@ export async function makeRequest<T = unknown>(
   params: Record<string, unknown> = {},
   options: RequestOptions = {}
 ): Promise<T> {
-  const { baseUrl, apiKey } = getMapsConfig();
+  const { baseUrl, apiKey, useProxy } = getMapsConfig();
 
-  // Construct full URL: baseUrl + /v1/maps/proxy + endpoint
-  const url = new URL(`${baseUrl}/v1/maps/proxy${endpoint}`);
+  const proxyPrefix = useProxy ? "/v1/maps/proxy" : "";
+  const url = new URL(`${baseUrl}${proxyPrefix}${endpoint}`);
 
   // Add API key as query parameter (standard Google Maps API authentication)
   url.searchParams.append("key", apiKey);
@@ -313,7 +323,6 @@ export type RoadsResult = {
  * Output: Image URL (not JSON) - use directly in <img src={url} />
  * Note: Construct URL manually with getMapsConfig() for auth
  */
-
 
 
 

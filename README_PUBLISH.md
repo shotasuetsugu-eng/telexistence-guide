@@ -42,8 +42,17 @@
 
 ### Google Map 連携
 
-- Manus組み込みのForge APIを使用するため、追加設定不要です。
-- `BUILT_IN_FORGE_API_KEY` と `BUILT_IN_FORGE_API_URL` が設定されていれば動作します。
+1. [Google Cloud Console](https://console.cloud.google.com/) で **Maps JavaScript API**、**Geocoding API**、**Places API** を有効化
+2. 「認証情報」→「APIキーを作成」でAPIキーを取得
+3. 環境変数に設定:
+   ```
+   GOOGLE_MAPS_API_KEY=取得したAPIキー
+   VITE_GOOGLE_MAPS_API_KEY=取得したAPIキー
+   ```
+4. `VITE_GOOGLE_MAPS_API_KEY` はブラウザに公開されるため、Google Cloud ConsoleでHTTPリファラー制限を設定してください。
+   - 例: `https://telexistence-guide.onrender.com/*`
+
+Manus/Forge環境で使う場合は、従来どおり `BUILT_IN_FORGE_API_KEY`、`BUILT_IN_FORGE_API_URL`、`VITE_FRONTEND_FORGE_API_KEY`、`VITE_FRONTEND_FORGE_API_URL` でも動作します。
 
 ### Slack 検索
 
