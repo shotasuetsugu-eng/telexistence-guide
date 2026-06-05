@@ -155,7 +155,11 @@ class SDKServer {
   }
 
   private getSessionSecret() {
-    const secret = ENV.cookieSecret;
+    const secret =
+      ENV.cookieSecret ||
+      process.env.COOKIE_SECRET ||
+      process.env.SESSION_SECRET ||
+      "local-dev-cookie-secret-change-this";
     return new TextEncoder().encode(secret);
   }
 
@@ -338,3 +342,4 @@ function buildCronUser(
 }
 
 export const sdk = new SDKServer();
+
