@@ -17,20 +17,6 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-function getAllowedSlackChannels() {
-  return ENV.slackAllowedChannels
-    .split(",")
-    .map(channel => channel.trim().replace(/^#/, ""))
-    .filter(Boolean);
-}
-
-function sanitizeSlackSearchQuery(query: string) {
-  return query
-    .replace(/\bin:\S+/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -412,85 +398,6 @@ export const appRouter = router({
       }),
   }),
 
-  // ===== SLACK =====
-  slack: router({
-    search: protectedProcedure
-      .input(z.object({ query: z.string().min(1), count: z.number().optional() }))
-      .query(async ({ input }) => {
-        const token = ENV.slackBotToken;
-        if (!token) {
-          return { messages: [], configured: false, message: "SLACK_BOT_TOKENが未設定です" };
-        }
-        const allowedChannels = getAllowedSlackChannels();
-        if (allowedChannels.length === 0) {
-          return { messages: [], configured: false, message: "SLACK_ALLOWED_CHANNELSが未設定です" };
-        }
-        const sanitizedQuery = sanitizeSlackSearchQuery(input.query);
-        if (!sanitizedQuery) {
-          return { messages: [], configured: true, message: "" };
-        }
-        try {
-          const perChannelCount = Math.max(1, Math.ceil((input.count ?? 20) / allowedChannels.length));
-          const results = await Promise.all(allowedChannels.map(async (channel) => {
-            const url = new URL("https://slack.com/api/search.messages");
-            url.searchParams.set("query", `${sanitizedQuery} in:#${channel}`);
-            url.searchParams.set("count", String(perChannelCount));
-            url.searchParams.set("highlight", "false");
-
-            const res = await fetch(url.toString(), {
-              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            });
-            if (!res.ok) throw new Error(`Slack API HTTP error: ${res.status}`);
-            const data = await res.json() as SlackSearchResponse;
-            if (!data.ok) throw new Error(`Slack API error: ${data.error}`);
-            return data.messages?.matches ?? [];
-          }));
-
-          const messages = results
-            .flat()
-            .filter((m) => allowedChannels.includes(m.channel?.name ?? ""))
-            .sort((a, b) => Number.parseFloat(b.ts) - Number.parseFloat(a.ts))
-            .slice(0, input.count ?? 20)
-            .map((m) => ({
-              ts: m.ts,
-              text: m.text,
-              username: m.username,
-              channel: m.channel?.name ?? "",
-              channelId: m.channel?.id ?? "",
-              permalink: m.permalink,
-              userId: m.user,
-            }));
-          return { messages, configured: true, message: "" };
-        } catch (e) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: String(e) });
-        }
-      }),
-    listChannels: protectedProcedure.query(async () => {
-      const token = ENV.slackBotToken;
-      if (!token) {
-        return { channels: [], configured: false };
-      }
-      const allowedChannels = getAllowedSlackChannels();
-      if (allowedChannels.length === 0) {
-        return { channels: [], configured: false };
-      }
-      try {
-        const res = await fetch("https://slack.com/api/conversations.list?limit=200&exclude_archived=true", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json() as { ok: boolean; channels?: Array<{ id: string; name: string; num_members?: number }>; error?: string };
-        if (!data.ok) return { channels: [], configured: true };
-        return {
-          channels: (data.channels ?? [])
-            .filter((c) => allowedChannels.includes(c.name))
-            .map((c) => ({ id: c.id, name: c.name, memberCount: c.num_members ?? 0 })),
-          configured: true,
-        };
-      } catch {
-        return { channels: [], configured: false };
-      }
-    }),
-  }),
 });
 
 // ===== DRIVE TYPE HELPERS =====
@@ -504,22 +411,6 @@ type DriveFile = {
   webContentLink?: string;
   iconLink?: string;
   thumbnailLink?: string;
-};
-
-type SlackSearchResponse = {
-  ok: boolean;
-  error?: string;
-  messages?: {
-    matches: Array<{
-      ts: string;
-      text: string;
-      username: string;
-      user: string;
-      channel: { id: string; name: string };
-      permalink: string;
-    }>;
-    total: number;
-  };
 };
 
 export type AppRouter = typeof appRouter;

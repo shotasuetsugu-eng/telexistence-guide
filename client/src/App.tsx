@@ -14,7 +14,6 @@ import Search from "./pages/Search";
 import AdminPanel from "./pages/AdminPanel";
 import Drive from "./pages/Drive";
 import MapPage from "./pages/MapPage";
-import SlackSearch from "./pages/SlackSearch";
 import CyberLayout from "./components/CyberLayout";
 
 function Router() {
@@ -31,7 +30,6 @@ function Router() {
         <Route path="/admin" component={AdminPanel} />
         <Route path="/drive" component={Drive} />
         <Route path="/map" component={MapPage} />
-        <Route path="/slack" component={SlackSearch} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

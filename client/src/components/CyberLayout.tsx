@@ -12,7 +12,6 @@ import {
   LogOut,
   HardDrive,
   Map,
-  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -27,7 +26,6 @@ const publicNavItems = [
 const integrationNavItems = [
   { icon: HardDrive, label: "Google Drive", path: "/drive" },
   { icon: Map, label: "マップ", path: "/map" },
-  { icon: MessageSquare, label: "Slack 検索", path: "/slack" },
 ];
 
 const adminNavItems = [

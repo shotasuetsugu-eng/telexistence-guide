@@ -13,7 +13,4 @@ export const ENV = {
   googleDriveFolderId: process.env.GOOGLE_DRIVE_FOLDER_ID ?? "",
   googleServiceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ?? "",
   googleServiceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY ?? "",
-  // Slack
-  slackBotToken: process.env.SLACK_BOT_TOKEN ?? "",
-  slackAllowedChannels: process.env.SLACK_ALLOWED_CHANNELS ?? "",
 };
