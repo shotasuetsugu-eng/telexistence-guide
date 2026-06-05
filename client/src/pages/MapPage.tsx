@@ -15,7 +15,24 @@ type SearchResult = {
   types: string[];
 };
 
-export default function MapPage() {
+export default function MapPage() {const getCurrentLocation = () => {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      console.log("現在地:", lat, lng);
+
+      setMapCenter({
+        lat,
+        lng,
+      });
+    },
+    (error) => {
+      console.error("位置情報取得失敗", error);
+    }
+  );
+};
   const { user, loading: authLoading } = useAuth();
   const [addressInput, setAddressInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
