@@ -28,13 +28,22 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      await db.upsertUser({
-        openId: userInfo.openId,
-        name: userInfo.name || null,
-        email: userInfo.email ?? null,
-        loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-        lastSignedIn: new Date(),
-      });
+      await db.insert(users).values({
+  openId: userInfo.id,
+  name: userInfo.name || userInfo.email,
+  email: userInfo.email,
+  loginMethod: "google",
+  role: "user",
+  lastSignedIn: new Date(),
+}).onConflictDoUpdate({
+  target: users.openId,
+  set: {
+    name: userInfo.name || userInfo.email,
+    email: userInfo.email,
+    lastSignedIn: new Date(),
+    updatedAt: new Date(),
+  }
+});
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
