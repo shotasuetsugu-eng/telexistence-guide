@@ -1,4 +1,4 @@
-const CACHE_NAME = "tx-guide-pwa-v2";
+const CACHE_NAME = "tx-guide-pwa-v20260607221944";
 const APP_SHELL = [
   "/",
   "/manifest.webmanifest",
@@ -57,4 +57,5 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
 
