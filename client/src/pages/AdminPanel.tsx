@@ -609,9 +609,22 @@ function ChecklistsAdmin() {
                         className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="項目管理">
                         {expandedId === cl.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </button>
-                      <button onClick={() => startEdit(cl)} className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
+                      <button
+                    onClick={() => {
+                      const url = cl.description || `/checklists/${cl.id}`;
+                      const w = window.open(url, "_blank", "noopener,noreferrer");
+                      if (!w) {
+                        alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
+                      }
+                    }}
+                    className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                    title="印刷"
+                  >
+                    印刷
+                  </button>
+                  <button onClick={() => startEdit(cl)} className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
+                    <Edit className="h-4 w-4" />
+                  </button>
                       <button onClick={() => { if (confirm("削除しますか？")) deleteMutation.mutate({ id: cl.id }); }}
                         className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-4 w-4" />
@@ -877,6 +890,7 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
 
 
 
