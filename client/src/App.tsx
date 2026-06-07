@@ -34,6 +34,7 @@ function Router() {
         <Route path="/stores" component={SpreadsheetPage} />
         <Route path="/integrations" component={Integrations} />
           <Route path="/router-setup" component={RouterSetup} />
+          <Route path="/Wifi-setup" component={RouterSetup} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -55,6 +56,8 @@ function App() {
 }
 
 export default App;
+
+
 
 
 
