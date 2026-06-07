@@ -97,13 +97,15 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      await db.insert(users)
+      const userRole = (await isAdminEmailAllowed(userInfo.email)) ? "admin" : "user";
+
+    await db.insert(users)
         .values({
           openId: userInfo.id,
           name: userInfo.name || userInfo.email,
           email: userInfo.email,
           loginMethod: "google",
-          role: "user",
+          role: userRole,
           lastSignedIn: new Date(),
         })
         .onConflictDoUpdate({
@@ -136,3 +138,4 @@ export function registerOAuthRoutes(app: Express) {
     }
   });
 }
+
