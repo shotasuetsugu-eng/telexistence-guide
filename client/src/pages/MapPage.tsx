@@ -244,6 +244,21 @@ export default function MapPage() {
             ))}
           </div>
 
+        <div className="cyber-border rounded-lg bg-card p-3">
+          <input
+            type="text"
+            value={storeSearch}
+            onChange={(event) => setStoreSearch(event.target.value)}
+            placeholder="登録済み店舗名・住所で検索"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+          />
+          {storeSearch.trim() && (
+            <p className="text-xs text-muted-foreground mt-2">
+              検索結果：{visibleStores.length}件
+            </p>
+          )}
+        </div>
+
           <div className="space-y-2">
             {visibleStores.map((store) => (
               <div key={store.name} className="cyber-border rounded-lg bg-card p-3 space-y-2">
