@@ -1,7 +1,7 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import { users } from "../../drizzle/schema";
-import { getDB, isAdminEmailAllowed } from "../db";
+import { getDb } from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
@@ -97,19 +97,13 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      const userRole = (await isAdminEmailAllowed(userInfo.email)) ? "admin" : "user";
-
-
-
       await db.insert(users)
-
-
         .values({
           openId: userInfo.id,
           name: userInfo.name || userInfo.email,
           email: userInfo.email,
           loginMethod: "google",
-          role: userRole,
+          role: "user",
           lastSignedIn: new Date(),
         })
         .onConflictDoUpdate({
@@ -117,8 +111,8 @@ export function registerOAuthRoutes(app: Express) {
           set: {
             name: userInfo.name || userInfo.email,
             email: userInfo.email,
-            
-        role: userRole,
+            loginMethod: "google",
+            lastSignedIn: new Date(),
           },
         });
 
@@ -142,4 +136,3 @@ export function registerOAuthRoutes(app: Express) {
     }
   });
 }
-
