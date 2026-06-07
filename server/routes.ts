@@ -1,127 +1,23 @@
 import { eq, like, or, desc, asc } from "drizzle-orm";
 }
   return { procedures: procedureResults, checklists: checklistResults, documents: documentResults };
+  adminUsers: router({
+    list: adminProcedure.query(async () => {
+      return db.listAdminEmails();
+    }),
 
-const MANAGED_ADMIN_OPEN_ID_PREFIX = "admin-email:";
-const PROTECTED_ADMIN_EMAILS = new Set(["shota.suetsugu@tx-inc.com"]);
+    add: adminProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        return db.addAdminEmail(input.email);
+      }),
 
-function normalizeAdminEmail(email: string) {
-  const normalized = email.trim().toLowerCase();
-
-  if (!normalized || !normalized.includes("@")) {
-    throw new Error("有効なメールアドレスを入力してください");
-  }
-
-  return normalized;
-}
-
-export async function isAdminEmailAllowed(email?: string | null) {
-  const normalizedEmail = email?.trim().toLowerCase();
-
-  if (!normalizedEmail) return false;
-  if (PROTECTED_ADMIN_EMAILS.has(normalizedEmail)) return true;
-
-  const db = await getDB();
-  if (!db) return false;
-
-  const rows = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, normalizedEmail));
-
-  return rows.some((row) => row.role === "admin");
-}
-
-export async function listAdminEmails() {
-  const admins = new Map<string, { email: string; protected: boolean }>();
-
-  for (const email of PROTECTED_ADMIN_EMAILS) {
-    admins.set(email, { email, protected: true });
-  }
-
-  const db = await getDB();
-  if (!db) return Array.from(admins.values());
-
-  const rows = await db.select().from(users);
-
-  for (const user of rows) {
-    const email = user.email?.trim().toLowerCase();
-
-    if (!email || user.role !== "admin") continue;
-
-    admins.set(email, {
-      email,
-      protected: PROTECTED_ADMIN_EMAILS.has(email),
-    });
-  }
-
-  return Array.from(admins.values()).sort((a, b) => a.email.localeCompare(b.email));
-}
-
-export async function addAdminEmail(email: string) {
-  const normalizedEmail = normalizeAdminEmail(email);
-  const db = await getDB();
-
-  if (!db) throw new Error("DB not available");
-
-  await db
-    .insert(users)
-    .values({
-      openId: `${MANAGED_ADMIN_OPEN_ID_PREFIX}${normalizedEmail}`,
-      name: normalizedEmail,
-      email: normalizedEmail,
-      role: "admin",
-      loginMethod: "admin-email",
-    })
-    .onConflictDoUpdate({
-      target: users.openId,
-      set: {
-        name: normalizedEmail,
-        email: normalizedEmail,
-        role: "admin",
-        loginMethod: "admin-email",
-      },
-    });
-
-  const existingUsers = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, normalizedEmail));
-
-  for (const user of existingUsers) {
-    if (!user.openId) continue;
-
-    await db
-      .update(users)
-      .set({ role: "admin" })
-      .where(eq(users.openId, user.openId));
-  }
-
-  return { email: normalizedEmail };
-}
-
-export async function removeAdminEmail(email: string) {
-  const normalizedEmail = normalizeAdminEmail(email);
-
-  if (PROTECTED_ADMIN_EMAILS.has(normalizedEmail)) {
-    throw new Error("この管理者メールは削除できません");
-  }
-
-  const db = await getDB();
-
-  if (!db) throw new Error("DB not available");
-
-  await db
-    .update(users)
-    .set({ role: "user" })
-    .where(eq(users.email, normalizedEmail));
-
-  await db
-    .delete(users)
-    .where(eq(users.openId, `${MANAGED_ADMIN_OPEN_ID_PREFIX}${normalizedEmail}`));
-
-  return { email: normalizedEmail };
-}
+    remove: adminProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        return db.removeAdminEmail(input.email);
+      }),
+  }),
 
 }
 import { eq, like, or, desc, asc } from "drizzle-orm";

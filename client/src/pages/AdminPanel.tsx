@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp } from "lucide-react";
 
-type Tab = "categories" | "procedures" | "checklists" | "documents";
+type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -83,6 +83,7 @@ export default function AdminPanel() {
     { id: "procedures" as Tab, label: "手順書", icon: BookOpen },
     { id: "checklists" as Tab, label: "チェックリスト", icon: CheckSquare },
     { id: "documents" as Tab, label: "資料", icon: FileText },
+    { id: "admins" as Tab, label: "管理者", icon: FileText },
   ];
 
   return (
@@ -115,6 +116,7 @@ export default function AdminPanel() {
       {activeTab === "procedures" && <ProceduresAdmin />}
       {activeTab === "checklists" && <ChecklistsAdmin />}
       {activeTab === "documents" && <DocumentsAdmin />}
+      {activeTab === "admins" && <AdminUsersAdmin />}
     </div>
   );
 }
@@ -760,6 +762,112 @@ function DocumentsAdmin() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function AdminUsersAdmin() {
+  const [email, setEmail] = useState("");
+  const { data: adminEmails = [], isLoading, refetch } = trpc.adminUsers.list.useQuery();
+
+  const addMutation = trpc.adminUsers.add.useMutation({
+    onSuccess: () => {
+      toast.success("管理者メールを追加しました");
+      setEmail("");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const removeMutation = trpc.adminUsers.remove.useMutation({
+    onSuccess: () => {
+      toast.success("管理者メールを削除しました");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const handleAdd = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!trimmedEmail) {
+      toast.error("メールアドレスを入力してください");
+      return;
+    }
+
+    addMutation.mutate({ email: trimmedEmail });
+  };
+
+  return (
+    <div className="space-y-4">
+      <form onSubmit={handleAdd} className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <h3 className="font-semibold text-foreground flex items-center gap-2">
+          <Plus className="h-4 w-4 text-primary" />
+          管理者メール追加
+        </h3>
+
+        <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="example@tx-inc.com"
+            className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            required
+          />
+
+          <Button type="submit" size="sm" disabled={addMutation.isPending}>
+            {addMutation.isPending ? "追加中..." : "管理者に追加"}
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          ここに追加したメールアドレスでGoogleログインしたユーザーが管理者になります。
+        </p>
+      </form>
+
+      <div className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <h3 className="font-semibold text-foreground">管理者メール一覧</h3>
+
+        {isLoading ? (
+          <div className="h-14 bg-muted rounded animate-pulse" />
+        ) : adminEmails.length === 0 ? (
+          <p className="text-sm text-muted-foreground">管理者メールは未登録です。</p>
+        ) : (
+          <div className="space-y-2">
+            {adminEmails.map((admin) => (
+              <div
+                key={admin.email}
+                className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2"
+              >
+                <div>
+                  <p className="text-sm font-medium text-foreground">{admin.email}</p>
+                  {admin.protected && (
+                    <p className="text-xs text-muted-foreground">初期管理者</p>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={admin.protected || removeMutation.isPending}
+                  onClick={() => {
+                    if (confirm(`${admin.email} を管理者から削除しますか？`)) {
+                      removeMutation.mutate({ email: admin.email });
+                    }
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  削除
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
