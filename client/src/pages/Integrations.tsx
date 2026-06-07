@@ -102,7 +102,8 @@ export default function Integrations() {
   };
 
   const handleSave = () => {
-    const items = keys.map((key) => ({
+    const saveKeys: LinkKey[] = ["dashboardProd", "dashboardStg", "autailProd", "autailStg"];
+    const items = saveKeys.map((key) => ({
       key,
       label: links[key].label,
       url: normalizeUrl(links[key].url),
@@ -112,11 +113,9 @@ export default function Integrations() {
   };
 
   const groups: Array<{ title: string; items: LinkKey[] }> = [
-    { title: "Shift", items: ["shiftFs", "shiftTs"] },
-    { title: "店舗一覧", items: ["storeList"] },
-    { title: "Dashboard", items: ["dashboardProd", "dashboardStg"] },
-    { title: "Autail", items: ["autailProd", "autailStg"] },
-  ];
+  { title: "Dashboard", items: ["dashboardProd", "dashboardStg"] },
+  { title: "Autail", items: ["autailProd", "autailStg"] },
+];
 
   return (
     <div className="space-y-6">
@@ -193,3 +192,4 @@ export default function Integrations() {
     </div>
   );
 }
+
