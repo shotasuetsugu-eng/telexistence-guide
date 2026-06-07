@@ -19,7 +19,7 @@ import { useState } from "react";
 
 const publicNavItems = [
   { icon: Home, label: "ダッシュボード", path: "/" },
-  { icon: BookOpen, label: "手順書", path: "/procedures" },
+  { icon: BookOpen, label: "Smartboarding", path: "/procedures" },
   { icon: CheckSquare, label: "チェックリスト", path: "/checklists" },
   { icon: FileText, label: "資料管理", path: "/documents" },
   { icon: Search, label: "検索", path: "/search" },
@@ -239,5 +239,6 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
 
 

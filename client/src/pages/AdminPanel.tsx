@@ -80,7 +80,7 @@ export default function AdminPanel() {
 
   const tabs = [
     { id: "categories" as Tab, label: "カテゴリ", icon: Layers },
-    { id: "procedures" as Tab, label: "手順書", icon: BookOpen },
+    { id: "procedures" as Tab, label: "Smartboarding", icon: BookOpen },
     { id: "checklists" as Tab, label: "チェックリスト", icon: CheckSquare },
     { id: "documents" as Tab, label: "資料", icon: FileText },
     { id: "admins" as Tab, label: "管理者", icon: FileText },
@@ -172,7 +172,7 @@ function CategoriesAdmin() {
         </h3>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="カテゴリ名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
-        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="説明（任意）"
+        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <Button type="submit" size="sm" disabled={createMutation.isPending}>
           {createMutation.isPending ? "作成中..." : "作成"}
@@ -223,21 +223,21 @@ function CategoriesAdmin() {
   );
 }
 
-// ===== PROCEDURES ADMIN =====
+// ===== SMARTBOARDING ADMIN =====
 function ProceduresAdmin() {
   const utils = trpc.useUtils();
   const { data: procedures, isLoading } = trpc.procedures.list.useQuery();
   const { data: categories } = trpc.categories.list.useQuery();
   const createMutation = trpc.procedures.create.useMutation({
-    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("手順書を作成しました"); },
+    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを作成しました"); },
     onError: (err) => toast.error(err.message),
   });
   const updateMutation = trpc.procedures.update.useMutation({
-    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("手順書を更新しました"); setEditingId(null); },
+    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを更新しました"); setEditingId(null); },
     onError: (err) => toast.error(err.message),
   });
   const deleteMutation = trpc.procedures.delete.useMutation({
-    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("手順書を削除しました"); },
+    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを削除しました"); },
     onError: (err) => toast.error(err.message),
   });
 
@@ -351,17 +351,17 @@ function ProceduresAdmin() {
   return (
     <div className="space-y-4">
       <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
-        <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規手順書</h3>
+        <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required>
           <option value="">カテゴリを選択</option>
           {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="タイトル"
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
-        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="説明（任意）"
+        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="本文・内容（任意）" rows={3}
+        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="メモ（任意）" rows={3}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
         <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
       </form>
@@ -452,9 +452,9 @@ function ProceduresAdmin() {
                         </div>
                       )}
                       <form onSubmit={handleAddStep} className="space-y-2">
-                        <input type="text" value={stepTitle} onChange={(e) => setStepTitle(e.target.value)} placeholder="ステップタイトル"
+                        <input type="text" value={stepTitle} onChange={(e) => setStepTitle(e.target.value)} placeholder="ステップ表示名"
                           className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" required />
-                        <input type="text" value={stepDescription} onChange={(e) => setStepDescription(e.target.value)} placeholder="説明（任意）"
+                        <input type="text" value={stepDescription} onChange={(e) => setStepDescription(e.target.value)} placeholder="リンクURL"
                           className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                         <input type="text" value={stepImageUrl} onChange={(e) => setStepImageUrl(e.target.value)} placeholder="画像URL（任意）"
                           className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
@@ -567,9 +567,9 @@ function ChecklistsAdmin() {
           <option value="">カテゴリを選択</option>
           {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="タイトル"
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
-        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="説明（任意）"
+        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
       </form>
@@ -713,9 +713,9 @@ function DocumentsAdmin() {
           <option value="">カテゴリを選択</option>
           {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="資料タイトル"
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="資料表示名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
-        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="説明（任意）"
+        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input id="file-upload" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary/20 file:text-primary"
@@ -871,3 +871,5 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
+
