@@ -119,6 +119,7 @@ export default function MapPage() {
   const [status, setStatus] = useState("");
   const [newChain, setNewChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
   const [newMapsUrl, setNewMapsUrl] = useState("");
+  const [storeSearch, setStoreSearch] = useState("");
   const resolveMapsUrlMutation = trpc.maps.resolveGoogleMapsUrl.useMutation({
     onError: (error) => toast.error(error.message),
   });
@@ -352,4 +353,5 @@ export default function MapPage() {
     </div>
   );
 }
+
 
