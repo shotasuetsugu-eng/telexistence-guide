@@ -1,14 +1,11 @@
-import { useEffect, useState } from "react";
-import {
-  ExternalLink,
-  LayoutDashboard,
-  Link as LinkIcon,
-  Save,
-  Sparkles,
-} from "lucide-react";
+import { ExternalLink, Link as LinkIcon, Save, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-type IntegrationKey =
+type LinkKey =
   | "shiftFs"
   | "shiftTs"
   | "storeList"
@@ -17,88 +14,75 @@ type IntegrationKey =
   | "autailProd"
   | "autailStg";
 
-type IntegrationLink = {
+type LinkItem = {
+  key: LinkKey;
   label: string;
   url: string;
 };
 
-type IntegrationLinks = Record<IntegrationKey, IntegrationLink>;
-
-const storageKey = "tx-integrations-links";
-
-const defaultLinks: IntegrationLinks = {
-  shiftFs: { label: "FS", url: "https://docs.google.com/spreadsheets/d/1P1kcKNJvlr8uA0XWxfFdpKU2RWFt8bj1RQUD6hH9Zhg/edit?gid=1323337038#gid=1323337038" },
-  shiftTs: { label: "TS", url: "https://docs.google.com/spreadsheets/d/1MyrxpLeKCLu1KNdfWLTGio38mFkDhPmpVNn-hLTgSWw/edit?gid=1212632163#gid=1212632163" },
-  storeList: { label: "店舗一覧", url: "https://docs.google.com/spreadsheets/d/1Y4Cw1XcLdb-EZhklHkgq8v2LO9ma8PRnqCnPNJW-aVE/edit?gid=1336532237#gid=1336532237" },
-
-  dashboardProd: { label: "PROD", url: "https://portal.telexistence.org/stores" },
-  dashboardStg: { label: "STG", url: "https://stg.portal.telexistence.org/stores" },
-
-  autailProd: { label: "PROD", url: "https://retail.telexistence.org/deployment" },
-  autailStg: { label: "STG", url: "https://retail.stg.telexistence.org/deployment" },
+const defaultLinks: Record<LinkKey, { title: string; label: string; url: string }> = {
+  shiftFs: { title: "Shift FS", label: "FS", url: "" },
+  shiftTs: { title: "Shift TS", label: "TS", url: "" },
+  storeList: { title: "店舗一覧", label: "店舗一覧", url: "" },
+  dashboardProd: { title: "Dashboard PROD", label: "PROD", url: "https://portal.telexistence.org/stores" },
+  dashboardStg: { title: "Dashboard STG", label: "STG", url: "https://stg.portal.telexistence.org/stores" },
+  autailProd: { title: "Autail PROD", label: "PROD", url: "https://retail.telexistence.org/deployment" },
+  autailStg: { title: "Autail STG", label: "STG", url: "https://retail.stg.telexistence.org/deployment" },
 };
 
+const keys = Object.keys(defaultLinks) as LinkKey[];
+
 function normalizeUrl(url: string) {
-  const trimmed = url.trim();
-
-  if (!trimmed) return "";
-
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-
-  return `https://${trimmed}`;
-}
-
-function loadLinks(): IntegrationLinks {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
-
-    return {
-      shiftFs: { ...defaultLinks.shiftFs, ...(saved.shiftFs ?? {}) },
-      shiftTs: { ...defaultLinks.shiftTs, ...(saved.shiftTs ?? {}) },
-      storeList: { ...defaultLinks.storeList, ...(saved.storeList ?? {}) },
-
-      dashboardProd: {
-        ...defaultLinks.dashboardProd,
-        ...(saved.dashboardProd ?? saved.dashboard ?? {}),
-      },
-      dashboardStg: {
-        ...defaultLinks.dashboardStg,
-        ...(saved.dashboardStg ?? {}),
-      },
-
-      autailProd: {
-        ...defaultLinks.autailProd,
-        ...(saved.autailProd ?? saved.autail ?? {}),
-      },
-      autailStg: {
-        ...defaultLinks.autailStg,
-        ...(saved.autailStg ?? {}),
-      },
-    };
-  } catch {
-    return defaultLinks;
-  }
-}
-
-function openUrl(url: string) {
-  if (!url) return;
-  window.open(url, "_blank", "noopener,noreferrer");
+  const value = url.trim();
+  if (!value) return "";
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return `https://${value}`;
 }
 
 export default function Integrations() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const [links, setLinks] = useState<IntegrationLinks>(defaultLinks);
-  const [status, setStatus] = useState("");
+  const utils = trpc.useUtils();
+  const { data = [], isLoading } = trpc.linkSettings.list.useQuery();
+
+  const saveMutation = trpc.linkSettings.save.useMutation({
+    onSuccess: async () => {
+      await utils.linkSettings.list.invalidate();
+      toast.success("リンク設定を保存しました");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const initialLinks = useMemo(() => {
+    const map = new Map<string, { label: string; url: string }>();
+    data.forEach((item) => map.set(item.key, { label: item.label, url: item.url }));
+
+    return keys.reduce((acc, key) => {
+      const saved = map.get(key);
+      acc[key] = {
+        key,
+        label: saved?.label || defaultLinks[key].label,
+        url: saved?.url || defaultLinks[key].url,
+      };
+      return acc;
+    }, {} as Record<LinkKey, LinkItem>);
+  }, [data]);
+
+  const [links, setLinks] = useState<Record<LinkKey, LinkItem>>(() => {
+    return keys.reduce((acc, key) => {
+      acc[key] = { key, label: defaultLinks[key].label, url: defaultLinks[key].url };
+      return acc;
+    }, {} as Record<LinkKey, LinkItem>);
+  });
 
   useEffect(() => {
-    setLinks(loadLinks());
-  }, []);
+    setLinks(initialLinks);
+  }, [initialLinks]);
 
-  const updateLink = (key: IntegrationKey, field: keyof IntegrationLink, value: string) => {
+  const updateLink = (key: LinkKey, field: "label" | "url", value: string) => {
     setLinks((prev) => ({
       ...prev,
       [key]: {
@@ -108,223 +92,104 @@ export default function Integrations() {
     }));
   };
 
-  const save = () => {
-    const nextLinks: IntegrationLinks = {
-      ...links,
-      dashboardProd: {
-        ...links.dashboardProd,
-        url: normalizeUrl(links.dashboardProd.url),
-      },
-      dashboardStg: {
-        ...links.dashboardStg,
-        url: normalizeUrl(links.dashboardStg.url),
-      },
-      autailProd: {
-        ...links.autailProd,
-        url: normalizeUrl(links.autailProd.url),
-      },
-      autailStg: {
-        ...links.autailStg,
-        url: normalizeUrl(links.autailStg.url),
-      },
-    };
-
-    setLinks(nextLinks);
-    window.localStorage.setItem(storageKey, JSON.stringify(nextLinks));
-    setStatus("保存しました");
-    setTimeout(() => setStatus(""), 2000);
+  const openLink = (key: LinkKey) => {
+    const url = normalizeUrl(links[key].url);
+    if (!url) {
+      toast.error("URLが未設定です");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const renderUserButtons = (
-    prodKey: IntegrationKey,
-    stgKey: IntegrationKey,
-  ) => (
-    <div className="grid grid-cols-2 gap-3">
-      <button
-        type="button"
-        onClick={() => openUrl(links[prodKey].url)}
-        disabled={!links[prodKey].url}
-        className="inline-flex items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <ExternalLink className="h-4 w-4" />
-        {links[prodKey].label || "PROD"}
-      </button>
+  const handleSave = () => {
+    const items = keys.map((key) => ({
+      key,
+      label: links[key].label,
+      url: normalizeUrl(links[key].url),
+    }));
 
-      <button
-        type="button"
-        onClick={() => openUrl(links[stgKey].url)}
-        disabled={!links[stgKey].url}
-        className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <ExternalLink className="h-4 w-4" />
-        {links[stgKey].label || "STG"}
-      </button>
-    </div>
-  );
+    saveMutation.mutate(items);
+  };
 
-  const renderAdminSetting = (
-    title: string,
-    Icon: typeof LayoutDashboard,
-    prodKey: IntegrationKey,
-    stgKey: IntegrationKey,
-  ) => (
-    <div className="rounded-lg border border-border bg-background p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-primary" />
-        <h3 className="font-semibold text-foreground">{title}</h3>
-      </div>
-
-      <div className="grid gap-3">
-        <div className="grid gap-3 md:grid-cols-[120px_220px_1fr_auto]">
-          <div className="flex items-center text-sm font-semibold text-primary">
-            PROD
-          </div>
-
-          <input
-            value={links[prodKey].label}
-            onChange={(event) => updateLink(prodKey, "label", event.target.value)}
-            placeholder="表示名"
-            className="w-full rounded border border-border bg-card px-3 py-2 text-sm"
-          />
-
-          <input
-            value={links[prodKey].url}
-            onChange={(event) => updateLink(prodKey, "url", event.target.value)}
-            placeholder="PROD URL"
-            className="w-full rounded border border-border bg-card px-3 py-2 text-sm"
-          />
-
-          <button
-            type="button"
-            onClick={() => openUrl(links[prodKey].url)}
-            disabled={!links[prodKey].url}
-            className="inline-flex items-center justify-center gap-2 rounded border border-border px-3 py-2 text-sm text-muted-foreground hover:text-primary disabled:opacity-40"
-          >
-            <ExternalLink className="h-4 w-4" />
-            開く
-          </button>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-[120px_220px_1fr_auto]">
-          <div className="flex items-center text-sm font-semibold text-primary">
-            STG
-          </div>
-
-          <input
-            value={links[stgKey].label}
-            onChange={(event) => updateLink(stgKey, "label", event.target.value)}
-            placeholder="表示名"
-            className="w-full rounded border border-border bg-card px-3 py-2 text-sm"
-          />
-
-          <input
-            value={links[stgKey].url}
-            onChange={(event) => updateLink(stgKey, "url", event.target.value)}
-            placeholder="STG URL"
-            className="w-full rounded border border-border bg-card px-3 py-2 text-sm"
-          />
-
-          <button
-            type="button"
-            onClick={() => openUrl(links[stgKey].url)}
-            disabled={!links[stgKey].url}
-            className="inline-flex items-center justify-center gap-2 rounded border border-border px-3 py-2 text-sm text-muted-foreground hover:text-primary disabled:opacity-40"
-          >
-            <ExternalLink className="h-4 w-4" />
-            開く
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderUserSection = (
-    title: string,
-    Icon: typeof LayoutDashboard,
-    prodKey: IntegrationKey,
-    stgKey: IntegrationKey,
-  ) => (
-    <div className="rounded-lg border border-border bg-background p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-primary" />
-        <h3 className="font-semibold text-foreground">{title}</h3>
-      </div>
-
-      {renderUserButtons(prodKey, stgKey)}
-    </div>
-  );
+  const groups: Array<{ title: string; items: LinkKey[] }> = [
+    { title: "Shift", items: ["shiftFs", "shiftTs"] },
+    { title: "店舗一覧", items: ["storeList"] },
+    { title: "Dashboard", items: ["dashboardProd", "dashboardStg"] },
+    { title: "Autail", items: ["autailProd", "autailStg"] },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-2">
         <h1 className="text-2xl font-black tracking-tight text-foreground">
           <span className="glitch-text" data-text="Integrations">Integrations</span>
         </h1>
-        <p className="mono-sub">
-          {isAdmin ? "// PROD_STG_LINK_SETTINGS" : "// PROD_STG_LINKS"}
-        </p>
+        <p className="mono-sub">// DB_LINK_SETTINGS</p>
       </div>
 
       <div className="cyber-border rounded-lg bg-card p-4 space-y-4">
-        <div className="flex items-center gap-2">
+        <h2 className="font-semibold text-foreground flex items-center gap-2">
           <LinkIcon className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold text-foreground">
-            {isAdmin ? "外部リンク設定" : "外部リンク"}
-          </h2>
-        </div>
+          外部リンク設定
+        </h2>
 
-        {isAdmin ? (
-          <div className="grid gap-4">
-            {renderAdminSetting(
-              "Dashboard",
-              LayoutDashboard,
-              "dashboardProd",
-              "dashboardStg",
-            )}
-
-            {renderAdminSetting(
-              "Autail",
-              Sparkles,
-              "autailProd",
-              "autailStg",
-            )}
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={save}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-              >
-                <Save className="h-4 w-4" />
-                保存
-              </button>
-
-              {status && (
-                <span className="text-sm text-primary">
-                  {status}
-                </span>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {renderUserSection(
-              "Dashboard",
-              LayoutDashboard,
-              "dashboardProd",
-              "dashboardStg",
-            )}
-
-            {renderUserSection(
-              "Autail",
-              Sparkles,
-              "autailProd",
-              "autailStg",
-            )}
+        {!isAdmin && (
+          <div className="rounded-md border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+            管理者のみ保存できます。表示内容はDBに保存された共通リンクです。
           </div>
         )}
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {groups.map((group) => (
+              <div key={group.title} className="rounded-lg border border-border bg-background/40 p-3 space-y-3">
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  {group.title}
+                </h3>
+
+                {group.items.map((key) => (
+                  <div key={key} className="grid gap-2 md:grid-cols-[180px_1fr_auto]">
+                    <input
+                      value={links[key]?.label || ""}
+                      onChange={(event) => updateLink(key, "label", event.target.value)}
+                      disabled={!isAdmin}
+                      className="px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm disabled:opacity-70"
+                      placeholder="表示名"
+                    />
+                    <input
+                      value={links[key]?.url || ""}
+                      onChange={(event) => updateLink(key, "url", event.target.value)}
+                      disabled={!isAdmin}
+                      className="px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm disabled:opacity-70"
+                      placeholder="URL"
+                    />
+                    <Button type="button" variant="outline" onClick={() => openLink(key)}>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      開く
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!isAdmin || saveMutation.isPending}
+        >
+          <Save className="h-4 w-4 mr-1" />
+          {saveMutation.isPending ? "保存中..." : "保存"}
+        </Button>
       </div>
     </div>
   );
 }
-

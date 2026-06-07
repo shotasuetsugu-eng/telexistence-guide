@@ -1,4 +1,4 @@
-import { eq, like, or, desc, asc } from "drizzle-orm";
+import { eq, like, or, desc, asc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
@@ -9,6 +9,7 @@ import {
   checklists, InsertChecklist,
   checklistItems, InsertChecklistItem,
   documents, InsertDocument,
+  linkSettings, InsertLinkSetting,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -297,5 +298,6 @@ export async function searchAll(query: string) {
 
   return { procedures: procedureResults, checklists: checklistResults, documents: documentResults };
 }
+
 
 

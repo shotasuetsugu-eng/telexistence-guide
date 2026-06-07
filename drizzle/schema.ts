@@ -118,3 +118,13 @@ export const documents = pgTable("documents", {
 
 export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
+
+export const linkSettings = pgTable("link_settings", {
+  key: text("key").primaryKey(),
+  label: text("label").notNull(),
+  url: text("url").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type LinkSetting = typeof linkSettings.$inferSelect;
+export type InsertLinkSetting = typeof linkSettings.$inferInsert;
