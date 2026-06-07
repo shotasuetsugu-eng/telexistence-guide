@@ -34,6 +34,45 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// ===== FORCE MOBILE CACHE REFRESH =====
+app.get("/clear-cache", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Clear-Site-Data", '"cache", "storage"');
+  res.status(200).send(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Cache Cleared</title>
+      </head>
+      <body style="font-family: sans-serif; padding: 24px;">
+        <h1>Cache clear request sent</h1>
+        <p>この画面を閉じて、もう一度サイトを開いてください。</p>
+        <p><a href="/map?fresh=999999">マップを開く</a></p>
+      </body>
+    </html>
+  `);
+});
+
+app.use((req, res, next) => {
+  const accept = req.headers.accept || "";
+  const isHtmlRequest = accept.includes("text/html");
+  const isServiceWorker = req.path === "/sw.js";
+  const isManifest = req.path.includes("manifest");
+
+  if (isHtmlRequest || isServiceWorker || isManifest) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+
+  next();
+});
+
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // tRPC API
@@ -64,3 +103,4 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+
