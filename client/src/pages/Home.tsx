@@ -40,25 +40,6 @@ export default function Home() {
           </div>
         ))}
       </div>
-      {/* Company Movie */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-foreground">Company Movie</h2>
-          <span className="mono-sub">// TX_OFFICIAL_VIDEO</span>
-        </div>
-
-        <div className="cyber-border rounded-lg overflow-hidden bg-card">
-          <iframe
-            src="https://www.youtube.com/embed/5Q8rIQ6HA4M?autoplay=1&mute=1&loop=1&playlist=5Q8rIQ6HA4M&controls=0&rel=0&modestbranding=1&playsinline=1"
-            title="Telexistence Company Movie"
-            className="w-full h-[520px]"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      </div>
-
-
       {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
@@ -86,7 +67,25 @@ export default function Home() {
           <p className="text-xs text-muted-foreground mt-1">PDF・画像をダウンロード</p>
         </button>
       </div>
+
+      {/* Company Movie */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground">Company Movie</h2>
+          <span className="mono-sub">// TX_OFFICIAL_VIDEO</span>
+        </div>
+
+        <div className="cyber-border rounded-lg overflow-hidden bg-card">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/5Q8rIQ6HA4M?autoplay=1&mute=1&loop=1&playlist=5Q8rIQ6HA4M&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0"
+            title="Telexistence Company Movie"
+            className="w-full h-[520px] pointer-events-none"
+            allow="autoplay; encrypted-media; picture-in-picture"
+          />
+        </div>
+      </div>
     </div>
   );
 }
+
 
