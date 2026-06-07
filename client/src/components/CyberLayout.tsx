@@ -1,7 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import {
-  BookOpen,
+import {BookOpen,
   CheckSquare,
   FileText,
   Search,
@@ -13,8 +12,7 @@ import {
   HardDrive,
   Map,
   LayoutDashboard,
-  Sparkles,
-} from "lucide-react";
+  Sparkles, Wifi} from "lucide-react";
 import { useState } from "react";
 
 const publicNavItems = [
@@ -239,6 +237,9 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+
+
 
 
 

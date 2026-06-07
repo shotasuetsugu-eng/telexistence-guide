@@ -15,6 +15,7 @@ import AdminPanel from "./pages/AdminPanel";
 import MapPage from "./pages/MapPage";
 import SpreadsheetPage from "./pages/SpreadsheetPage";
 import Integrations from "./pages/Integrations";
+import RouterSetup from "./pages/RouterSetup";
 import CyberLayout from "./components/CyberLayout";
 
 function Router() {
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/shift" component={SpreadsheetPage} />
         <Route path="/stores" component={SpreadsheetPage} />
         <Route path="/integrations" component={Integrations} />
+          <Route path="/router-setup" component={RouterSetup} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -53,4 +55,6 @@ function App() {
 }
 
 export default App;
+
+
 
