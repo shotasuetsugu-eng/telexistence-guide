@@ -363,6 +363,9 @@ function ProceduresAdmin() {
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="メモ（任意）" rows={3}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
+        <input id="procedure-main-file" type="file" onChange={(e) => setProcedureFile(e.target.files?.[0] ?? null)}
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+        {procedureFile && <p className="text-xs text-muted-foreground">選択中: {procedureFile.name} ({(procedureFile.size / 1024).toFixed(1)} KB)</p>}
         <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
       </form>
 
@@ -507,6 +510,7 @@ function ChecklistsAdmin() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [checklistFile, setChecklistFile] = useState<File | null>(null);
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -570,6 +574,9 @@ function ChecklistsAdmin() {
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        <input id="checklist-main-file" type="file" onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+        {checklistFile && <p className="text-xs text-muted-foreground">選択中: {checklistFile.name} ({(checklistFile.size / 1024).toFixed(1)} KB)</p>}
         <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
       </form>
 
@@ -669,6 +676,7 @@ function DocumentsAdmin() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [checklistFile, setChecklistFile] = useState<File | null>(null);
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [file, setFile] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -869,6 +877,8 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
+
 
 
 
