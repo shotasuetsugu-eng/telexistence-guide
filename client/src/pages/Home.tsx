@@ -40,51 +40,24 @@ export default function Home() {
           </div>
         ))}
       </div>
-
-      {/* Categories */}
+      {/* Company Movie */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-foreground">工程カテゴリ</h2>
-          <span className="mono-sub">// PROCESS_CATEGORIES</span>
+          <h2 className="text-xl font-bold text-foreground">Company Movie</h2>
+          <span className="mono-sub">// TX_OFFICIAL_VIDEO</span>
         </div>
 
-        {catLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="cyber-border rounded-lg p-5 bg-card animate-pulse h-28" />
-            ))}
-          </div>
-        ) : categories && categories.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setLocation(`/procedures?category=${cat.id}`)}
-                className="cyber-border rounded-lg p-5 bg-card text-left hover:bg-card/80 transition-all group"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Layers className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                      {cat.name}
-                    </h3>
-                    {cat.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{cat.description}</p>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="cyber-border rounded-lg p-8 bg-card text-center">
-            <p className="text-muted-foreground">カテゴリが登録されていません</p>
-            <p className="mono-sub mt-2">// NO_CATEGORIES_FOUND</p>
-          </div>
-        )}
+        <div className="cyber-border rounded-lg overflow-hidden bg-card">
+          <iframe
+            src="https://www.youtube.com/embed/5Q8rIQ6HA4M?autoplay=1&mute=1&loop=1&playlist=5Q8rIQ6HA4M&controls=0&rel=0&modestbranding=1&playsinline=1"
+            title="Telexistence Company Movie"
+            className="w-full h-[520px]"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
       </div>
+
 
       {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -116,3 +89,4 @@ export default function Home() {
     </div>
   );
 }
+
