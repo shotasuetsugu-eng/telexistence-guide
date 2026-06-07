@@ -12,6 +12,8 @@ import {
   LogOut,
   HardDrive,
   Map,
+  LayoutDashboard,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,8 +26,11 @@ const publicNavItems = [
 ];
 
 const integrationNavItems = [
-  { icon: HardDrive, label: "Google Drive", path: "/drive" },
+  { icon: LayoutDashboard, label: "Shift", path: "/shift" },
+  { icon: HardDrive, label: "店舗一覧", path: "/stores" },
   { icon: Map, label: "マップ", path: "/map" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/integrations" },
+  { icon: Sparkles, label: "Autail", path: "/integrations" },
 ];
 
 const adminNavItems = [
@@ -234,3 +239,5 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+

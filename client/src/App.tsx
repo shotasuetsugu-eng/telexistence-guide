@@ -12,8 +12,9 @@ import ChecklistDetail from "./pages/ChecklistDetail";
 import Documents from "./pages/Documents";
 import Search from "./pages/Search";
 import AdminPanel from "./pages/AdminPanel";
-import Drive from "./pages/Drive";
 import MapPage from "./pages/MapPage";
+import SpreadsheetPage from "./pages/SpreadsheetPage";
+import Integrations from "./pages/Integrations";
 import CyberLayout from "./components/CyberLayout";
 
 function Router() {
@@ -27,9 +28,10 @@ function Router() {
         <Route path="/checklists/:id" component={ChecklistDetail} />
         <Route path="/documents" component={Documents} />
         <Route path="/search" component={Search} />
-        <Route path="/admin" component={AdminPanel} />
-        <Route path="/drive" component={Drive} />
-        <Route path="/map" component={MapPage} />
+        <Route path="/admin" component={AdminPanel} />        <Route path="/map" component={MapPage} />
+        <Route path="/shift" component={SpreadsheetPage} />
+        <Route path="/stores" component={SpreadsheetPage} />
+        <Route path="/integrations" component={Integrations} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -51,3 +53,4 @@ function App() {
 }
 
 export default App;
+
