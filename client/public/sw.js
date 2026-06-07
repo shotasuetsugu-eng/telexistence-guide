@@ -1,4 +1,4 @@
-const CACHE_NAME = "tx-guide-pwa-v-force-20260607";
+const CACHE_NAME = "tx-guide-force-refresh-20260607-2";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -13,5 +13,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    fetch(event.request, { cache: "no-store" }).catch(() => fetch(event.request))
+  );
 });
