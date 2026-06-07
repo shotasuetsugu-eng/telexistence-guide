@@ -1,235 +1,355 @@
-import { useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { MapView } from "@/components/Map";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { trpc } from "@/lib/trpc";
+import { ExternalLink, LocateFixed, MapPin, Plus, Store, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type LatLng = { lat: number; lng: number };
-type TravelMode = "driving" | "walking" | "cycling" | "transit";
+
+type ConvenienceStore = {
+  chain: "7-Eleven" | "FamilyMart" | "Lawson";
+  name: string;
+  address: string;
+  mapsUrl: string;
+  location: LatLng;
+};
+
+const defaultStores: ConvenienceStore[] = [
+  {
+    chain: "7-Eleven",
+    name: "セブン-イレブン 丸の内センタービル店",
+    address: "東京都千代田区丸の内1-6-1",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6838,139.7651",
+    location: { lat: 35.6838, lng: 139.7651 },
+  },
+  {
+    chain: "7-Eleven",
+    name: "セブン-イレブン 東京駅日本橋口店",
+    address: "東京都千代田区丸の内1-9-1",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6824,139.7691",
+    location: { lat: 35.6824, lng: 139.7691 },
+  },
+  {
+    chain: "FamilyMart",
+    name: "ファミリーマート 丸の内オアゾ店",
+    address: "東京都千代田区丸の内1-6-4",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6832,139.766",
+    location: { lat: 35.6832, lng: 139.766 },
+  },
+  {
+    chain: "FamilyMart",
+    name: "ファミリーマート 八重洲一丁目店",
+    address: "東京都中央区八重洲1-5-9",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6812,139.7712",
+    location: { lat: 35.6812, lng: 139.7712 },
+  },
+  {
+    chain: "Lawson",
+    name: "ローソン 丸の内二重橋前店",
+    address: "東京都千代田区丸の内2-3-1",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6805,139.7617",
+    location: { lat: 35.6805, lng: 139.7617 },
+  },
+  {
+    chain: "Lawson",
+    name: "ローソン 東京駅八重洲中央口店",
+    address: "東京都千代田区丸の内1-9-1",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.681,139.7681",
+    location: { lat: 35.681, lng: 139.7681 },
+  },
+];
+
+const chains = ["7-Eleven", "FamilyMart", "Lawson"] as const;
+const storageKey = "tx.convenience.stores";
+
+function normalizeUrl(url: string) {
+  const value = url.trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+function getLocationFromMapsUrl(url: string): LatLng | null {
+  const decoded = decodeURIComponent(url);
+  const patterns = [
+    /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /[?&]query=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /[?&]destination=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+  ];
+  for (const pattern of patterns) {
+    const match = decoded.match(pattern);
+    if (match) return { lat: Number(match[1]), lng: Number(match[2]) };
+  }
+  return null;
+}
+
+function getStoreNameFromMapsUrl(url: string) {
+  try {
+    const decoded = decodeURIComponent(url);
+    const placeMatch = decoded.match(/\/place\/([^/@?]+)/);
+    if (placeMatch?.[1]) return placeMatch[1].replace(/\+/g, " ").trim();
+
+    const parsed = new URL(normalizeUrl(url));
+    const query = parsed.searchParams.get("query") || parsed.searchParams.get("q");
+    if (query && !/^-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?$/.test(query)) {
+      return query.replace(/\+/g, " ").trim();
+    }
+  } catch {}
+  return "";
+}
+
+function loadStores() {
+  try {
+    const saved = window.localStorage.getItem(storageKey);
+    if (saved) return JSON.parse(saved) as ConvenienceStore[];
+  } catch {}
+  return defaultStores;
+}
 
 export default function MapPage() {
-  const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<TravelMode>("driving");
-  const [mapCenter, setMapCenter] = useState<LatLng>({ lat: 35.6762, lng: 139.6503 });
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeChain, setActiveChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
+  const [stores, setStores] = useState<ConvenienceStore[]>(defaultStores);
   const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
-  const [destination, setDestination] = useState<LatLng | null>(null);
-  const [destinationName, setDestinationName] = useState("");
-  const [route, setRoute] = useState<LatLng[]>([]);
-  const [steps, setSteps] = useState<string[]>([]);
+  const [selectedStore, setSelectedStore] = useState<ConvenienceStore>(defaultStores[0]);
   const [status, setStatus] = useState("");
-  const [arrivalTime, setArrivalTime] = useState("");
+  const [newChain, setNewChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
+  const [newMapsUrl, setNewMapsUrl] = useState("");
+  const resolveMapsUrlMutation = trpc.maps.resolveGoogleMapsUrl.useMutation({
+    onError: (error) => toast.error(error.message),
+  });
 
-  const modeLabel: Record<TravelMode, string> = {
-    driving: "車",
-    walking: "徒歩",
-    cycling: "自転車",
-    transit: "電車",
+  useEffect(() => {
+    const loadedStores = loadStores();
+    setStores(loadedStores);
+    setSelectedStore(loadedStores[0] ?? defaultStores[0]);
+  }, []);
+
+  const saveStores = (nextStores: ConvenienceStore[]) => {
+    setStores(nextStores);
+    window.localStorage.setItem(storageKey, JSON.stringify(nextStores));
   };
 
-  const searchLocation = async () => {
-    if (!query.trim()) return;
-
-    setStatus("検索中...");
-    setSteps([]);
-    setRoute([]);
-    setArrivalTime("");
-
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
-    );
-    const data = await res.json();
-
-    if (!data.length) {
-      setStatus("見つかりませんでした");
-      return;
-    }
-
-    const loc = {
-      lat: Number(data[0].lat),
-      lng: Number(data[0].lon),
-    };
-
-    setDestination(loc);
-    setDestinationName(data[0].display_name);
-    setMapCenter(loc);
-    setStatus(data[0].display_name);
-  };
+  const visibleStores = useMemo(
+    () => stores.filter((store) => store.chain === activeChain),
+    [stores, activeChain]
+  );
 
   const showCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const loc = {
+        setCurrentLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        };
-
-        setCurrentLocation(loc);
-        setMapCenter(loc);
-        setStatus("現在地を表示しました");
+        });
+        setStatus("現在地を取得しました");
       },
-      () => {
-        setStatus("現在地を取得できませんでした");
-      },
+      () => setStatus("現在地を取得できませんでした"),
       { enableHighAccuracy: true }
     );
   };
 
-  const openGoogleNavigation = (travelMode: string) => {
-    if (!currentLocation || !destination) {
-      setStatus("現在地と目的地を先に設定してください");
-      return;
-    }
-
-    const url =
-      `https://www.google.com/maps/dir/?api=1` +
-      `&origin=${currentLocation.lat},${currentLocation.lng}` +
-      `&destination=${destination.lat},${destination.lng}` +
-      `&travelmode=${travelMode}`;
-
-    window.open(url, "_blank");
+  const openGoogleRoute = (store: ConvenienceStore) => {
+    setSelectedStore(store);
+    const destination = encodeURIComponent(
+      store.location ? `${store.location.lat},${store.location.lng}` : `${store.name} ${store.address}`
+    );
+    const origin = currentLocation
+      ? `&origin=${currentLocation.lat},${currentLocation.lng}`
+      : "";
+    window.open(
+      `https://www.google.com/maps/dir/?api=1${origin}&destination=${destination}&travelmode=walking`,
+      "_blank"
+    );
   };
 
-  const searchRoute = async () => {
-    if (!currentLocation || !destination) {
-      setStatus("現在地と目的地を先に設定してください");
+  const selectStore = (store: ConvenienceStore) => {
+    setSelectedStore(store);
+    setStatus(`${store.name} を選択しました`);
+  };
+
+  const addStore = async (event: FormEvent) => {
+    event.preventDefault();
+    const mapsUrl = normalizeUrl(newMapsUrl);
+    if (!mapsUrl) {
+      toast.error("Googleマップリンクを入力してください");
       return;
     }
 
-    if (mode === "transit") {
-      setStatus("電車ルートはGoogleマップで開きます");
-      openGoogleNavigation("transit");
-      return;
-    }
+    const resolved = await resolveMapsUrlMutation.mutateAsync({ url: mapsUrl });
+    const autoName = resolved.name || getStoreNameFromMapsUrl(mapsUrl);
+    const location = resolved.location ?? getLocationFromMapsUrl(mapsUrl) ?? selectedStore.location;
+    const nextStore: ConvenienceStore = {
+      chain: newChain,
+      name: autoName || "店舗名未取得",
+      address: autoName || "Googleマップリンクから登録",
+      mapsUrl: resolved.url,
+      location,
+    };
+    saveStores([...stores, nextStore]);
+    setSelectedStore(nextStore);
+    setActiveChain(newChain);
+    setNewMapsUrl("");
+    toast.success("店舗リンクを追加しました");
+  };
 
-    setStatus(`${modeLabel[mode]}ルート検索中...`);
-    setSteps([]);
-    setArrivalTime("");
-
-    const url =
-      `https://router.project-osrm.org/route/v1/${mode}/` +
-      `${currentLocation.lng},${currentLocation.lat};${destination.lng},${destination.lat}` +
-      `?overview=full&geometries=geojson&steps=true`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (!data.routes?.length) {
-      setStatus("経路が見つかりませんでした");
-      return;
-    }
-
-    const routePoints = data.routes[0].geometry.coordinates.map(
-      ([lng, lat]: [number, number]) => ({ lat, lng })
-    );
-
-    const routeSteps = data.routes[0].legs[0].steps.map((step: any) => {
-      const distance = Math.round(step.distance);
-      const name = step.name || "道路";
-      const type = step.maneuver.type;
-      const modifier = step.maneuver.modifier;
-
-      let action = "進む";
-      if (modifier === "left") action = "左折";
-      if (modifier === "right") action = "右折";
-      if (modifier === "straight") action = "直進";
-      if (modifier === "slight left") action = "やや左";
-      if (modifier === "slight right") action = "やや右";
-      if (modifier === "sharp left") action = "大きく左折";
-      if (modifier === "sharp right") action = "大きく右折";
-      if (type === "arrive") action = "到着";
-
-      return `${distance}m先、${name}を${action}`;
-    });
-
-    const distanceKm = (data.routes[0].distance / 1000).toFixed(1);
-    const durationMin = Math.round(data.routes[0].duration / 60);
-    const arrival = new Date(Date.now() + data.routes[0].duration * 1000);
-    const hh = String(arrival.getHours()).padStart(2, "0");
-    const mm = String(arrival.getMinutes()).padStart(2, "0");
-
-    setRoute(routePoints);
-    setSteps(routeSteps);
-    setMapCenter(currentLocation);
-    setArrivalTime(`${hh}:${mm}`);
-    setStatus(`${modeLabel[mode]} / 距離: ${distanceKm}km / 目安: ${durationMin}分 / 到着予定: ${hh}:${mm}`);
+  const deleteStore = (storeName: string) => {
+    const nextStores = stores.filter((store) => store.name !== storeName);
+    saveStores(nextStores);
+    const fallback = nextStores.find((store) => store.chain === activeChain) ?? nextStores[0] ?? defaultStores[0];
+    setSelectedStore(fallback);
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">マップ</h1>
-
+    <div className="space-y-6">
       <div className="space-y-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="住所・場所を検索"
-          className="w-full rounded border p-3 bg-background"
-        />
+        <h1 className="text-2xl font-black tracking-tight text-foreground">
+          <span className="glitch-text" data-text="コンビニマップ">コンビニマップ</span>
+        </h1>
+        <p className="mono-sub">// CONVENIENCE_STORE_ROUTE</p>
+      </div>
 
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value as TravelMode)}
-          className="w-full rounded border p-3 bg-background"
-        >
-          <option value="driving">車</option>
-          <option value="walking">徒歩</option>
-          <option value="cycling">自転車</option>
-          <option value="transit">電車 Googleマップで開く</option>
-        </select>
+      <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+        <div className="space-y-4">
+          <button
+            onClick={showCurrentLocation}
+            className="w-full cyber-border rounded-lg p-3 bg-card flex items-center justify-center gap-2 text-sm text-primary hover:bg-primary/10 transition-colors"
+          >
+            <LocateFixed className="h-4 w-4" />
+            現在地を使う
+          </button>
 
-        <button onClick={searchLocation} className="w-full rounded border p-3">
-          目的地を検索
-        </button>
-
-        <button onClick={showCurrentLocation} className="w-full rounded border p-3">
-          現在地を表示
-        </button>
-
-        <button onClick={searchRoute} className="w-full rounded border p-3">
-          経路・到着時間を表示
-        </button>
-
-        {arrivalTime && (
-          <div className="rounded border p-3">
-            <p className="text-sm">到着予定</p>
-            <p className="text-2xl font-bold">{arrivalTime}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {chains.map((chain) => (
+              <button
+                key={chain}
+                onClick={() => {
+                  setActiveChain(chain);
+                  const first = stores.find((store) => store.chain === chain);
+                  if (first) setSelectedStore(first);
+                }}
+                className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                  activeChain === chain
+                    ? "border-primary/50 bg-primary/15 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {chain}
+              </button>
+            ))}
           </div>
-        )}
 
-        {status && <p className="text-sm text-muted-foreground">{status}</p>}
-        {destinationName && <p className="text-xs text-muted-foreground">{destinationName}</p>}
-      </div>
+          <div className="space-y-2">
+            {visibleStores.map((store) => (
+              <div key={store.name} className="cyber-border rounded-lg bg-card p-3 space-y-2">
+                <button
+                  onClick={() => selectStore(store)}
+                  className="w-full text-left flex items-start gap-3"
+                >
+                  <Store className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-foreground">{store.name}</span>
+                    <span className="block text-xs text-muted-foreground mt-1">{store.address}</span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => openGoogleRoute(store)}
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Googleマップで経路表示
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => deleteStore(store.name)}
+                    className="ml-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    削除
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <button onClick={() => openGoogleNavigation("driving")} className="rounded border p-3">
-          車でナビ
-        </button>
-        <button onClick={() => openGoogleNavigation("walking")} className="rounded border p-3">
-          徒歩ナビ
-        </button>
-        <button onClick={() => openGoogleNavigation("transit")} className="rounded border p-3">
-          電車ナビ
-        </button>
-      </div>
+          {isAdmin && (
+            <form onSubmit={addStore} className="cyber-border rounded-lg bg-card p-3 space-y-3">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <Plus className="h-4 w-4 text-primary" />
+                店舗リンク追加
+              </div>
+              <select
+                value={newChain}
+                onChange={(event) => setNewChain(event.target.value as ConvenienceStore["chain"])}
+                className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
+              >
+                {chains.map((chain) => <option key={chain} value={chain}>{chain}</option>)}
+              </select>
+              <input
+                value={newMapsUrl}
+                onChange={(event) => setNewMapsUrl(event.target.value)}
+                placeholder="Googleマップリンク"
+                className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
+              />
+              <Button type="submit" size="sm" disabled={resolveMapsUrlMutation.isPending}>
+                {resolveMapsUrlMutation.isPending ? "取得中..." : "追加"}
+              </Button>
+            </form>
+          )}
 
-      <div className="h-[500px] overflow-hidden rounded-lg border">
-        <MapView
-          className="h-full w-full"
-          initialCenter={mapCenter}
-          initialZoom={15}
-          currentLocation={currentLocation}
-          destination={destination}
-          route={route}
-        />
-      </div>
-
-      {steps.length > 0 && (
-        <div className="rounded border p-3 space-y-2">
-          <h2 className="font-bold">ナビ案内</h2>
-          {steps.map((step, index) => (
-            <p key={index} className="text-sm">
-              {index + 1}. {step}
-            </p>
-          ))}
+          {status && <p className="text-sm text-muted-foreground">{status}</p>}
         </div>
-      )}
+
+      <div className="space-y-3">
+        <div className="cyber-border rounded-lg bg-card p-3 space-y-2">
+          <div className="flex items-start gap-3">
+            <Store className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground">{selectedStore.name}</p>
+              <p className="text-xs text-muted-foreground">{selectedStore.address}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 ml-8">
+            <button
+              type="button"
+              onClick={() => openGoogleRoute(selectedStore)}
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Googleマップで経路表示
+            </button>
+
+            {isAdmin && stores.some((store) => store.name === selectedStore.name) && (
+              <button
+                type="button"
+                onClick={() => deleteStore(selectedStore.name)}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+                削除
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="h-[560px] overflow-hidden rounded-lg border border-border">
+          <MapView
+            className="h-full w-full"
+            initialCenter={selectedStore.location}
+            initialZoom={16}
+            currentLocation={currentLocation}
+            destination={selectedStore.location}
+            route={[]}
+          />
+        </div>
+      </div>
+      </div>
     </div>
   );
 }
+

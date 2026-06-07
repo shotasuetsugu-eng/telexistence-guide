@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, CheckSquare, Square } from "lucide-react";
+import { ArrowLeft, CheckSquare, ExternalLink, Square } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { useState, useEffect, useCallback } from "react";
 
@@ -17,6 +17,15 @@ function loadCheckedItems(checklistId: number): Set<number> {
 
 function saveCheckedItems(checklistId: number, items: Set<number>) {
   localStorage.setItem(getStorageKey(checklistId), JSON.stringify(Array.from(items)));
+}
+
+function splitAttachment(content: string) {
+  const match = content.match(/\n添付:\s*(\S+)$/);
+  if (!match) return { text: content, url: "" };
+  return {
+    text: content.slice(0, match.index).trim(),
+    url: match[1],
+  };
 }
 
 export default function ChecklistDetail() {
@@ -118,23 +127,40 @@ export default function ChecklistDetail() {
         <div className="space-y-2">
           {checklist.items.map((item) => {
             const isChecked = checkedItems.has(item.id);
+            const attachment = splitAttachment(item.content);
             return (
-              <button
+              <div
                 key={item.id}
-                onClick={() => toggleItem(item.id)}
-                className={`w-full cyber-border rounded-lg p-4 bg-card text-left transition-all flex items-center gap-3 ${
+                className={`w-full cyber-border rounded-lg p-4 bg-card text-left transition-all flex items-start gap-3 ${
                   isChecked ? "border-cyber-green/40 bg-cyber-green/5" : "hover:bg-card/80"
                 }`}
               >
-                {isChecked ? (
-                  <CheckSquare className="h-5 w-5 text-cyber-green shrink-0" />
-                ) : (
-                  <Square className="h-5 w-5 text-muted-foreground shrink-0" />
-                )}
-                <span className={`text-sm ${isChecked ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                  {item.content}
-                </span>
-              </button>
+                <button onClick={() => toggleItem(item.id)} className="mt-0.5">
+                  {isChecked ? (
+                    <CheckSquare className="h-5 w-5 text-cyber-green shrink-0" />
+                  ) : (
+                    <Square className="h-5 w-5 text-muted-foreground shrink-0" />
+                  )}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <button onClick={() => toggleItem(item.id)} className="block text-left">
+                    <span className={`text-sm whitespace-pre-wrap ${isChecked ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {attachment.text}
+                    </span>
+                  </button>
+                  {attachment.url && (
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-2 text-xs text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      添付ファイルを開く
+                    </a>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

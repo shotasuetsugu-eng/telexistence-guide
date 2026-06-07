@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 
 export default function ProcedureDetail() {
@@ -78,11 +78,23 @@ export default function ProcedureDetail() {
                       <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{step.description}</p>
                     )}
                     {step.imageUrl && (
-                      <img
-                        src={step.imageUrl}
-                        alt={step.title}
-                        className="mt-3 rounded-md max-w-full h-auto border border-border"
-                      />
+                      step.imageUrl.match(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i) || step.imageUrl.startsWith("data:image/") ? (
+                        <img
+                          src={step.imageUrl}
+                          alt={step.title}
+                          className="mt-3 rounded-md max-w-full h-auto border border-border"
+                        />
+                      ) : (
+                        <a
+                          href={step.imageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          添付ファイルを開く
+                        </a>
+                      )
                     )}
                   </div>
                 </div>

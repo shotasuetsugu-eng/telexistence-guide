@@ -17,6 +17,38 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+function normalizeGoogleMapsUrl(url: string) {
+  const value = url.trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+function parseGoogleMapsUrl(url: string) {
+  const decoded = decodeURIComponent(url);
+  const locationPatterns = [
+    /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /[?&]query=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /[?&]destination=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+  ];
+  const placeMatch = decoded.match(/\/place\/([^/@?]+)/);
+  const queryMatch = decoded.match(/[?&](?:query|q)=([^&]+)/);
+  const name = placeMatch?.[1]?.replace(/\+/g, " ").trim()
+    || queryMatch?.[1]?.replace(/\+/g, " ").trim()
+    || "";
+  for (const pattern of locationPatterns) {
+    const match = decoded.match(pattern);
+    if (match) {
+      return {
+        name,
+        location: { lat: Number(match[1]), lng: Number(match[2]) },
+      };
+    }
+  }
+  return { name, location: null };
+}
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -297,6 +329,22 @@ export const appRouter = router({
     }),
   }),
 
+  // ===== ASSETS =====
+  assets: router({
+    upload: adminProcedure.input(z.object({
+      folder: z.enum(["procedures", "checklists"]).default("procedures"),
+      fileName: z.string().min(1),
+      fileData: z.string(),
+      mimeType: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const buffer = Buffer.from(input.fileData, "base64");
+      const safeName = input.fileName.replace(/[^\w.\-()[\]\s]/g, "_");
+      const fileKey = `${input.folder}/${Date.now()}-${safeName}`;
+      const { url } = await storagePut(fileKey, buffer, input.mimeType || "application/octet-stream");
+      return { fileKey, url };
+    }),
+  }),
+
   // ===== SEARCH =====
   search: router({
     query: publicProcedure.input(z.object({ q: z.string().min(1) })).query(async ({ input }) => {
@@ -306,6 +354,48 @@ export const appRouter = router({
 
   // ===== GOOGLE MAPS =====
   maps: router({
+    resolveGoogleMapsUrl: adminProcedure
+      .input(z.object({ url: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const originalUrl = normalizeGoogleMapsUrl(input.url);
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(originalUrl);
+        } catch {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Googleマップリンクを入力してください" });
+        }
+
+        const allowedHosts = new Set([
+          "maps.app.goo.gl",
+          "www.google.com",
+          "google.com",
+          "maps.google.com",
+        ]);
+        if (parsedUrl.protocol !== "https:" || !allowedHosts.has(parsedUrl.hostname)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "GoogleマップのURLのみ登録できます" });
+        }
+
+        let finalUrl = originalUrl;
+        try {
+          for (let i = 0; i < 5; i++) {
+            const response = await fetch(finalUrl, { method: "HEAD", redirect: "manual" });
+            const location = response.headers.get("location");
+            if (!location) break;
+            const nextUrl = new URL(location, finalUrl);
+            if (!allowedHosts.has(nextUrl.hostname)) break;
+            finalUrl = nextUrl.toString();
+          }
+        } catch {
+          finalUrl = originalUrl;
+        }
+
+        const parsed = parseGoogleMapsUrl(finalUrl);
+        return {
+          url: finalUrl,
+          name: parsed.name,
+          location: parsed.location,
+        };
+      }),
     geocode: publicProcedure
       .input(z.object({ address: z.string().min(1) }))
       .query(async ({ input }) => {

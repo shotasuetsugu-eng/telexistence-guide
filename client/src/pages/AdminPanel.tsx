@@ -7,6 +7,15 @@ import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Sa
 
 type Tab = "categories" | "procedures" | "checklists" | "documents";
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function PasswordLoginForm() {
   const [password, setPassword] = useState("");
   const loginMutation = trpc.auth.loginWithPassword.useMutation({
@@ -243,6 +252,9 @@ function ProceduresAdmin() {
     onSuccess: () => { utils.procedureSteps.list.invalidate(); toast.success("ステップを更新しました"); setEditingStepId(null); },
     onError: (err) => toast.error(err.message),
   });
+  const uploadAssetMutation = trpc.assets.upload.useMutation({
+    onError: (err) => toast.error(err.message),
+  });
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -256,10 +268,12 @@ function ProceduresAdmin() {
   const [stepTitle, setStepTitle] = useState("");
   const [stepDescription, setStepDescription] = useState("");
   const [stepImageUrl, setStepImageUrl] = useState("");
+  const [stepFile, setStepFile] = useState<File | null>(null);
   const [editingStepId, setEditingStepId] = useState<number | null>(null);
   const [editStepTitle, setEditStepTitle] = useState("");
   const [editStepDescription, setEditStepDescription] = useState("");
   const [editStepImageUrl, setEditStepImageUrl] = useState("");
+  const [editStepFile, setEditStepFile] = useState<File | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,18 +300,50 @@ function ProceduresAdmin() {
     { enabled: expandedProcId !== null }
   );
 
-  const handleAddStep = (e: React.FormEvent) => {
+  const handleAddStep = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expandedProcId || !stepTitle.trim()) return;
     const nextStepNum = (stepsData?.length ?? 0) + 1;
+    let uploadedUrl = stepImageUrl.trim();
+    if (stepFile) {
+      const uploaded = await uploadAssetMutation.mutateAsync({
+        folder: "procedures",
+        fileName: stepFile.name,
+        fileData: await fileToBase64(stepFile),
+        mimeType: stepFile.type || undefined,
+      });
+      uploadedUrl = uploaded.url;
+    }
     createStepMutation.mutate({
       procedureId: expandedProcId,
       stepNumber: nextStepNum,
       title: stepTitle.trim(),
       description: stepDescription.trim() || undefined,
-      imageUrl: stepImageUrl.trim() || undefined,
+      imageUrl: uploadedUrl || undefined,
     });
-    setStepTitle(""); setStepDescription(""); setStepImageUrl("");
+    setStepTitle(""); setStepDescription(""); setStepImageUrl(""); setStepFile(null);
+    const input = document.getElementById("procedure-step-file") as HTMLInputElement | null;
+    if (input) input.value = "";
+  };
+
+  const handleUpdateStep = async (stepId: number) => {
+    let uploadedUrl = editStepImageUrl.trim();
+    if (editStepFile) {
+      const uploaded = await uploadAssetMutation.mutateAsync({
+        folder: "procedures",
+        fileName: editStepFile.name,
+        fileData: await fileToBase64(editStepFile),
+        mimeType: editStepFile.type || undefined,
+      });
+      uploadedUrl = uploaded.url;
+    }
+    updateStepMutation.mutate({
+      id: stepId,
+      title: editStepTitle.trim() || undefined,
+      description: editStepDescription.trim() || undefined,
+      imageUrl: uploadedUrl || undefined,
+    });
+    setEditStepFile(null);
   };
 
   return (
@@ -375,8 +421,10 @@ function ProceduresAdmin() {
                                     className="w-full px-2 py-1 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                                   <input type="text" value={editStepImageUrl} onChange={(e) => setEditStepImageUrl(e.target.value)} placeholder="画像URL"
                                     className="w-full px-2 py-1 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                                  <input type="file" onChange={(e) => setEditStepFile(e.target.files?.[0] ?? null)}
+                                    className="w-full px-2 py-1 rounded bg-input border border-border text-foreground text-xs file:mr-2 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
                                   <div className="flex gap-1">
-                                    <Button size="sm" onClick={() => updateStepMutation.mutate({ id: step.id, title: editStepTitle.trim() || undefined, description: editStepDescription.trim() || undefined, imageUrl: editStepImageUrl.trim() || undefined })} disabled={updateStepMutation.isPending}>
+                                    <Button size="sm" onClick={() => handleUpdateStep(step.id)} disabled={updateStepMutation.isPending || uploadAssetMutation.isPending}>
                                       <Save className="h-3 w-3 mr-1" />保存
                                     </Button>
                                     <Button size="sm" variant="outline" onClick={() => setEditingStepId(null)}><X className="h-3 w-3" /></Button>
@@ -386,7 +434,7 @@ function ProceduresAdmin() {
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs text-foreground"><span className="text-primary font-bold mr-1">{step.stepNumber}.</span>{step.title}</span>
                                   <div className="flex gap-1">
-                                    <button onClick={() => { setEditingStepId(step.id); setEditStepTitle(step.title); setEditStepDescription(step.description || ""); setEditStepImageUrl(step.imageUrl || ""); }}
+                                    <button onClick={() => { setEditingStepId(step.id); setEditStepTitle(step.title); setEditStepDescription(step.description || ""); setEditStepImageUrl(step.imageUrl || ""); setEditStepFile(null); }}
                                       className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
                                       <Edit className="h-3 w-3" />
                                     </button>
@@ -408,8 +456,10 @@ function ProceduresAdmin() {
                           className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                         <input type="text" value={stepImageUrl} onChange={(e) => setStepImageUrl(e.target.value)} placeholder="画像URL（任意）"
                           className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                        <Button type="submit" size="sm" disabled={createStepMutation.isPending}>
-                          {createStepMutation.isPending ? "追加中..." : "ステップ追加"}
+                        <input id="procedure-step-file" type="file" onChange={(e) => setStepFile(e.target.files?.[0] ?? null)}
+                          className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground text-xs file:mr-2 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+                        <Button type="submit" size="sm" disabled={createStepMutation.isPending || uploadAssetMutation.isPending}>
+                          {createStepMutation.isPending || uploadAssetMutation.isPending ? "追加中..." : "ステップ追加"}
                         </Button>
                       </form>
                     </div>
@@ -449,6 +499,9 @@ function ChecklistsAdmin() {
     onSuccess: () => { utils.checklists.list.invalidate(); toast.success("項目を削除しました"); },
     onError: (err) => toast.error(err.message),
   });
+  const uploadAssetMutation = trpc.assets.upload.useMutation({
+    onError: (err) => toast.error(err.message),
+  });
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -458,6 +511,7 @@ function ChecklistsAdmin() {
   const [editDescription, setEditDescription] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [itemContent, setItemContent] = useState("");
+  const [itemFile, setItemFile] = useState<File | null>(null);
 
   const { data: itemsData } = trpc.checklistItems.list.useQuery(
     { checklistId: expandedId! },
@@ -482,11 +536,24 @@ function ChecklistsAdmin() {
     updateMutation.mutate({ id: editingId, title: editTitle.trim(), description: editDescription.trim() || undefined });
   };
 
-  const handleAddItem = (e: React.FormEvent) => {
+  const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expandedId || !itemContent.trim()) return;
-    createItemMutation.mutate({ checklistId: expandedId, content: itemContent.trim() });
+    let content = itemContent.trim();
+    if (itemFile) {
+      const uploaded = await uploadAssetMutation.mutateAsync({
+        folder: "checklists",
+        fileName: itemFile.name,
+        fileData: await fileToBase64(itemFile),
+        mimeType: itemFile.type || undefined,
+      });
+      content = `${content}\n添付: ${uploaded.url}`;
+    }
+    createItemMutation.mutate({ checklistId: expandedId, content });
     setItemContent("");
+    setItemFile(null);
+    const input = document.getElementById("checklist-item-file") as HTMLInputElement | null;
+    if (input) input.value = "";
   };
 
   return (
@@ -560,10 +627,14 @@ function ChecklistsAdmin() {
                           ))}
                         </div>
                       )}
-                      <form onSubmit={handleAddItem} className="flex gap-2">
+                      <form onSubmit={handleAddItem} className="grid gap-2 md:grid-cols-[1fr_220px_auto]">
                         <input type="text" value={itemContent} onChange={(e) => setItemContent(e.target.value)} placeholder="チェック項目"
-                          className="flex-1 px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" required />
-                        <Button type="submit" size="sm" disabled={createItemMutation.isPending}>追加</Button>
+                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+                        <input id="checklist-item-file" type="file" onChange={(e) => setItemFile(e.target.files?.[0] ?? null)}
+                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground text-xs file:mr-2 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+                        <Button type="submit" size="sm" disabled={createItemMutation.isPending || uploadAssetMutation.isPending}>
+                          {createItemMutation.isPending || uploadAssetMutation.isPending ? "追加中..." : "追加"}
+                        </Button>
                       </form>
                     </div>
                   )}
