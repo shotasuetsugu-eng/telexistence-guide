@@ -1,19 +1,29 @@
-const CACHE_NAME = "tx-guide-force-refresh-20260607-2";
-
-self.addEventListener("install", (event) => {
+self.addEventListener("install", function(event) {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", function(event) {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
+      .then(function(keys) {
+        return Promise.all(keys.map(function(key) {
+          return caches.delete(key);
+        }));
+      })
+      .then(function() {
+        return self.registration.unregister();
+      })
+      .then(function() {
+        return self.clients.matchAll();
+      })
+      .then(function(clients) {
+        clients.forEach(function(client) {
+          client.navigate(client.url);
+        });
+      })
   );
 });
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    fetch(event.request, { cache: "no-store" }).catch(() => fetch(event.request))
-  );
+self.addEventListener("fetch", function(event) {
+  event.respondWith(fetch(event.request));
 });

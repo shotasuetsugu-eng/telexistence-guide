@@ -22,15 +22,27 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
    
-      <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js?v=20260607-2").catch(console.error);
-        });
-      }
-    </script>
-  </body>
+      
+  <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      registrations.forEach(function(registration) {
+        registration.unregister();
+      });
+    });
+  }
+
+  if (window.caches) {
+    caches.keys().then(function(keys) {
+      keys.forEach(function(key) {
+        caches.delete(key);
+      });
+    });
+  }
+</script>
+</body>
 
 </html>
+
 
 
