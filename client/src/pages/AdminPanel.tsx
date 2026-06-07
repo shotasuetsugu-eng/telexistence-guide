@@ -262,6 +262,7 @@ function ProceduresAdmin() {
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [content, setContent] = useState("");
+  const [procedureFile, setProcedureFile] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -868,6 +869,7 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
 
 
 
