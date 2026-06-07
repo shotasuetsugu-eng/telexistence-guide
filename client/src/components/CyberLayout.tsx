@@ -24,7 +24,8 @@ const publicNavItems = [
 ];
 
 const integrationNavItems = [
-  { icon: LayoutDashboard, label: "Shift", path: "/shift" },
+    { path: "/Wifi-setup", label: "ルーター設定", icon: Wifi },
+{ icon: LayoutDashboard, label: "Shift", path: "/shift" },
   { icon: HardDrive, label: "店舗一覧", path: "/stores" },
   { icon: Map, label: "マップ", path: "/map" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/integrations" },
@@ -237,6 +238,8 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+
 
 
 
