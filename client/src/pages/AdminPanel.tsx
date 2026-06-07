@@ -279,8 +279,8 @@ function ProceduresAdmin() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !categoryId) return;
-    createMutation.mutate({ categoryId: Number(categoryId), title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
+    if (!title.trim()) return;
+    createMutation.mutate({ categoryId: categoryId ? Number(categoryId) : undefined, title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
     setTitle(""); setDescription(""); setContent("");
   };
 
@@ -522,8 +522,8 @@ function ChecklistsAdmin() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !categoryId) return;
-    createMutation.mutate({ categoryId: Number(categoryId), title: title.trim(), description: description.trim() || undefined });
+    if (!title.trim()) return;
+    createMutation.mutate({ categoryId: categoryId ? Number(categoryId) : undefined, title: title.trim(), description: description.trim() || undefined });
     setTitle(""); setDescription("");
   };
 
@@ -683,7 +683,7 @@ function DocumentsAdmin() {
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
       uploadMutation.mutate({
-        categoryId: Number(categoryId), title: title.trim(), description: description.trim() || undefined,
+        categoryId: categoryId ? Number(categoryId) : undefined, title: title.trim(), description: description.trim() || undefined,
         fileName: file.name, fileData: base64, mimeType: file.type || undefined, fileSize: file.size,
       });
       setTitle(""); setDescription(""); setFile(null);
@@ -871,6 +871,9 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
+
+
 
 
 
