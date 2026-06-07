@@ -189,7 +189,7 @@ function CategoriesAdmin() {
                 <div className="space-y-2">
                   <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="説明"
+                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}>
@@ -376,9 +376,9 @@ function ProceduresAdmin() {
                 <div className="p-3 space-y-2">
                   <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="説明"
+                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} placeholder="本文" rows={3}
+                  <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} placeholder="使用しません" rows={3}
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}><Save className="h-3 w-3 mr-1" />保存</Button>
@@ -419,7 +419,7 @@ function ProceduresAdmin() {
                                 <div className="space-y-1.5">
                                   <input type="text" value={editStepTitle} onChange={(e) => setEditStepTitle(e.target.value)}
                                     className="w-full px-2 py-1 rounded bg-input border border-border text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                                  <input type="text" value={editStepDescription} onChange={(e) => setEditStepDescription(e.target.value)} placeholder="説明"
+                                  <input type="text" value={editStepDescription} onChange={(e) => setEditStepDescription(e.target.value)} placeholder="リンクURL"
                                     className="w-full px-2 py-1 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                                   <input type="text" value={editStepImageUrl} onChange={(e) => setEditStepImageUrl(e.target.value)} placeholder="画像URL"
                                     className="w-full px-2 py-1 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
@@ -584,7 +584,7 @@ function ChecklistsAdmin() {
                 <div className="p-3 space-y-2">
                   <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="説明"
+                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}><Save className="h-3 w-3 mr-1" />保存</Button>
@@ -734,7 +734,7 @@ function DocumentsAdmin() {
                 <div className="space-y-2">
                   <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="説明"
+                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}><Save className="h-3 w-3 mr-1" />保存</Button>
@@ -871,5 +871,8 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
+
+
 
 
