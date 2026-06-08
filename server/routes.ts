@@ -318,3 +318,4 @@ export async function searchAll(query: string) {
 
   return { procedures: procedureResults, checklists: checklistResults, documents: documentResults };
 }
+
