@@ -13,6 +13,7 @@ export default function RouterSetup() {
 const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
+  const [showRouterFrame, setShowRouterFrame] = useState(false);
   const routerIp = "192.168.200.1";
   const [pcIp, setPcIp] = useState("192.168.200.10");
   const [prefixLength, setPrefixLength] = useState("24");
@@ -175,7 +176,11 @@ Read-Host
   };
 
   const openRouter = () => {
-    window.open(`http://${routerIp}`, "_blank", "noopener,noreferrer");
+    setShowRouterFrame(true);
+  };
+
+  const openRouterNewTab = () => {
+    window.open(routerUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -311,15 +316,29 @@ Read-Host
           PowerShellはPC側の固定IPとDNSを自動設定し、TP-Link管理画面を開きます。SSIDやDHCPはコピーされた値を管理画面へ入力してください。
         </p>
       </section>
+      {showRouterFrame && (
+        <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-foreground">TP-Link 管理画面</h2>
+            <button
+              onClick={openRouterNewTab}
+              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
+            >
+              別タブで開く
+            </button>
+          </div>
+
+          <iframe
+            title="TP-Link Router Admin"
+            src={routerUrl}
+            className="w-full h-[720px] rounded-md border border-border bg-background"
+          />
+
+          <p className="text-sm text-muted-foreground">
+            表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
+          </p>
+        </section>
+      )}
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
