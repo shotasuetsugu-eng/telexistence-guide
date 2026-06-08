@@ -10,6 +10,7 @@ type StaticDevice = {
 
 export default function RouterSetup() {
   const [storeType, setStoreType] = useState<StoreType>("SEJ");
+  const [showNetworkBasicFrame, setShowNetworkBasicFrame] = useState(false);
 const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
@@ -180,9 +181,20 @@ Read-Host
     setShowRouterFrame(true);
   };
 
+  const openNetworkBasicNewTab = () => {
+    window.open(networkBasicUrl, "_blank", "noopener,noreferrer");
+  };
+
+
+  const showNetworkBasicPage = () => {
+    setShowNetworkBasicFrame(true);
+  };
+
+
 const openRouterNewTab = () => {
     window.open(routerUrl, "_blank", "noopener,noreferrer");
   };
+
 
 return (
     <div className="space-y-6">
@@ -343,6 +355,10 @@ return (
     </div>
   );
 }
+
+
+
+
 
 
 
