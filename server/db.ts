@@ -199,10 +199,21 @@ export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
+  // categoryId固定はやめる。本番DBに存在するカテゴリIDを必ず作って使う。
+  const createdCategory = await db
+    .insert(categories)
+    .values({
+      name: "チェックリスト",
+      sortOrder: 999,
+    })
+    .returning({ id: categories.id });
+
+  const categoryId = createdCategory[0].id;
+
   const result = await db
     .insert(checklists)
     .values({
-      categoryId: typeof data.categoryId === "number" ? data.categoryId : 1,
+      categoryId,
       title: data.title,
       description: data.description ?? null,
       sortOrder: data.sortOrder ?? 0,
@@ -376,6 +387,7 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
 
 
 
