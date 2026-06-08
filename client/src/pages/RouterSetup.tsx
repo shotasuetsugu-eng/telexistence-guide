@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+type StoreType = "SEJ" | "FM";
+
 type StaticDevice = {
   name: string;
   mac: string;
@@ -7,7 +9,8 @@ type StaticDevice = {
 };
 
 export default function RouterSetup() {
-  const [ssid, setSsid] = useState("TX-SCARA");
+  const [storeType, setStoreType] = useState<StoreType>("SEJ");
+const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("");
   const routerIp = "192.168.200.1";
   const [pcIp, setPcIp] = useState("192.168.200.10");
@@ -36,8 +39,22 @@ export default function RouterSetup() {
   const removeDevice = (index: number) => {
     setDevices((prev) => prev.filter((_, i) => i !== index));
   };
+  const storeNetworkText =
+    storeType === "SEJ"
+      ? `Store Type: SEJ
+Internet Connection Type: 静的IP
+IP Address: 192.168.97.9
+Subnet Mask: 255.255.255.0
+Gateway: 192.168.97.1
+Primary DNS: 8.8.8.8
+Secondary DNS: 1.1.1.1`
+      : `Store Type: FM
+Internet Connection Type: V6プラス`;
 
-  const settingText = `SSID: ${ssid}
+
+  const settingText = `${storeNetworkText}
+
+SSID: ${ssid}
 Wi-Fi Password: ${wifiPassword}
 Router IP: ${routerIp}
 PC Fixed IP: ${pcIp}
@@ -173,7 +190,18 @@ Read-Host
         <h2 className="text-xl font-semibold text-foreground">TP-Link ルーター設定</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <label className="space-y-1">
+                    <label className="space-y-1 md:col-span-2">
+            <span className="text-sm text-muted-foreground">店舗タイプ</span>
+            <select
+              className="w-full px-3 py-2 rounded-md bg-input border border-border"
+              value={storeType}
+              onChange={(e) => setStoreType(e.target.value as StoreType)}
+            >
+              <option value="SEJ">SEJ</option>
+              <option value="FM">FM</option>
+            </select>
+          </label>
+<label className="space-y-1">
             <span className="text-sm text-muted-foreground">SSID</span>
             <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={ssid} onChange={(e) => setSsid(e.target.value)} />
           </label>
@@ -232,6 +260,46 @@ Read-Host
           </label>
         </div>
       </section>
+      <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <h2 className="text-xl font-semibold text-foreground">
+          {storeType === "SEJ" ? "SEJネットワーク設定" : "FMネットワーク設定"}
+        </h2>
+
+        {storeType === "SEJ" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="text-sm text-muted-foreground">インターネット接続タイプ</div>
+              <div className="font-semibold">静的IP</div>
+            </div>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="text-sm text-muted-foreground">IPアドレス</div>
+              <div className="font-semibold">192.168.97.9</div>
+            </div>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="text-sm text-muted-foreground">サブネットマスク</div>
+              <div className="font-semibold">255.255.255.0</div>
+            </div>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="text-sm text-muted-foreground">ゲートウェイ</div>
+              <div className="font-semibold">192.168.97.1</div>
+            </div>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="text-sm text-muted-foreground">プライマリーDNS</div>
+              <div className="font-semibold">8.8.8.8</div>
+            </div>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="text-sm text-muted-foreground">セカンダリーDNS</div>
+              <div className="font-semibold">1.1.1.1</div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md border border-border bg-input p-3">
+            <div className="text-sm text-muted-foreground">インターネット接続タイプ</div>
+            <div className="font-semibold">V6プラス</div>
+          </div>
+        )}
+      </section>
+
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -275,6 +343,7 @@ Read-Host
     </div>
   );
 }
+
 
 
 
