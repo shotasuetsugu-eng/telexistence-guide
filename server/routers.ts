@@ -152,7 +152,7 @@ export const appRouter = router({
       return { ...procedure, steps };
     }),
     create: adminProcedure.input(z.object({
-      categoryId: z.number(),
+      categoryId: z.number().optional(),
       title: z.string().min(1),
       description: z.string().optional(),
       content: z.string().optional(),
@@ -234,7 +234,7 @@ export const appRouter = router({
       return { ...checklist, items };
     }),
     create: adminProcedure.input(z.object({
-      categoryId: z.number(),
+      categoryId: z.number().optional(),
       title: z.string().min(1),
       description: z.string().optional(),
       sortOrder: z.number().optional(),
@@ -306,7 +306,7 @@ export const appRouter = router({
       return doc;
     }),
     upload: adminProcedure.input(z.object({
-      categoryId: z.number(),
+      categoryId: z.number().optional(),
       title: z.string().min(1),
       description: z.string().optional(),
       fileName: z.string().min(1),
@@ -519,6 +519,7 @@ type DriveFile = {
 };
 
 export type AppRouter = typeof appRouter;
+
 
 
 
