@@ -198,7 +198,7 @@ export async function getChecklistById(id: number) {
 export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(checklists).values(data).returning({ id: checklists.id });
+  const result = await db.insert(checklists).values({ ...data, categoryId: data.categoryId ?? 1 }).returning({ id: checklists.id });
   return { id: result[0].id };
 }
 
@@ -366,4 +366,5 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
 
