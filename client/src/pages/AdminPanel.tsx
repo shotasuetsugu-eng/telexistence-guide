@@ -171,7 +171,7 @@ function CategoriesAdmin() {
           新規カテゴリ
         </h3>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="カテゴリ名"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <Button type="submit" size="sm" disabled={createMutation.isPending}>
@@ -354,11 +354,11 @@ function ProceduresAdmin() {
       <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
           {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="メモ（任意）" rows={3}
@@ -456,7 +456,7 @@ function ProceduresAdmin() {
                       )}
                       <form onSubmit={handleAddStep} className="space-y-2">
                         <input type="text" value={stepTitle} onChange={(e) => setStepTitle(e.target.value)} placeholder="ステップ表示名"
-                          className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+                          className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                         <input type="text" value={stepDescription} onChange={(e) => setStepDescription(e.target.value)} placeholder="リンクURL"
                           className="w-full px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                         <input type="text" value={stepImageUrl} onChange={(e) => setStepImageUrl(e.target.value)} placeholder="画像URL（任意）"
@@ -567,11 +567,11 @@ function ChecklistsAdmin() {
       <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規チェックリスト</h3>
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
           {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input id="checklist-main-file" type="file" onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
@@ -650,7 +650,7 @@ function ChecklistsAdmin() {
                       )}
                       <form onSubmit={handleAddItem} className="grid gap-2 md:grid-cols-[1fr_220px_auto]">
                         <input type="text" value={itemContent} onChange={(e) => setItemContent(e.target.value)} placeholder="チェック項目"
-                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
                         <input id="checklist-item-file" type="file" onChange={(e) => setItemFile(e.target.files?.[0] ?? null)}
                           className="px-2 py-1.5 rounded bg-input border border-border text-foreground text-xs file:mr-2 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
                         <Button type="submit" size="sm" disabled={createItemMutation.isPending || uploadAssetMutation.isPending}>
@@ -729,16 +729,16 @@ function DocumentsAdmin() {
       <form onSubmit={handleUpload} className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2"><Upload className="h-4 w-4 text-primary" />資料アップロード</h3>
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
           {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="資料表示名"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" required />
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input id="file-upload" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary/20 file:text-primary"
-          accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" required />
+          accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" />
         {file && <p className="text-xs text-muted-foreground">選択中: {file.name} ({(file.size / 1024).toFixed(1)} KB)</p>}
         <Button type="submit" size="sm" disabled={uploadMutation.isPending}>{uploadMutation.isPending ? "アップロード中..." : "アップロード"}</Button>
       </form>
@@ -834,7 +834,7 @@ function AdminUsersAdmin() {
             onChange={(event) => setEmail(event.target.value)}
             placeholder="example@tx-inc.com"
             className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            required
+           
           />
 
           <Button type="submit" size="sm" disabled={addMutation.isPending}>
@@ -890,6 +890,8 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
+
 
 
 
