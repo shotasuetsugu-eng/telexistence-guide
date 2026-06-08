@@ -11,10 +11,12 @@ type StaticDevice = {
 export default function RouterSetup() {
   const [storeType, setStoreType] = useState<StoreType>("SEJ");
   const [showNetworkBasicFrame, setShowNetworkBasicFrame] = useState(false);
+  const [showDhcpServerAdvFrame, setShowDhcpServerAdvFrame] = useState(false);
 const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
   const networkBasicUrl = "http://192.168.200.1/#networkBasic";
+  const dhcpServerAdvUrl = "http://192.168.200.1/#dhcpServerAdv";
   const [showRouterFrame, setShowRouterFrame] = useState(false);
   const routerIp = "192.168.200.1";
   const [pcIp, setPcIp] = useState("192.168.200.10");
@@ -189,6 +191,14 @@ Read-Host
     window.open(networkBasicUrl, "_blank", "noopener,noreferrer");
   };
 
+  const showDhcpServerAdvPage = () => {
+    setShowDhcpServerAdvFrame(true);
+  };
+
+  const openDhcpServerAdvNewTab = () => {
+    window.open(dhcpServerAdvUrl, "_blank", "noopener,noreferrer");
+  };
+
 const openRouterNewTab = () => {
     window.open(routerUrl, "_blank", "noopener,noreferrer");
   };
@@ -350,6 +360,44 @@ return (
           固定IPはPDF手順に合わせて固定です。コピーしてTP-Linkのアドレス予約に入力してください。
         </p>
       </section>
+      <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <h2 className="text-xl font-semibold text-foreground">固定IP設定ページ</h2>
+
+        <div className="rounded-md border border-border bg-input p-3">
+          <div className="text-sm text-muted-foreground">TP-Link DHCP / アドレス予約URL</div>
+          <div className="font-semibold break-all">http://192.168.200.1/#dhcpServerAdv</div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={showDhcpServerAdvPage}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+          >
+            下に設定画面を表示
+          </button>
+
+          <button
+            onClick={openDhcpServerAdvNewTab}
+            className="px-4 py-2 rounded-md border border-border hover:bg-muted"
+          >
+            別タブで開く
+          </button>
+        </div>
+
+        {showDhcpServerAdvFrame && (
+          <div className="space-y-2">
+            <iframe
+              title="TP-Link DHCP Server Advanced"
+              src={dhcpServerAdvUrl}
+              className="w-full h-[720px] rounded-md border border-border bg-background"
+            />
+
+            <p className="text-sm text-muted-foreground">
+              表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
+            </p>
+          </div>
+        )}
+      </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h2 className="text-xl font-semibold text-foreground">実行</h2>
@@ -394,6 +442,7 @@ return (
     </div>
   );
 }
+
 
 
 
