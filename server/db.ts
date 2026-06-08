@@ -195,49 +195,24 @@ export async function getChecklistById(id: number) {
   return result[0];
 }
 
-async function ensureChecklistCategoryId() {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-
-  // categories の通常selectで落ちる環境があるため、生SQLで最低限のカテゴリを保証する
-  await db.execute(sql`
-    INSERT INTO categories (name, "sortOrder")
-    VALUES ('Default', 999)
-    ON CONFLICT DO NOTHING
-  `);
-
-  const rows = await db.execute(sql`
-    SELECT id FROM categories
-    ORDER BY id ASC
-    LIMIT 1
-  `);
-
-  const first = Array.isArray(rows) ? rows[0] : (rows as any)?.[0];
-
-  if (first?.id) {
-    return Number(first.id);
-  }
-
-  throw new Error("Failed to ensure default category");
-}
-
 export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
-  const categoryId =
-    typeof data.categoryId === "number" && Number.isFinite(data.categoryId)
-      ? data.categoryId
-      : await ensureChecklistCategoryId();
+  // チェックリストはカテゴリなしで作成できるようにする
+  await db.execute(sql`
+    ALTER TABLE checklists
+    ALTER COLUMN "categoryId" DROP NOT NULL
+  `);
 
   const result = await db
     .insert(checklists)
     .values({
-      categoryId,
+      categoryId: null,
       title: data.title,
       description: data.description ?? null,
       sortOrder: data.sortOrder ?? 0,
-    })
+    } as any)
     .returning({ id: checklists.id });
 
   return { id: result[0].id };
@@ -407,6 +382,7 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
 
 
 
