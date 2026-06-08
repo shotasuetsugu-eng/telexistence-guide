@@ -181,15 +181,13 @@ Read-Host
     setShowRouterFrame(true);
   };
 
-  const openNetworkBasicNewTab = () => {
-    window.open(networkBasicUrl, "_blank", "noopener,noreferrer");
-  };
-
-
   const showNetworkBasicPage = () => {
     setShowNetworkBasicFrame(true);
   };
 
+  const openNetworkBasicNewTab = () => {
+    window.open(networkBasicUrl, "_blank", "noopener,noreferrer");
+  };
 
 const openRouterNewTab = () => {
     window.open(routerUrl, "_blank", "noopener,noreferrer");
@@ -288,6 +286,47 @@ return (
           </div>
         )}
       </section>
+      {storeType === "SEJ" && (
+        <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
+          <h2 className="text-xl font-semibold text-foreground">SEJインターネット設定ページ</h2>
+
+          <div className="rounded-md border border-border bg-input p-3">
+            <div className="text-sm text-muted-foreground">TP-Link インターネット設定URL</div>
+            <div className="font-semibold break-all">http://192.168.200.1/#networkBasic</div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={showNetworkBasicPage}
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+            >
+              下に設定画面を表示
+            </button>
+
+            <button
+              onClick={openNetworkBasicNewTab}
+              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
+            >
+              別タブで開く
+            </button>
+          </div>
+
+          {showNetworkBasicFrame && (
+            <div className="space-y-2">
+              <iframe
+                title="SEJ Network Basic"
+                src={networkBasicUrl}
+                className="w-full h-[720px] rounded-md border border-border bg-background"
+              />
+
+              <p className="text-sm text-muted-foreground">
+                表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
 
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -355,6 +394,7 @@ return (
     </div>
   );
 }
+
 
 
 
