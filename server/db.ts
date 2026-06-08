@@ -199,20 +199,21 @@ async function ensureChecklistCategoryId() {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
+  // 既存カテゴリを名前検索せず、まず1件使う
   const existing = await db
     .select({ id: categories.id })
     .from(categories)
-    .where(eq(categories.name, "チェックリスト"))
     .limit(1);
 
   if (existing.length > 0) {
     return existing[0].id;
   }
 
+  // カテゴリが1件もない場合だけ作成
   const created = await db
     .insert(categories)
     .values({
-      name: "チェックリスト",
+      name: "Default",
       sortOrder: 999,
     })
     .returning({ id: categories.id });
@@ -406,6 +407,7 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
 
 
 
