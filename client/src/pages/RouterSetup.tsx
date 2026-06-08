@@ -49,6 +49,11 @@ DHCP Range: ${dhcpStart} - ${dhcpEnd}
 Static IP Devices:
 ${devices.map((d) => `- ${d.name || "(no name)"} / MAC: ${d.mac || "(empty)"} / IP: ${d.ip || "(empty)"}`).join("\n")}
 `;
+  const fixedIpText = devices
+    .map((d) => `${d.name || "Device"}: ${d.ip || "-"}`)
+    .join("\n");
+
+
 
   const generatePowerShell = () => {
     const deviceNotes = devices
@@ -146,6 +151,11 @@ Read-Host
     alert("設定値をコピーしました");
   };
 
+  const copyFixedIps = async () => {
+    await navigator.clipboard.writeText(fixedIpText);
+    alert("固定IPリストをコピーしました");
+  };
+
   const openRouter = () => {
     window.open(`http://${routerIp}`, "_blank", "noopener,noreferrer");
   };
@@ -226,23 +236,23 @@ Read-Host
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-foreground">固定IPリスト</h2>
-          <button onClick={addDevice} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm">
-            + 追加
+          <button onClick={copyFixedIps} className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm">
+            固定IPをコピー
           </button>
         </div>
 
         <div className="space-y-2">
-          {devices.map((device, index) => (
-            <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-2">
-              <input className="px-3 py-2 rounded-md bg-input border border-border" placeholder="機器名" value={device.name} onChange={(e) => updateDevice(index, "name", e.target.value)} />
-              <input className="px-3 py-2 rounded-md bg-input border border-border" placeholder="MAC Address" value={device.mac} onChange={(e) => updateDevice(index, "mac", e.target.value)} />
-              <input className="px-3 py-2 rounded-md bg-input border border-border" placeholder="固定IP" value={device.ip} onChange={(e) => updateDevice(index, "ip", e.target.value)} />
-              <button onClick={() => removeDevice(index)} className="px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-destructive">
-                削除
-              </button>
+          {devices.map((device) => (
+            <div key={device.name} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <input className="px-3 py-2 rounded-md bg-input border border-border" value={device.name} readOnly />
+              <input className="px-3 py-2 rounded-md bg-input border border-border" value={device.ip} readOnly />
             </div>
           ))}
         </div>
+
+        <p className="text-sm text-muted-foreground">
+          固定IPはPDF手順に合わせて固定です。コピーしてTP-Linkのアドレス予約に入力してください。
+        </p>
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -265,6 +275,7 @@ Read-Host
     </div>
   );
 }
+
 
 
 
