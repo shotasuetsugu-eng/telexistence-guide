@@ -50,6 +50,21 @@ function parseGoogleMapsUrl(url: string) {
 }
 
 export const appRouter = router({
+  adminUsers: router({
+    list: adminProcedure.query(async () => {
+      return db.listAdminEmails();
+    }),
+    add: adminProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        return db.addAdminEmail(input.email);
+      }),
+    remove: adminProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        return db.removeAdminEmail(input.email);
+      }),
+  }),
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -504,6 +519,8 @@ type DriveFile = {
 };
 
 export type AppRouter = typeof appRouter;
+
+
 
 
 
