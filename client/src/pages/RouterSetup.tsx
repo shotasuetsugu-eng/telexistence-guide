@@ -12,6 +12,7 @@ export default function RouterSetup() {
   const [storeType, setStoreType] = useState<StoreType>("SEJ");
 const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
+  const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
   const routerIp = "192.168.200.1";
   const [pcIp, setPcIp] = useState("192.168.200.10");
   const [prefixLength, setPrefixLength] = useState("24");
@@ -313,6 +314,8 @@ Read-Host
     </div>
   );
 }
+
+
 
 
 
