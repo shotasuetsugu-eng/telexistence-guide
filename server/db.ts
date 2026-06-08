@@ -199,16 +199,10 @@ export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
-  // チェックリストはカテゴリなしで作成できるようにする
-  await db.execute(sql`
-    ALTER TABLE checklists
-    ALTER COLUMN "categoryId" DROP NOT NULL
-  `);
-
   const result = await db
     .insert(checklists)
     .values({
-      categoryId: null,
+      categoryId: typeof data.categoryId === "number" ? data.categoryId : 1,
       title: data.title,
       description: data.description ?? null,
       sortOrder: data.sortOrder ?? 0,
@@ -382,6 +376,8 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
+
 
 
 
