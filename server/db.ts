@@ -195,19 +195,44 @@ export async function getChecklistById(id: number) {
   return result[0];
 }
 
+async function ensureChecklistCategoryId() {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  const existing = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.name, "チェックリスト"))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0].id;
+  }
+
+  const created = await db
+    .insert(categories)
+    .values({
+      name: "チェックリスト",
+      sortOrder: 999,
+    })
+    .returning({ id: categories.id });
+
+  return created[0].id;
+}
+
 export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
-  const safeCategoryId =
+  const categoryId =
     typeof data.categoryId === "number" && Number.isFinite(data.categoryId)
       ? data.categoryId
-      : 1;
+      : await ensureChecklistCategoryId();
 
   const result = await db
     .insert(checklists)
     .values({
-      categoryId: safeCategoryId,
+      categoryId,
       title: data.title,
       description: data.description ?? null,
       sortOrder: data.sortOrder ?? 0,
@@ -381,6 +406,7 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
 
 
 
