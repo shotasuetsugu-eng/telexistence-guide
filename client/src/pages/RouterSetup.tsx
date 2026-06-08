@@ -19,8 +19,10 @@ export default function RouterSetup() {
   const [dhcpEnd, setDhcpEnd] = useState("192.168.200.199");
   const [interfaceName, setInterfaceName] = useState("Wi-Fi");
   const [devices, setDevices] = useState<StaticDevice[]>([
-    { name: "IP Camera", mac: "", ip: "192.168.200.20" },
-    { name: "Robot", mac: "", ip: "192.168.200.30" },
+    { name: "Robot", mac: "", ip: "192.168.200.8" },
+    { name: "PICO", mac: "", ip: "192.168.200.90" },
+    { name: "Front Cam / FC", mac: "", ip: "192.168.200.60" },
+    { name: "Back Cam / BC", mac: "", ip: "192.168.200.61" },
   ]);
 
   const updateDevice = (index: number, key: keyof StaticDevice, value: string) => {
@@ -263,4 +265,7 @@ Read-Host
     </div>
   );
 }
+
+
+
 
