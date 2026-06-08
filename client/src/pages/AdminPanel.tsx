@@ -183,6 +183,7 @@ function CategoriesAdmin() {
         <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
       ) : (
         <div className="space-y-2">
+            {categories?.map((cat) => (
             <div key={cat.id} className="cyber-border rounded-lg p-3 bg-card">
               {editingId === cat.id ? (
                 <div className="space-y-2">
@@ -215,6 +216,7 @@ function CategoriesAdmin() {
                 </div>
               )}
             </div>
+          ))}
         </div>
       )}
     </div>
@@ -278,9 +280,9 @@ function ProceduresAdmin() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    createMutation.mutate({ categoryId: undefined, title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
-    setTitle(""); setDescription(""); setContent("");
+    if (!title.trim() || categoryId === "") return;
+    createMutation.mutate({ categoryId, title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
+    setTitle(""); setDescription(""); setContent(""); setCategoryId("");
   };
 
   const startEdit = (proc: { id: number; title: string; description: string | null; content: string | null }) => {
@@ -355,6 +357,11 @@ function ProceduresAdmin() {
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+          <option value="">カテゴリを選択</option>
+          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+        </select>
         <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="メモ（任意）" rows={3}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
         <input id="procedure-main-file" type="file" onChange={(e) => setProcedureFile(e.target.files?.[0] ?? null)}
@@ -520,9 +527,9 @@ function ChecklistsAdmin() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    createMutation.mutate({ categoryId: undefined, title: title.trim(), description: description.trim() || undefined });
-    setTitle(""); setDescription("");
+    if (!title.trim() || categoryId === "") return;
+    createMutation.mutate({ categoryId, title: title.trim(), description: description.trim() || undefined });
+    setTitle(""); setDescription(""); setCategoryId("");
   };
 
   const startEdit = (cl: { id: number; title: string; description: string | null }) => {
@@ -564,6 +571,11 @@ function ChecklistsAdmin() {
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+          <option value="">カテゴリを選択</option>
+          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+        </select>
         <input id="checklist-main-file" type="file" onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
         {checklistFile && <p className="text-xs text-muted-foreground">選択中: {checklistFile.name} ({(checklistFile.size / 1024).toFixed(1)} KB)</p>}
@@ -688,15 +700,15 @@ function DocumentsAdmin() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !file) return;
+    if (!title.trim() || categoryId === "" || !file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
       uploadMutation.mutate({
-        categoryId: undefined, title: title.trim(), description: description.trim() || undefined,
+        categoryId, title: title.trim(), description: description.trim() || undefined,
         fileName: file.name, fileData: base64, mimeType: file.type || undefined, fileSize: file.size,
       });
-      setTitle(""); setDescription(""); setFile(null);
+      setTitle(""); setDescription(""); setCategoryId(""); setFile(null);
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
     };
@@ -722,6 +734,11 @@ function DocumentsAdmin() {
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+          <option value="">カテゴリを選択</option>
+          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+        </select>
         <input id="file-upload" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary/20 file:text-primary"
           accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" />

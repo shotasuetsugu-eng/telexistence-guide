@@ -1,26 +1,4 @@
 import { eq, like, or, desc, asc } from "drizzle-orm";
-}
-  return { procedures: procedureResults, checklists: checklistResults, documents: documentResults };
-  adminUsers: router({
-    list: adminProcedure.query(async () => {
-      return db.listAdminEmails();
-    }),
-
-    add: adminProcedure
-      .input(z.object({ email: z.string().email() }))
-      .mutation(async ({ input }) => {
-        return db.addAdminEmail(input.email);
-      }),
-
-    remove: adminProcedure
-      .input(z.object({ email: z.string().email() }))
-      .mutation(async ({ input }) => {
-        return db.removeAdminEmail(input.email);
-      }),
-  }),
-
-}
-import { eq, like, or, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
@@ -52,6 +30,16 @@ export async function getDb() {
 }
 
 // ===== USER =====
+export async function isAdminEmailAllowed(email?: string | null): Promise<boolean> {
+  if (!email) return false;
+  const normalizedEmail = email.trim().toLowerCase();
+  if (ENV.ownerEmail && normalizedEmail === ENV.ownerEmail) return true;
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
+  return result[0]?.role === "admin";
+}
+
 export async function upsertUser(user: UpsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();

@@ -152,7 +152,7 @@ export const appRouter = router({
       return { ...procedure, steps };
     }),
     create: adminProcedure.input(z.object({
-      categoryId: z.number().optional(),
+      categoryId: z.number(),
       title: z.string().min(1),
       description: z.string().optional(),
       content: z.string().optional(),
@@ -234,7 +234,7 @@ export const appRouter = router({
       return { ...checklist, items };
     }),
     create: adminProcedure.input(z.object({
-      categoryId: z.number().optional(),
+      categoryId: z.number(),
       title: z.string().min(1),
       description: z.string().optional(),
       sortOrder: z.number().optional(),
@@ -306,7 +306,7 @@ export const appRouter = router({
       return doc;
     }),
     upload: adminProcedure.input(z.object({
-      categoryId: z.number().optional(),
+      categoryId: z.number(),
       title: z.string().min(1),
       description: z.string().optional(),
       fileName: z.string().min(1),
@@ -360,6 +360,19 @@ export const appRouter = router({
     }),
   }),
 
+  // ===== LINK SETTINGS =====
+  linkSettings: router({
+    list: publicProcedure.query(async () => {
+      return db.listLinkSettings();
+    }),
+    save: adminProcedure.input(z.array(z.object({
+      key: z.string().min(1),
+      label: z.string().min(1),
+      url: z.string(),
+    }))).mutation(async ({ input }) => {
+      return db.saveLinkSettings(input);
+    }),
+  }),
   // ===== SEARCH =====
   search: router({
     query: publicProcedure.input(z.object({ q: z.string().min(1) })).query(async ({ input }) => {

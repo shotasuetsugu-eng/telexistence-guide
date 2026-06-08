@@ -31,6 +31,16 @@ export async function getDb() {
 }
 
 // ===== USER =====
+export async function isAdminEmailAllowed(email?: string | null): Promise<boolean> {
+  if (!email) return false;
+  const normalizedEmail = email.trim().toLowerCase();
+  if (ENV.ownerEmail && normalizedEmail === ENV.ownerEmail) return true;
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
+  return result[0]?.role === "admin";
+}
+
 export async function upsertUser(user: UpsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
@@ -419,10 +429,10 @@ export async function listSimpleChecklists(): Promise<SimpleChecklistLink[]> {
     .where(eq(linkSettings.key, SIMPLE_CHECKLISTS_KEY))
     .limit(1);
 
-  if (result.length === 0 || !result[0].value) return [];
+  if (result.length === 0 || !result[0].url) return [];
 
   try {
-    const parsed = JSON.parse(result[0].value);
+    const parsed = JSON.parse(result[0].url);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -455,12 +465,14 @@ export async function addSimpleChecklist(data: {
     .insert(linkSettings)
     .values({
       key: SIMPLE_CHECKLISTS_KEY,
-      value: JSON.stringify(next),
+      label: "Simple Checklists",
+      url: JSON.stringify(next),
     })
     .onConflictDoUpdate({
       target: linkSettings.key,
       set: {
-        value: JSON.stringify(next),
+        label: "Simple Checklists",
+      url: JSON.stringify(next),
       },
     });
 
@@ -478,14 +490,43 @@ export async function removeSimpleChecklist(id: string) {
     .insert(linkSettings)
     .values({
       key: SIMPLE_CHECKLISTS_KEY,
-      value: JSON.stringify(next),
+      label: "Simple Checklists",
+      url: JSON.stringify(next),
     })
     .onConflictDoUpdate({
       target: linkSettings.key,
       set: {
-        value: JSON.stringify(next),
+        label: "Simple Checklists",
+      url: JSON.stringify(next),
       },
     });
 
   return { success: true };
+}
+
+export async function listLinkSettings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(linkSettings).orderBy(asc(linkSettings.key));
+}
+
+export async function saveLinkSettings(items: InsertLinkSetting[]) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  for (const item of items) {
+    await db
+      .insert(linkSettings)
+      .values(item)
+      .onConflictDoUpdate({
+        target: linkSettings.key,
+        set: {
+          label: item.label,
+          url: item.url,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  return listLinkSettings();
 }
