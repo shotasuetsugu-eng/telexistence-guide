@@ -397,3 +397,95 @@ export async function removeAdminEmail(email: string) {
 
 
 
+
+export type SimpleChecklistLink = {
+  id: string;
+  title: string;
+  url?: string | null;
+  fileName?: string | null;
+  fileUrl?: string | null;
+  createdAt: string;
+};
+
+const SIMPLE_CHECKLISTS_KEY = "simple_checklists";
+
+export async function listSimpleChecklists(): Promise<SimpleChecklistLink[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select()
+    .from(linkSettings)
+    .where(eq(linkSettings.key, SIMPLE_CHECKLISTS_KEY))
+    .limit(1);
+
+  if (result.length === 0 || !result[0].value) return [];
+
+  try {
+    const parsed = JSON.parse(result[0].value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function addSimpleChecklist(data: {
+  title: string;
+  url?: string | null;
+  fileName?: string | null;
+  fileUrl?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  const current = await listSimpleChecklists();
+
+  const item: SimpleChecklistLink = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    title: data.title,
+    url: data.url ?? null,
+    fileName: data.fileName ?? null,
+    fileUrl: data.fileUrl ?? null,
+    createdAt: new Date().toISOString(),
+  };
+
+  const next = [item, ...current];
+
+  await db
+    .insert(linkSettings)
+    .values({
+      key: SIMPLE_CHECKLISTS_KEY,
+      value: JSON.stringify(next),
+    })
+    .onConflictDoUpdate({
+      target: linkSettings.key,
+      set: {
+        value: JSON.stringify(next),
+      },
+    });
+
+  return item;
+}
+
+export async function removeSimpleChecklist(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  const current = await listSimpleChecklists();
+  const next = current.filter((item) => item.id !== id);
+
+  await db
+    .insert(linkSettings)
+    .values({
+      key: SIMPLE_CHECKLISTS_KEY,
+      value: JSON.stringify(next),
+    })
+    .onConflictDoUpdate({
+      target: linkSettings.key,
+      set: {
+        value: JSON.stringify(next),
+      },
+    });
+
+  return { success: true };
+}
