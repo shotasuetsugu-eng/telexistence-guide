@@ -199,26 +199,26 @@ async function ensureChecklistCategoryId() {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
-  // 既存カテゴリを名前検索せず、まず1件使う
-  const existing = await db
-    .select({ id: categories.id })
-    .from(categories)
-    .limit(1);
+  // categories の通常selectで落ちる環境があるため、生SQLで最低限のカテゴリを保証する
+  await db.execute(sql`
+    INSERT INTO categories (name, "sortOrder")
+    VALUES ('Default', 999)
+    ON CONFLICT DO NOTHING
+  `);
 
-  if (existing.length > 0) {
-    return existing[0].id;
+  const rows = await db.execute(sql`
+    SELECT id FROM categories
+    ORDER BY id ASC
+    LIMIT 1
+  `);
+
+  const first = Array.isArray(rows) ? rows[0] : (rows as any)?.[0];
+
+  if (first?.id) {
+    return Number(first.id);
   }
 
-  // カテゴリが1件もない場合だけ作成
-  const created = await db
-    .insert(categories)
-    .values({
-      name: "Default",
-      sortOrder: 999,
-    })
-    .returning({ id: categories.id });
-
-  return created[0].id;
+  throw new Error("Failed to ensure default category");
 }
 
 export async function createChecklist(data: InsertChecklist) {
@@ -407,6 +407,7 @@ export async function removeAdminEmail(email: string) {
     removed: true,
   };
 }
+
 
 
 
