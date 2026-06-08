@@ -13,6 +13,7 @@ export default function RouterSetup() {
 const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
+  const networkBasicUrl = "http://192.168.200.1/#networkBasic";
   const [showRouterFrame, setShowRouterFrame] = useState(false);
   const routerIp = "192.168.200.1";
   const [pcIp, setPcIp] = useState("192.168.200.10");
@@ -179,11 +180,11 @@ Read-Host
     setShowRouterFrame(true);
   };
 
-  const openRouterNewTab = () => {
+const openRouterNewTab = () => {
     window.open(routerUrl, "_blank", "noopener,noreferrer");
   };
 
-  return (
+return (
     <div className="space-y-6">
       <div>
         <h1 className="glitch-text text-3xl font-bold text-primary" data-text="Router Setup">
@@ -342,3 +343,6 @@ Read-Host
     </div>
   );
 }
+
+
+
