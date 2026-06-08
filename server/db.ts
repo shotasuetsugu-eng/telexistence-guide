@@ -301,3 +301,68 @@ export async function searchAll(query: string) {
 
 
 
+
+export async function listAdminEmails() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.role, "admin"));
+
+  return result
+    .filter((user) => !!user.email)
+    .map((user) => ({
+      email: user.email!,
+      protected: user.email === ENV.ownerEmail,
+    }));
+}
+
+export async function addAdminEmail(email: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, normalizedEmail))
+    .limit(1);
+
+  if (existing.length === 0) {
+    throw new Error("このメールアドレスのユーザーはまだGoogleログインしていません。先に一度ログインしてください。");
+  }
+
+  await db
+    .update(users)
+    .set({ role: "admin" })
+    .where(eq(users.email, normalizedEmail));
+
+  return {
+    email: normalizedEmail,
+    protected: normalizedEmail === ENV.ownerEmail,
+  };
+}
+
+export async function removeAdminEmail(email: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (normalizedEmail === ENV.ownerEmail) {
+    throw new Error("初期管理者は削除できません。");
+  }
+
+  await db
+    .update(users)
+    .set({ role: "user" })
+    .where(eq(users.email, normalizedEmail));
+
+  return {
+    email: normalizedEmail,
+    removed: true,
+  };
+}
