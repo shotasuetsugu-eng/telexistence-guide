@@ -296,9 +296,9 @@ return (
           </div>
         )}
       </section>
-      {storeType === "SEJ" && (
+      {(storeType === "SEJ" || storeType === "FM") && (
         <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">SEJインターネット設定ページ</h2>
+          <h2 className="text-xl font-semibold text-foreground">インターネット設定ページ</h2>
 
           <div className="rounded-md border border-border bg-input p-3">
             <div className="text-sm text-muted-foreground">TP-Link インターネット設定URL</div>
@@ -324,7 +324,7 @@ return (
           {showNetworkBasicFrame && (
             <div className="space-y-2">
               <iframe
-                title="SEJ Network Basic"
+                title="Internet Network Basic"
                 src={networkBasicUrl}
                 className="w-full h-[720px] rounded-md border border-border bg-background"
               />
@@ -442,6 +442,7 @@ return (
     </div>
   );
 }
+
 
 
 
