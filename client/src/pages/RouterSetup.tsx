@@ -11,7 +11,7 @@ type StaticDevice = {
 export default function RouterSetup() {
   const [storeType, setStoreType] = useState<StoreType>("SEJ");
 const [ssid, setSsid] = useState("TX-SCARA");
-  const [wifiPassword, setWifiPassword] = useState("");
+  const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const routerIp = "192.168.200.1";
   const [pcIp, setPcIp] = useState("192.168.200.10");
   const [prefixLength, setPrefixLength] = useState("24");
@@ -190,7 +190,7 @@ Read-Host
         <h2 className="text-xl font-semibold text-foreground">TP-Link ルーター設定</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <label className="space-y-1 md:col-span-2">
+          <label className="space-y-1 md:col-span-2">
             <span className="text-sm text-muted-foreground">店舗タイプ</span>
             <select
               className="w-full px-3 py-2 rounded-md bg-input border border-border"
@@ -201,62 +201,32 @@ Read-Host
               <option value="FM">FM</option>
             </select>
           </label>
-<label className="space-y-1">
+
+          <label className="space-y-1">
             <span className="text-sm text-muted-foreground">SSID</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={ssid} onChange={(e) => setSsid(e.target.value)} />
+            <input
+              className="w-full px-3 py-2 rounded-md bg-input border border-border"
+              value={ssid}
+              onChange={(e) => setSsid(e.target.value)}
+            />
           </label>
 
           <label className="space-y-1">
             <span className="text-sm text-muted-foreground">Wi-Fi Password</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={wifiPassword} onChange={(e) => setWifiPassword(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">ルーター設定ページ</span>
-            <div className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground">
-              http://192.168.200.1
-            </div>
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">PC固定IP</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={pcIp} onChange={(e) => setPcIp(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">Prefix Length</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={prefixLength} onChange={(e) => setPrefixLength(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">Gateway</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={gateway} onChange={(e) => setGateway(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">DNS 1</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={dns1} onChange={(e) => setDns1(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">DNS 2</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={dns2} onChange={(e) => setDns2(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">DHCP開始IP</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={dhcpStart} onChange={(e) => setDhcpStart(e.target.value)} />
-          </label>
-
-          <label className="space-y-1">
-            <span className="text-sm text-muted-foreground">DHCP終了IP</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={dhcpEnd} onChange={(e) => setDhcpEnd(e.target.value)} />
+            <input
+              className="w-full px-3 py-2 rounded-md bg-input border border-border"
+              value={wifiPassword}
+              onChange={(e) => setWifiPassword(e.target.value)}
+            />
           </label>
 
           <label className="space-y-1 md:col-span-2">
-            <span className="text-sm text-muted-foreground">PCネットワーク名</span>
-            <input className="w-full px-3 py-2 rounded-md bg-input border border-border" value={interfaceName} onChange={(e) => setInterfaceName(e.target.value)} />
-            <p className="text-xs text-muted-foreground">通常は Wi-Fi。LANなら Ethernet に変更。</p>
+            <span className="text-sm text-muted-foreground">ルーター設定ページ</span>
+            <input
+              className="w-full px-3 py-2 rounded-md bg-input border border-border"
+              value={routerUrl}
+              onChange={(e) => setRouterUrl(e.target.value)}
+            />
           </label>
         </div>
       </section>
@@ -343,6 +313,7 @@ Read-Host
     </div>
   );
 }
+
 
 
 
