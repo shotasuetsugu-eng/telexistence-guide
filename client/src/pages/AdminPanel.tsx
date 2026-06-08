@@ -183,7 +183,6 @@ function CategoriesAdmin() {
         <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
       ) : (
         <div className="space-y-2">
-          {categories?.map((cat) => (
             <div key={cat.id} className="cyber-border rounded-lg p-3 bg-card">
               {editingId === cat.id ? (
                 <div className="space-y-2">
@@ -216,7 +215,6 @@ function CategoriesAdmin() {
                 </div>
               )}
             </div>
-          ))}
         </div>
       )}
     </div>
@@ -353,10 +351,6 @@ function ProceduresAdmin() {
     <div className="space-y-4">
       <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
-        </select>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
@@ -566,10 +560,6 @@ function ChecklistsAdmin() {
     <div className="space-y-4">
       <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規チェックリスト</h3>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
-        </select>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
@@ -728,10 +718,6 @@ function DocumentsAdmin() {
     <div className="space-y-4">
       <form onSubmit={handleUpload} className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2"><Upload className="h-4 w-4 text-primary" />資料アップロード</h3>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          {categories?.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
-        </select>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="資料表示名"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
@@ -890,6 +876,7 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
 
 
 
