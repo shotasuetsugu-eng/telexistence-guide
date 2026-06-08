@@ -473,100 +473,190 @@ function ProceduresAdmin() {
   );
 }
 
+// ===== CHECKLISTS ADMIN =====
 function ChecklistsAdmin() {
   const utils = trpc.useUtils();
-  const { data: checklists = [], isLoading } = trpc.simpleChecklists.list.useQuery();
-
-  const createMutation = trpc.simpleChecklists.create.useMutation({
-    onSuccess: () => {
-      utils.simpleChecklists.list.invalidate();
-      toast.success("チェックリストを作成しました");
-      setTitle(""); setUrl(""); setFile(null);
-    },
+  const { data: checklists, isLoading } = trpc.checklists.list.useQuery();
+  const { data: categories } = trpc.categories.list.useQuery();
+  const createMutation = trpc.checklists.create.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("チェックリストを作成しました"); },
     onError: (err) => toast.error(err.message),
   });
-
-  const removeMutation = trpc.simpleChecklists.remove.useMutation({
-    onSuccess: () => {
-      utils.simpleChecklists.list.invalidate();
-      toast.success("チェックリストを削除しました");
-    },
+  const updateMutation = trpc.checklists.update.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("チェックリストを更新しました"); setEditingId(null); },
     onError: (err) => toast.error(err.message),
   });
-
-  const uploadMutation = trpc.assets.upload.useMutation();
+  const deleteMutation = trpc.checklists.delete.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("チェックリストを削除しました"); },
+    onError: (err) => toast.error(err.message),
+  });
+  const createItemMutation = trpc.checklistItems.create.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("項目を追加しました"); },
+    onError: (err) => toast.error(err.message),
+  });
+  const deleteItemMutation = trpc.checklistItems.delete.useMutation({
+    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("項目を削除しました"); },
+    onError: (err) => toast.error(err.message),
+  });
+  const uploadAssetMutation = trpc.assets.upload.useMutation({
+    onError: (err) => toast.error(err.message),
+  });
 
   const [title, setTitle] = useState("");
-  const [url, setUrl]     = useState("");
-  const [file, setFile]   = useState<File | null>(null);
+  const [description, setDescription] = useState("");
+  const [checklistFile, setChecklistFile] = useState<File | null>(null);
+  const [categoryId, setCategoryId] = useState<number | "">("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [itemContent, setItemContent] = useState("");
+  const [itemFile, setItemFile] = useState<File | null>(null);
 
-  const handleCreate = async () => {
-    if (!title.trim()) return toast.error("表示名を入力してください");
-    let fileName: string | null = null;
-    let fileUrl:  string | null = null;
-    if (file) {
-      const uploaded = await uploadMutation.mutateAsync({
+  const { data: itemsData } = trpc.checklistItems.list.useQuery(
+    { checklistId: expandedId! },
+    { enabled: expandedId !== null }
+  );
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    createMutation.mutate({ categoryId: undefined, title: title.trim(), description: description.trim() || undefined });
+    setTitle(""); setDescription("");
+  };
+
+  const startEdit = (cl: { id: number; title: string; description: string | null }) => {
+    setEditingId(cl.id);
+    setEditTitle(cl.title);
+    setEditDescription(cl.description || "");
+  };
+
+  const handleUpdate = () => {
+    if (!editingId || !editTitle.trim()) return;
+    updateMutation.mutate({ id: editingId, title: editTitle.trim(), description: editDescription.trim() || undefined });
+  };
+
+  const handleAddItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expandedId || !itemContent.trim()) return;
+    let content = itemContent.trim();
+    if (itemFile) {
+      const uploaded = await uploadAssetMutation.mutateAsync({
         folder: "checklists",
-        fileName: file.name,
-        fileData: await fileToBase64(file),
-        mimeType: file.type || undefined,
+        fileName: itemFile.name,
+        fileData: await fileToBase64(itemFile),
+        mimeType: itemFile.type || undefined,
       });
-      fileName = file.name;
-      fileUrl  = uploaded.url;
+      content = `${content}\n添付: ${uploaded.url}`;
     }
-    createMutation.mutate({ title: title.trim(), url: url.trim() || null, fileName, fileUrl });
+    createItemMutation.mutate({ checklistId: expandedId, content });
+    setItemContent("");
+    setItemFile(null);
+    const input = document.getElementById("checklist-item-file") as HTMLInputElement | null;
+    if (input) input.value = "";
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold">チェックリスト管理</h2>
-      <div className="bg-card border rounded-lg p-4 space-y-3">
-        <h3 className="font-semibold">新規作成</h3>
-        <div>
-          <label className="text-sm font-medium">表示名 *</label>
-          <input className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
-            value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例: Deployチェックリスト" />
-        </div>
-        <div>
-          <label className="text-sm font-medium">リンクURL</label>
-          <input className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
-            value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
-        </div>
-        <div>
-          <label className="text-sm font-medium">ファイル</label>
-          <input type="file" className="w-full mt-1" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </div>
-        <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50"
-          onClick={handleCreate} disabled={createMutation.isPending || uploadMutation.isPending}>
-          {createMutation.isPending || uploadMutation.isPending ? "保存中..." : "作成"}
-        </button>
-      </div>
-      <div className="space-y-2">
-        {isLoading && <p className="text-muted-foreground">読み込み中...</p>}
-        {checklists.length === 0 && !isLoading && <p className="text-muted-foreground">チェックリストがありません</p>}
-        {checklists.map((item) => (
-          <div key={item.id} className="flex items-center justify-between border rounded-lg p-3 bg-card">
-            <div>
-              <p className="font-medium">{item.title}</p>
-              {item.url && (
-                <a href={item.url} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline truncate block max-w-xs">{item.url}</a>
-              )}
-              {item.fileUrl && (
-                <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-green-500 hover:underline">📎 {item.fileName ?? "ファイル"}</a>
+    <div className="space-y-4">
+      <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規チェックリスト</h3>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+        <input id="checklist-main-file" type="file" onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+        {checklistFile && <p className="text-xs text-muted-foreground">選択中: {checklistFile.name} ({(checklistFile.size / 1024).toFixed(1)} KB)</p>}
+        <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
+      </form>
+
+      {isLoading ? (
+        <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
+      ) : (
+        <div className="space-y-2">
+          {checklists?.map((cl) => (
+            <div key={cl.id} className="cyber-border rounded-lg bg-card">
+              {editingId === cl.id ? (
+                <div className="p-3 space-y-2">
+                  <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
+                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}><Save className="h-3 w-3 mr-1" />保存</Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)}><X className="h-3 w-3 mr-1" />キャンセル</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm truncate">{cl.title}</p>
+                      {cl.description && <p className="text-xs text-muted-foreground truncate">{cl.description}</p>}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => setExpandedId(expandedId === cl.id ? null : cl.id)}
+                        className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="項目管理">
+                        {expandedId === cl.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
+                      <button
+                    onClick={() => {
+                      const url = cl.description || `/checklists/${cl.id}`;
+                      const w = window.open(url, "_blank", "noopener,noreferrer");
+                      if (!w) {
+                        alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
+                      }
+                    }}
+                    className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                    title="印刷"
+                  >
+                    印刷
+                  </button>
+                  <button onClick={() => startEdit(cl)} className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
+                    <Edit className="h-4 w-4" />
+                  </button>
+                      <button onClick={() => { if (confirm("削除しますか？")) deleteMutation.mutate({ id: cl.id }); }}
+                        className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {expandedId === cl.id && (
+                    <div className="mt-3 pt-3 border-t border-border space-y-3">
+                      <p className="mono-sub">チェック項目 // ITEMS</p>
+                      {itemsData && itemsData.length > 0 && (
+                        <div className="space-y-1">
+                          {itemsData.map((item) => (
+                            <div key={item.id} className="flex items-center justify-between p-2 rounded bg-muted/50">
+                              <span className="text-xs text-foreground">{item.content}</span>
+                              <button onClick={() => { if (confirm("項目を削除しますか？")) deleteItemMutation.mutate({ id: item.id }); }}
+                                className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <form onSubmit={handleAddItem} className="grid gap-2 md:grid-cols-[1fr_220px_auto]">
+                        <input type="text" value={itemContent} onChange={(e) => setItemContent(e.target.value)} placeholder="チェック項目"
+                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                        <input id="checklist-item-file" type="file" onChange={(e) => setItemFile(e.target.files?.[0] ?? null)}
+                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground text-xs file:mr-2 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+                        <Button type="submit" size="sm" disabled={createItemMutation.isPending || uploadAssetMutation.isPending}>
+                          {createItemMutation.isPending || uploadAssetMutation.isPending ? "追加中..." : "追加"}
+                        </Button>
+                      </form>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-            <button className="text-red-500 hover:text-red-700 px-2 py-1 text-sm"
-              onClick={() => removeMutation.mutate({ id: item.id })} disabled={removeMutation.isPending}>
-              削除
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
 }
 
 // ===== DOCUMENTS ADMIN =====
