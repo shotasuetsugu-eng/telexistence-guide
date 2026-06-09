@@ -335,3 +335,33 @@ export async function deleteMapStore(id: number) {
   if (!db) throw new Error("DB not available");
   await db.delete(mapStores).where(eq(mapStores.id, id));
 }
+
+/** ===== MAP STORE API ROUTES ===== */
+export function registerMapStoreApiRoutes(app: any) {
+  app.get("/api/map-stores", async (_req: any, res: any) => {
+    try {
+      const stores = await getMapStores();
+      res.json(stores);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to get map stores" });
+    }
+  });
+
+  app.post("/api/map-stores", async (req: any, res: any) => {
+    try {
+      const result = await createMapStore(req.body);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to create map store" });
+    }
+  });
+
+  app.delete("/api/map-stores/:id", async (req: any, res: any) => {
+    try {
+      await deleteMapStore(Number(req.params.id));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to delete map store" });
+    }
+  });
+}
