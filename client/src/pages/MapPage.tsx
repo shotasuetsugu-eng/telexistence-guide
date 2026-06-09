@@ -72,18 +72,29 @@ function loadStores() {
 }
 
 async function loadStoresFromApi(): Promise<ConvenienceStore[]> {
-  const response = await fetch("/api/map-stores");
-  if (!response.ok) throw new Error("Failed to load map stores");
+  const response = await fetch("/api/map-stores", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to load map stores");
+  }
+
   const rows = await response.json();
+
+  if (!Array.isArray(rows)) return [];
 
   return rows.map((row: any) => ({
     id: row.id,
-    chain: row.chain,
-    name: row.name,
-    address: row.address,
+    chain: row.chain || "7-Eleven",
+    name: row.name || "店舗名未設定",
+    address: row.address || "",
+    mapsUrl: row.address || "",
     location: {
-      lat: Number(row.lat),
-      lng: Number(row.lng),
+      lat: Number(row.lat || 35.681236),
+      lng: Number(row.lng || 139.767125),
     },
   }));
 }
@@ -265,6 +276,7 @@ export default function MapPage() {
     }
 
     saveStores([...stores, savedStore]);
+    window.localStorage.setItem(storageKey, JSON.stringify([...stores, savedStore]));
     setSelectedStore(savedStore);
     setActiveChain(newChain);
     setNewMapsUrl("");
@@ -459,6 +471,9 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
 
 
 
