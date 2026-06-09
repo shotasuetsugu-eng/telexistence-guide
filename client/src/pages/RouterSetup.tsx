@@ -53,15 +53,15 @@ ${fixedIpText}
 `.trim();
 
   const openRouter = () => {
-    window.open(routerUrl, "_blank", "noopener,noreferrer");
+    window.open(routerUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
   };
 
   const showNetworkBasicPage = () => {
-    window.open(networkBasicUrl, "_blank", "noopener,noreferrer");
+    window.open(networkBasicUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
   };
 
   const showDhcpServerAdvPage = () => {
-    window.open(dhcpServerAdvUrl, "_blank", "noopener,noreferrer");
+    window.open(dhcpServerAdvUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
   };
 
   const copySettings = async () => {
@@ -89,7 +89,7 @@ return (
             onClick={openRouter}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
           >
-            TP-Link管理画面を開く
+            TP-Link管理画面をWeb版で開く
           </button>
 
           <button
@@ -152,7 +152,7 @@ return (
             onClick={showNetworkBasicPage}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
           >
-            設定画面を開く
+            設定画面をWeb版で開く
           </button>
         </div>
 
@@ -199,7 +199,7 @@ return (
             onClick={showDhcpServerAdvPage}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
           >
-            設定画面を開く
+            設定画面をWeb版で開く
           </button>
         </div>
 
