@@ -88,12 +88,17 @@ async function createStoreOnApi(store: ConvenienceStore) {
       chain: store.chain,
       name: store.name,
       address: store.address,
+      mapsUrl: store.mapsUrl,
       lat: String(store.location.lat),
       lng: String(store.location.lng),
     }),
   });
 
-  if (!response.ok) throw new Error("Failed to create map store");
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to create map store");
+  }
+
   return response.json();
 }
 
@@ -436,6 +441,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 

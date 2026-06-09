@@ -408,9 +408,20 @@ export function registerMapStoreApiRoutes(app: any) {
 
   app.post("/api/map-stores", async (req: any, res: any) => {
     try {
-      const result = await createMapStore(req.body);
+      const body = req.body ?? {};
+
+      const data = {
+        chain: String(body.chain ?? "7-Eleven"),
+        name: String(body.name ?? "店舗名未設定"),
+        address: String(body.address ?? body.mapsUrl ?? ""),
+        lat: String(body.lat ?? body.location?.lat ?? "35.681236"),
+        lng: String(body.lng ?? body.location?.lng ?? "139.767125"),
+      };
+
+      const result = await createMapStore(data);
       res.json(result);
     } catch (error: any) {
+      console.error("Failed to create map store", error);
       res.status(500).json({ error: error.message ?? "Failed to create map store" });
     }
   });
@@ -440,6 +451,7 @@ export function registerMapStoreApiRoutes(app: any) {
     }
   });
 }
+
 
 
 
