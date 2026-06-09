@@ -88,6 +88,7 @@ export async function updateUserRole(openId: string, role: string) {
 export async function getAllCategories() {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(categories).orderBy(asc(categories.sortOrder));
 }
 
@@ -101,6 +102,7 @@ export async function getCategoryById(id: number) {
 export async function createCategory(data: InsertCategory) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(categories).values(data).returning({ id: categories.id });
   return { id: result[0].id };
 }
@@ -108,12 +110,14 @@ export async function createCategory(data: InsertCategory) {
 export async function updateCategory(id: number, data: Partial<InsertCategory>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.update(categories).set(data).where(eq(categories.id, id));
 }
 
 export async function deleteCategory(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(categories).where(eq(categories.id, id));
 }
 
@@ -121,12 +125,14 @@ export async function deleteCategory(id: number) {
 export async function getProceduresByCategory(categoryId: number) {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(procedures).where(eq(procedures.categoryId, categoryId)).orderBy(asc(procedures.sortOrder));
 }
 
 export async function getAllProcedures() {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(procedures).orderBy(asc(procedures.sortOrder));
 }
 
@@ -140,6 +146,7 @@ export async function getProcedureById(id: number) {
 export async function createProcedure(data: InsertProcedure) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(procedures).values(data).returning({ id: procedures.id });
   return { id: result[0].id };
 }
@@ -147,12 +154,14 @@ export async function createProcedure(data: InsertProcedure) {
 export async function updateProcedure(id: number, data: Partial<InsertProcedure>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.update(procedures).set(data).where(eq(procedures.id, id));
 }
 
 export async function deleteProcedure(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(procedureSteps).where(eq(procedureSteps.procedureId, id));
   await db.delete(procedures).where(eq(procedures.id, id));
 }
@@ -161,12 +170,14 @@ export async function deleteProcedure(id: number) {
 export async function getStepsByProcedure(procedureId: number) {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(procedureSteps).where(eq(procedureSteps.procedureId, procedureId)).orderBy(asc(procedureSteps.stepNumber));
 }
 
 export async function createProcedureStep(data: InsertProcedureStep) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(procedureSteps).values(data).returning({ id: procedureSteps.id });
   return { id: result[0].id };
 }
@@ -174,12 +185,14 @@ export async function createProcedureStep(data: InsertProcedureStep) {
 export async function updateProcedureStep(id: number, data: Partial<InsertProcedureStep>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.update(procedureSteps).set(data).where(eq(procedureSteps.id, id));
 }
 
 export async function deleteProcedureStep(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(procedureSteps).where(eq(procedureSteps.id, id));
 }
 
@@ -187,12 +200,14 @@ export async function deleteProcedureStep(id: number) {
 export async function getChecklistsByCategory(categoryId: number) {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(checklists).where(eq(checklists.categoryId, categoryId)).orderBy(asc(checklists.sortOrder));
 }
 
 export async function getAllChecklists() {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(checklists).orderBy(asc(checklists.sortOrder));
 }
 
@@ -206,6 +221,7 @@ export async function getChecklistById(id: number) {
 export async function createChecklist(data: InsertChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(checklists).values(data).returning({ id: checklists.id });
   return { id: result[0].id };
 }
@@ -213,12 +229,14 @@ export async function createChecklist(data: InsertChecklist) {
 export async function updateChecklist(id: number, data: Partial<InsertChecklist>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.update(checklists).set(data).where(eq(checklists.id, id));
 }
 
 export async function deleteChecklist(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(checklistItems).where(eq(checklistItems.checklistId, id));
   await db.delete(checklists).where(eq(checklists.id, id));
 }
@@ -227,12 +245,14 @@ export async function deleteChecklist(id: number) {
 export async function getItemsByChecklist(checklistId: number) {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(checklistItems).where(eq(checklistItems.checklistId, checklistId)).orderBy(asc(checklistItems.sortOrder));
 }
 
 export async function createChecklistItem(data: InsertChecklistItem) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(checklistItems).values(data).returning({ id: checklistItems.id });
   return { id: result[0].id };
 }
@@ -240,12 +260,14 @@ export async function createChecklistItem(data: InsertChecklistItem) {
 export async function updateChecklistItem(id: number, data: Partial<InsertChecklistItem>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.update(checklistItems).set(data).where(eq(checklistItems.id, id));
 }
 
 export async function deleteChecklistItem(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(checklistItems).where(eq(checklistItems.id, id));
 }
 
@@ -253,12 +275,14 @@ export async function deleteChecklistItem(id: number) {
 export async function getDocumentsByCategory(categoryId: number) {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(documents).where(eq(documents.categoryId, categoryId)).orderBy(desc(documents.createdAt));
 }
 
 export async function getAllDocuments() {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(documents).orderBy(desc(documents.createdAt));
 }
 
@@ -272,6 +296,7 @@ export async function getDocumentById(id: number) {
 export async function createDocument(data: InsertDocument) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(documents).values(data).returning({ id: documents.id });
   return { id: result[0].id };
 }
@@ -279,12 +304,14 @@ export async function createDocument(data: InsertDocument) {
 export async function updateDocument(id: number, data: Partial<InsertDocument>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.update(documents).set(data).where(eq(documents.id, id));
 }
 
 export async function deleteDocument(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(documents).where(eq(documents.id, id));
 }
 
@@ -311,9 +338,25 @@ export async function searchAll(query: string) {
 
 
 /** ===== MAP STORES ===== */
+async function ensureMapStoresTable(db: any) {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS map_stores (
+      id SERIAL PRIMARY KEY,
+      chain varchar(50) NOT NULL,
+      name varchar(500) NOT NULL,
+      address text NOT NULL,
+      lat text NOT NULL,
+      lng text NOT NULL,
+      created_at timestamp DEFAULT now() NOT NULL,
+      updated_at timestamp DEFAULT now() NOT NULL
+    );
+  `);
+}
+
 export async function getMapStores() {
   const db = await getDb();
   if (!db) return [];
+  await ensureMapStoresTable(db);
   return db.select().from(mapStores).orderBy(mapStores.id);
 }
 
@@ -326,6 +369,7 @@ export async function createMapStore(data: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   const result = await db.insert(mapStores).values(data).returning({ id: mapStores.id });
   return { id: result[0].id };
 }
@@ -333,12 +377,14 @@ export async function createMapStore(data: {
 export async function deleteMapStore(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
   await db.delete(mapStores).where(eq(mapStores.id, id));
 }
 
 export async function updateMapStoreName(id: number, name: string) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureMapStoresTable(db);
 
   await db
     .update(mapStores)
@@ -394,6 +440,8 @@ export function registerMapStoreApiRoutes(app: any) {
     }
   });
 }
+
+
 
 
 

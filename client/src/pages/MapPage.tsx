@@ -212,29 +212,49 @@ export default function MapPage() {
   };
   const addStore = async (event: FormEvent) => {
     event.preventDefault();
+
     const mapsUrl = normalizeUrl(newMapsUrl);
+    const displayName = newDisplayName.trim();
+
     if (!mapsUrl) {
       toast.error("Googleマップリンクを入力してください");
       return;
     }
 
-    const resolved = await resolveMapsUrlMutation.mutateAsync({ url: mapsUrl });
-    const autoName = resolved.name || getStoreNameFromMapsUrl(mapsUrl);
-    const location = resolved.location ?? getLocationFromMapsUrl(mapsUrl) ?? selectedStore?.location ?? currentLocation;
+    if (!displayName) {
+      toast.error("表示名を入力してください");
+      return;
+    }
+
+    let resolved: Partial<ConvenienceStore> = {};
+
+    try {
+      resolved = await resolveMapsUrlMutation.mutateAsync({ url: mapsUrl });
+    } catch (error) {
+      console.warn("Google Maps URL resolve failed. Use manual display name.", error);
+    }
+
     const nextStore: ConvenienceStore = {
       chain: newChain,
-      name: autoName || "店舗名未取得",
-      address: autoName || "Googleマップリンクから登録",
-      mapsUrl: resolved.url,
-      location,
+      name: displayName,
+      address: resolved.address || mapsUrl,
+      mapsUrl,
+      location: resolved.location || currentLocation || fallbackLocation,
     };
-    const created = await createStoreOnApi(nextStore);
-    const savedStore = { ...nextStore, id: created.id };
-    saveStores([...stores, savedStore]);
-    setSelectedStore(savedStore);
-    setActiveChain(newChain);
-    setNewMapsUrl("");
-    toast.success("店舗リンクを追加しました");
+
+    try {
+      const created = await createStoreOnApi(nextStore);
+      const savedStore = { ...nextStore, id: created.id };
+
+      saveStores([...stores, savedStore]);
+      setSelectedStore(savedStore);
+      setActiveChain(newChain);
+      setNewMapsUrl("");
+      setNewDisplayName("");
+      toast.success("店舗リンクを追加しました");
+    } catch (error: any) {
+      toast.error(error.message ?? "店舗リンクの追加に失敗しました");
+    }
   };
 
   const deleteStore = async (storeName: string) => {
@@ -426,6 +446,10 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+
 
 
 
