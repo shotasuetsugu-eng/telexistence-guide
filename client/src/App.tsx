@@ -14,6 +14,7 @@ import Search from "./pages/Search";
 import AdminPanel from "./pages/AdminPanel";
 import MapPage from "./pages/MapPage";
 import SpreadsheetPage from "./pages/SpreadsheetPage";
+import MeasurementValuesPage from "./pages/MeasurementValuesPage";
 import Integrations from "./pages/Integrations";
 import RouterSetup from "./pages/RouterSetup";
 import CyberLayout from "./components/CyberLayout";
@@ -32,7 +33,7 @@ function Router() {
         <Route path="/admin" component={AdminPanel} />        <Route path="/map" component={MapPage} />
         <Route path="/shift" component={SpreadsheetPage} />
         <Route path="/stores" component={SpreadsheetPage} />
-          <Route path="/measurement-values" component={SpreadsheetPage} />
+          <Route path="/measurement-values" component={MeasurementValuesPage} />
         <Route path="/integrations" component={Integrations} />
           <Route path="/router-setup" component={RouterSetup} />
           <Route path="/Wifi-setup" component={RouterSetup} />
@@ -57,6 +58,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
