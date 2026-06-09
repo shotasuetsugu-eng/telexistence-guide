@@ -25,7 +25,7 @@ const publicNavItems = [
 
 const integrationNavItems = [
     { path: "/Wifi-setup", label: "ルーター設定", icon: Wifi },
-  { icon: FileText, label: "メジャメント数値", path: "/sheet?target=measurement" },
+  { icon: FileText, label: "メジャメント数値", path: "/measurement-values" },
 { icon: LayoutDashboard, label: "Shift", path: "/shift" },
   { icon: HardDrive, label: "店舗一覧", path: "/stores" },
   { icon: Map, label: "マップ", path: "/map" },
@@ -239,6 +239,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
 
 
 
