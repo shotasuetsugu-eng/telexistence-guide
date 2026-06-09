@@ -62,6 +62,7 @@ const defaultStores: ConvenienceStore[] = [
 ];
 
 const chains = ["7-Eleven", "FamilyMart", "Lawson"] as const;
+const fallbackLocation = { lat: 35.681236, lng: 139.767125 };
 const storageKey = "tx.convenience.stores";
 
 function normalizeUrl(url: string) {
@@ -153,7 +154,7 @@ export default function MapPage() {
   const isAdmin = user?.role === "admin";
   const [activeChain, setActiveChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
   const [stores, setStores] = useState<ConvenienceStore[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LatLng>(fallbackLocation);
   const [selectedStore, setSelectedStore] = useState<ConvenienceStore | null>(null);
   const [status, setStatus] = useState("");
   const [newChain, setNewChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
@@ -386,7 +387,7 @@ export default function MapPage() {
           <div className="flex items-center gap-3 ml-8">
             <button
               type="button"
-              onClick={() => openGoogleRoute(selectedStore)}
+              onClick={() => selectedStore && openGoogleRoute(selectedStore)}
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
             >
               <ExternalLink className="h-4 w-4" />
@@ -411,7 +412,7 @@ export default function MapPage() {
             className="h-full w-full"
             initialCenter={selectedStore?.location ?? currentLocation}
             initialZoom={16}
-            currentLocation={currentLocation}
+            currentLocation={currentLocation ?? fallbackLocation}
             destination={selectedStore?.location ?? currentLocation}
             route={[]}
           />
@@ -421,6 +422,10 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+
 
 
 
