@@ -336,6 +336,19 @@ export async function deleteMapStore(id: number) {
   await db.delete(mapStores).where(eq(mapStores.id, id));
 }
 
+export async function updateMapStoreName(id: number, name: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  await db
+    .update(mapStores)
+    .set({
+      name,
+      updatedAt: new Date(),
+    })
+    .where(eq(mapStores.id, id));
+}
+
 /** ===== MAP STORE API ROUTES ===== */
 export function registerMapStoreApiRoutes(app: any) {
   app.get("/api/map-stores", async (_req: any, res: any) => {
@@ -356,6 +369,22 @@ export function registerMapStoreApiRoutes(app: any) {
     }
   });
 
+  app.patch("/api/map-stores/:id/name", async (req: any, res: any) => {
+    try {
+      const name = String(req.body?.name ?? "").trim();
+
+      if (!name) {
+        res.status(400).json({ error: "name is required" });
+        return;
+      }
+
+      await updateMapStoreName(Number(req.params.id), name);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to update map store name" });
+    }
+  });
+
   app.delete("/api/map-stores/:id", async (req: any, res: any) => {
     try {
       await deleteMapStore(Number(req.params.id));
@@ -365,5 +394,6 @@ export function registerMapStoreApiRoutes(app: any) {
     }
   });
 }
+
 
 

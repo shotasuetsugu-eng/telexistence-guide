@@ -104,6 +104,16 @@ async function deleteStoreOnApi(id: number) {
 
   if (!response.ok) throw new Error("Failed to delete map store");
 }
+
+async function updateStoreNameOnApi(id: number, name: string) {
+  const response = await fetch(`/api/map-stores/${id}/name`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) throw new Error("Failed to update map store name");
+}
 export default function MapPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -114,6 +124,7 @@ export default function MapPage() {
   const [status, setStatus] = useState("");
   const [newChain, setNewChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
   const [newMapsUrl, setNewMapsUrl] = useState("");
+  const [newDisplayName, setNewDisplayName] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
   const resolveMapsUrlMutation = trpc.maps.resolveGoogleMapsUrl.useMutation({
     onError: (error) => toast.error(error.message),
@@ -168,6 +179,37 @@ export default function MapPage() {
     setStatus(`${store.name} を選択しました`);
   };
 
+  const updateDisplayName = async (store: ConvenienceStore, value: string) => {
+    const nextName = value.trim();
+
+    if (!nextName) {
+      toast.error("表示名を入力してください");
+      return;
+    }
+
+    if (nextName === store.name) return;
+
+    if (store.id) {
+      await updateStoreNameOnApi(store.id, nextName);
+    }
+
+    const nextStores = stores.map((item) => {
+      if (store.id && item.id === store.id) return { ...item, name: nextName };
+      if (!store.id && item.name === store.name) return { ...item, name: nextName };
+      return item;
+    });
+
+    saveStores(nextStores);
+
+    if (
+      (selectedStore?.id && selectedStore.id === store.id) ||
+      (!selectedStore?.id && selectedStore?.name === store.name)
+    ) {
+      setSelectedStore({ ...store, name: nextName });
+    }
+
+    toast.success("表示名を更新しました");
+  };
   const addStore = async (event: FormEvent) => {
     event.preventDefault();
     const mapsUrl = normalizeUrl(newMapsUrl);
@@ -253,7 +295,14 @@ export default function MapPage() {
             ))}
           </div>
 
-        <div className="cyber-border rounded-lg bg-card p-3">
+        <div className="cyber-border rounded-lg bg-card p-3">            <input
+              type="text"
+              value={newDisplayName}
+              onChange={(event) => setNewDisplayName(event.target.value)}
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+              placeholder="表示名 例：ローソン 丸の内二重橋前店"
+            />
+
           <input
             type="text"
             value={storeSearch}
@@ -270,7 +319,7 @@ export default function MapPage() {
 
           <div className="space-y-2">
             {visibleStores.map((store) => (
-              <div key={store.name} className="cyber-border rounded-lg bg-card p-3 space-y-2">
+              <div key={store.id ?? store.name} className="cyber-border rounded-lg bg-card p-3 space-y-2">
                 <button
                   onClick={() => selectStore(store)}
                   className="w-full text-left flex items-start gap-3"
@@ -377,6 +426,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 
