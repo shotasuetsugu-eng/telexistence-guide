@@ -210,11 +210,27 @@ export default function MapPage() {
     window.localStorage.setItem(storageKey, JSON.stringify(nextStores));
   };
 
-  const visibleStores = useMemo(
-    () => stores.filter((store) => store.chain === activeChain),
-    [stores, activeChain]
-  );
+  const visibleStores = useMemo(() => {
+    const keyword = storeSearch.trim().toLowerCase();
 
+    return stores.filter((store) => {
+      const searchableText = [
+        store.chain,
+        store.name,
+        store.address,
+        store.mapsUrl,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (keyword) {
+        return searchableText.includes(keyword);
+      }
+
+      return store.chain === activeChain;
+    });
+  }, [stores, activeChain, storeSearch]);
   const showCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -559,6 +575,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 
