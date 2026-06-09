@@ -103,8 +103,6 @@ function getStoreNameFromMapsUrl(url: string) {
 }
 
 function loadStores() {
-  const saved = window.localStorage.getItem(storageKey);
-  if (saved) return JSON.parse(saved) as ConvenienceStore[];
   return [];
 }
 
@@ -422,6 +420,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 
