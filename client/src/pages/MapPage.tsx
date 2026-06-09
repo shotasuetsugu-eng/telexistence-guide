@@ -16,50 +16,7 @@ type ConvenienceStore = {
   location: LatLng;
 };
 
-const defaultStores: ConvenienceStore[] = [
-  {
-    chain: "7-Eleven",
-    name: "セブン-イレブン 丸の内センタービル店",
-    address: "東京都千代田区丸の内1-6-1",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6838,139.7651",
-    location: { lat: 35.6838, lng: 139.7651 },
-  },
-  {
-    chain: "7-Eleven",
-    name: "セブン-イレブン 東京駅日本橋口店",
-    address: "東京都千代田区丸の内1-9-1",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6824,139.7691",
-    location: { lat: 35.6824, lng: 139.7691 },
-  },
-  {
-    chain: "FamilyMart",
-    name: "ファミリーマート 丸の内オアゾ店",
-    address: "東京都千代田区丸の内1-6-4",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6832,139.766",
-    location: { lat: 35.6832, lng: 139.766 },
-  },
-  {
-    chain: "FamilyMart",
-    name: "ファミリーマート 八重洲一丁目店",
-    address: "東京都中央区八重洲1-5-9",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6812,139.7712",
-    location: { lat: 35.6812, lng: 139.7712 },
-  },
-  {
-    chain: "Lawson",
-    name: "ローソン 丸の内二重橋前店",
-    address: "東京都千代田区丸の内2-3-1",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.6805,139.7617",
-    location: { lat: 35.6805, lng: 139.7617 },
-  },
-  {
-    chain: "Lawson",
-    name: "ローソン 東京駅八重洲中央口店",
-    address: "東京都千代田区丸の内1-9-1",
-    mapsUrl: "https://www.google.com/maps/search/?api=1&query=35.681,139.7681",
-    location: { lat: 35.681, lng: 139.7681 },
-  },
-];
+const defaultStores: ConvenienceStore[] = [];
 
 const chains = ["7-Eleven", "FamilyMart", "Lawson"] as const;
 const fallbackLocation = { lat: 35.681236, lng: 139.767125 };
@@ -164,8 +121,8 @@ export default function MapPage() {
 
  useEffect(() => {
   window.localStorage.removeItem(storageKey);
-  setStores(defaultStores);
-  setSelectedStore(defaultStores[0] ?? null);
+  setStores([]);
+  setSelectedStore(null);
 }, []);
 
   const saveStores = (nextStores: ConvenienceStore[]) => {
@@ -420,6 +377,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 
