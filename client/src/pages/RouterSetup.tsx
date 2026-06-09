@@ -212,11 +212,13 @@ return (
 
         {showNetworkBasicFrame && (
           <div className="space-y-2">
-            <iframe
-              title="Internet Network Basic"
-              src={networkBasicUrl}
-              className="w-full h-[720px] rounded-md border border-border bg-background"
-            />
+            <div className="w-full overflow-x-auto rounded-md border border-border bg-background">
+              <iframe
+                title="Internet Network Basic"
+                src={networkBasicUrl}
+                className="h-[720px] w-[1280px] max-w-none bg-background"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
             </p>
@@ -271,11 +273,13 @@ return (
 
         {showDhcpServerAdvFrame && (
           <div className="space-y-2">
-            <iframe
-              title="TP-Link DHCP Server Advanced"
-              src={dhcpServerAdvUrl}
-              className="w-full h-[720px] rounded-md border border-border bg-background"
-            />
+            <div className="w-full overflow-x-auto rounded-md border border-border bg-background">
+              <iframe
+                title="TP-Link DHCP Server Advanced"
+                src={dhcpServerAdvUrl}
+                className="h-[720px] w-[1280px] max-w-none bg-background"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
             </p>
