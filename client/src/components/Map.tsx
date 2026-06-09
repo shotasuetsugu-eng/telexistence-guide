@@ -39,6 +39,12 @@ const logoUrlByChain: Record<ConvenienceStore["chain"], string> = {
   Lawson: "/map-icons/lawson.png",
 };
 
+const labelByChain: Record<ConvenienceStore["chain"], string> = {
+  "7-Eleven": "7-Eleven",
+  FamilyMart: "FamilyMart",
+  Lawson: "LAWSON",
+};
+
 function isSameStore(a?: ConvenienceStore | null, b?: ConvenienceStore | null) {
   if (!a || !b) return false;
   if (a.id && b.id) return a.id === b.id;
@@ -46,40 +52,57 @@ function isSameStore(a?: ConvenienceStore | null, b?: ConvenienceStore | null) {
 }
 
 function getStoreLogoIcon(chain: ConvenienceStore["chain"], isSelected: boolean) {
-  const size = isSelected ? 58 : 46;
+  const width = isSelected ? 132 : 108;
+  const height = isSelected ? 56 : 46;
   const logoUrl = logoUrlByChain[chain];
+  const label = labelByChain[chain];
 
   return L.divIcon({
-    className: "store-logo-marker-wrapper",
+    className: "store-logo-sign-marker-wrapper",
     html: `
       <div style="
-        width:${size}px;
-        height:${size}px;
-        border-radius:12px;
+        width:${width}px;
+        height:${height}px;
+        border-radius:10px;
         background:#ffffff;
         border:${isSelected ? 4 : 2}px solid ${isSelected ? "#00f5d4" : "#ffffff"};
-        box-shadow:0 0 ${isSelected ? 18 : 10}px rgba(0,245,212,0.75);
+        box-shadow:0 0 ${isSelected ? 20 : 12}px rgba(0,245,212,0.75);
         display:flex;
         align-items:center;
         justify-content:center;
         overflow:hidden;
+        position:relative;
       ">
         <img
           src="${logoUrl}"
           alt="${chain}"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
           style="
             width:100%;
             height:100%;
             object-fit:contain;
-            padding:4px;
+            padding:5px 8px;
             box-sizing:border-box;
           "
         />
+        <div style="
+          display:none;
+          width:100%;
+          height:100%;
+          align-items:center;
+          justify-content:center;
+          color:#111827;
+          font-weight:900;
+          font-size:14px;
+          letter-spacing:0.2px;
+        ">
+          ${label}
+        </div>
       </div>
     `,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size],
-    popupAnchor: [0, -size],
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
+    popupAnchor: [0, -height],
   });
 }
 
