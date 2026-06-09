@@ -258,10 +258,9 @@ function ProceduresAdmin() {
     onError: (err) => toast.error(err.message),
   });
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [content, setContent] = useState("");
-  const [procedureFile, setProcedureFile] = useState<File | null>(null);
+  const [createRows, setCreateRows] = useState([
+    { id: 1, title: "", description: "", content: "", file: null as File | null },
+  ]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -277,12 +276,45 @@ function ProceduresAdmin() {
   const [editStepImageUrl, setEditStepImageUrl] = useState("");
   const [editStepFile, setEditStepFile] = useState<File | null>(null);
 
-  const handleCreate = (e: React.FormEvent) => {
+  const updateCreateRow = (
+    rowId: number,
+    field: "title" | "description" | "content" | "file",
+    value: string | File | null
+  ) => {
+    setCreateRows((rows) =>
+      rows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row))
+    );
+  };
+
+  const addCreateRow = () => {
+    setCreateRows((rows) => [
+      ...rows,
+      { id: Date.now(), title: "", description: "", content: "", file: null },
+    ]);
+  };
+
+  const removeCreateRow = (rowId: number) => {
+    setCreateRows((rows) => rows.filter((row) => row.id !== rowId));
+  };
+
+  const handleCreate = (e: React.FormEvent, rowId: number) => {
     e.preventDefault();
     const defaultCategoryId = categories?.[0]?.id;
-    if (!title.trim() || !defaultCategoryId) return;
-    createMutation.mutate({ categoryId: defaultCategoryId, title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
-    setTitle(""); setDescription(""); setContent("");
+    const row = createRows.find((item) => item.id === rowId);
+    if (!row?.title.trim() || !defaultCategoryId) return;
+
+    createMutation.mutate({
+      categoryId: defaultCategoryId,
+      title: row.title.trim(),
+      description: row.description.trim() || undefined,
+      content: row.content.trim() || undefined,
+    });
+
+    setCreateRows((rows) =>
+      rows.map((item) =>
+        item.id === rowId ? { ...item, title: "", description: "", content: "", file: null } : item
+      )
+    );
   };
 
   const startEdit = (proc: { id: number; title: string; description: string | null; content: string | null }) => {
@@ -351,19 +383,43 @@ function ProceduresAdmin() {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
-        <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="メモ（任意）" rows={3}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
-        <input id="procedure-main-file" type="file" onChange={(e) => setProcedureFile(e.target.files?.[0] ?? null)}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
-        {procedureFile && <p className="text-xs text-muted-foreground">選択中: {procedureFile.name} ({(procedureFile.size / 1024).toFixed(1)} KB)</p>}
-        <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
-      </form>
+      <div className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
+          <Button type="button" size="sm" variant="outline" onClick={addCreateRow}>
+            <Plus className="h-4 w-4" />
+            入力欄を追加
+          </Button>
+        </div>
+
+        {createRows.map((row, index) => (
+          <form key={row.id} onSubmit={(e) => handleCreate(e, row.id)} className="space-y-3 rounded-md border border-border/70 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-foreground">作成欄 {index + 1}</p>
+              {createRows.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeCreateRow(row.id)}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                  削除
+                </button>
+              )}
+            </div>
+            <input type="text" value={row.title} onChange={(e) => updateCreateRow(row.id, "title", e.target.value)} placeholder="表示名"
+              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            <input type="text" value={row.description} onChange={(e) => updateCreateRow(row.id, "description", e.target.value)} placeholder="リンクURL"
+              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            <textarea value={row.content} onChange={(e) => updateCreateRow(row.id, "content", e.target.value)} placeholder="メモ（任意）" rows={3}
+              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
+            <input id={`procedure-main-file-${row.id}`} type="file" onChange={(e) => updateCreateRow(row.id, "file", e.target.files?.[0] ?? null)}
+              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+            {row.file && <p className="text-xs text-muted-foreground">選択中: {row.file.name} ({(row.file.size / 1024).toFixed(1)} KB)</p>}
+            <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
+          </form>
+        ))}
+      </div>
 
       {isLoading ? (
         <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
