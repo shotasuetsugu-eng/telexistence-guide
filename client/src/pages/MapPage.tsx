@@ -102,13 +102,8 @@ function getStoreNameFromMapsUrl(url: string) {
 }
 
 function loadStores() {
-  try {
-    const saved = window.localStorage.getItem(storageKey);
-    if (saved) return JSON.parse(saved) as ConvenienceStore[];
-  } catch {}
   return defaultStores;
 }
-
 export default function MapPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -124,11 +119,11 @@ export default function MapPage() {
     onError: (error) => toast.error(error.message),
   });
 
-  useEffect(() => {
-    const loadedStores = loadStores();
-    setStores(loadedStores);
-    setSelectedStore(loadedStores[0] ?? defaultStores[0]);
-  }, []);
+ useEffect(() => {
+  window.localStorage.removeItem(storageKey);
+  setStores(defaultStores);
+  setSelectedStore(defaultStores[0] ?? null);
+}, []);
 
   const saveStores = (nextStores: ConvenienceStore[]) => {
     setStores(nextStores);
