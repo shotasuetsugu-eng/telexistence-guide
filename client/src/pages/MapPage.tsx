@@ -425,6 +425,31 @@ export default function MapPage() {
           )}
         </div>
 
+          {isAdmin && (
+            <form onSubmit={addStore} className="cyber-border rounded-lg bg-card p-3 space-y-3">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <Plus className="h-4 w-4 text-primary" />
+                店舗リンク追加
+              </div>
+              <select
+                value={newChain}
+                onChange={(event) => setNewChain(event.target.value as ConvenienceStore["chain"])}
+                className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
+              >
+                {chains.map((chain) => <option key={chain} value={chain}>{chain}</option>)}
+              </select>
+              <input
+                value={newMapsUrl}
+                onChange={(event) => setNewMapsUrl(event.target.value)}
+                placeholder="Googleマップリンク"
+                className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
+              />
+              <Button type="submit" size="sm" disabled={resolveMapsUrlMutation.isPending}>
+                {resolveMapsUrlMutation.isPending ? "取得中..." : "追加"}
+              </Button>
+            </form>
+          )}
+
           <div className="space-y-2">
             {visibleStores.map((store) => (
               <div key={store.id ?? store.name} className="cyber-border rounded-lg bg-card p-3 space-y-2">
@@ -469,30 +494,6 @@ export default function MapPage() {
             ))}
           </div>
 
-          {isAdmin && (
-            <form onSubmit={addStore} className="cyber-border rounded-lg bg-card p-3 space-y-3">
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <Plus className="h-4 w-4 text-primary" />
-                店舗リンク追加
-              </div>
-              <select
-                value={newChain}
-                onChange={(event) => setNewChain(event.target.value as ConvenienceStore["chain"])}
-                className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-              >
-                {chains.map((chain) => <option key={chain} value={chain}>{chain}</option>)}
-              </select>
-              <input
-                value={newMapsUrl}
-                onChange={(event) => setNewMapsUrl(event.target.value)}
-                placeholder="Googleマップリンク"
-                className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-              />
-              <Button type="submit" size="sm" disabled={resolveMapsUrlMutation.isPending}>
-                {resolveMapsUrlMutation.isPending ? "取得中..." : "追加"}
-              </Button>
-            </form>
-          )}
 
           {status && <p className="text-sm text-muted-foreground">{status}</p>}
         </div>
