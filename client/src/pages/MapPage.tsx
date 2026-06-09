@@ -104,7 +104,7 @@ function getStoreNameFromMapsUrl(url: string) {
 function loadStores() {
   const saved = window.localStorage.getItem(storageKey);
   if (saved) return JSON.parse(saved) as ConvenienceStore[];
-  return defaultStores;
+  return [];
 }
 
 async function loadStoresFromApi(): Promise<ConvenienceStore[]> {
@@ -152,9 +152,9 @@ export default function MapPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeChain, setActiveChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
-  const [stores, setStores] = useState<ConvenienceStore[]>(defaultStores);
+  const [stores, setStores] = useState<ConvenienceStore[]>([]);
   const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
-  const [selectedStore, setSelectedStore] = useState<ConvenienceStore>(defaultStores[0]);
+  const [selectedStore, setSelectedStore] = useState<ConvenienceStore | null>(null);
   const [status, setStatus] = useState("");
   const [newChain, setNewChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
   const [newMapsUrl, setNewMapsUrl] = useState("");
@@ -222,7 +222,7 @@ export default function MapPage() {
 
     const resolved = await resolveMapsUrlMutation.mutateAsync({ url: mapsUrl });
     const autoName = resolved.name || getStoreNameFromMapsUrl(mapsUrl);
-    const location = resolved.location ?? getLocationFromMapsUrl(mapsUrl) ?? selectedStore.location;
+    const location = resolved.location ?? getLocationFromMapsUrl(mapsUrl) ?? selectedStore?.location ?? currentLocation;
     const nextStore: ConvenienceStore = {
       chain: newChain,
       name: autoName || "店舗名未取得",
@@ -378,8 +378,8 @@ export default function MapPage() {
           <div className="flex items-start gap-3">
             <Store className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div className="min-w-0">
-              <p className="font-semibold text-foreground">{selectedStore.name}</p>
-              <p className="text-xs text-muted-foreground">{selectedStore.address}</p>
+              <p className="font-semibold text-foreground">{selectedStore?.name ?? "店舗が選択されていません"}</p>
+              <p className="text-xs text-muted-foreground">{selectedStore?.address ?? ""}</p>
             </div>
           </div>
 
@@ -409,10 +409,10 @@ export default function MapPage() {
         <div className="h-[560px] overflow-hidden rounded-lg border border-border">
           <MapView
             className="h-full w-full"
-            initialCenter={selectedStore.location}
+            initialCenter={selectedStore?.location ?? currentLocation}
             initialZoom={16}
             currentLocation={currentLocation}
-            destination={selectedStore.location}
+            destination={selectedStore?.location ?? currentLocation}
             route={[]}
           />
         </div>
@@ -421,6 +421,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 
