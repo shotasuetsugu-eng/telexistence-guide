@@ -80,12 +80,12 @@ ${fixedIpText}
     alert("設定値をコピーしました");
   };
 
-  const copyFixedIps = async () => {
-    await navigator.clipboard.writeText(fixedIpText);
-    alert("固定IPリストをコピーしました");
+  const copyValue = async (value: string) => {
+    await navigator.clipboard.writeText(value);
+    alert(`${value} をコピーしました`);
   };
 
-  return (
+return (
     <div className="space-y-6">
       <div className="glitch-text text-3xl font-bold text-primary" data-text="Router Setup">
         Router Setup
@@ -180,33 +180,33 @@ ${fixedIpText}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="rounded-md border border-border bg-input p-3">
               <div className="text-sm text-muted-foreground">インターネット接続タイプ</div>
-              <div className="font-semibold">静的IP</div>
+              <button type="button" onClick={() => copyValue("静的IP")} className="font-semibold text-left hover:underline">静的IP</button>
             </div>
             <div className="rounded-md border border-border bg-input p-3">
               <div className="text-sm text-muted-foreground">IPアドレス</div>
-              <div className="font-semibold">192.168.97.9</div>
+              <button type="button" onClick={() => copyValue("192.168.97.9")} className="font-semibold text-left hover:underline">192.168.97.9</button>
             </div>
             <div className="rounded-md border border-border bg-input p-3">
               <div className="text-sm text-muted-foreground">サブネットマスク</div>
-              <div className="font-semibold">255.255.255.0</div>
+              <button type="button" onClick={() => copyValue("255.255.255.0")} className="font-semibold text-left hover:underline">255.255.255.0</button>
             </div>
             <div className="rounded-md border border-border bg-input p-3">
               <div className="text-sm text-muted-foreground">ゲートウェイ</div>
-              <div className="font-semibold">192.168.97.1</div>
+              <button type="button" onClick={() => copyValue("192.168.97.1")} className="font-semibold text-left hover:underline">192.168.97.1</button>
             </div>
             <div className="rounded-md border border-border bg-input p-3">
               <div className="text-sm text-muted-foreground">プライマリーDNS</div>
-              <div className="font-semibold">8.8.8.8</div>
+              <button type="button" onClick={() => copyValue("8.8.8.8")} className="font-semibold text-left hover:underline">8.8.8.8</button>
             </div>
             <div className="rounded-md border border-border bg-input p-3">
               <div className="text-sm text-muted-foreground">セカンダリーDNS</div>
-              <div className="font-semibold">1.1.1.1</div>
+              <button type="button" onClick={() => copyValue("1.1.1.1")} className="font-semibold text-left hover:underline">1.1.1.1</button>
             </div>
           </div>
         ) : (
           <div className="rounded-md border border-border bg-input p-3">
             <div className="text-sm text-muted-foreground">インターネット接続タイプ</div>
-            <div className="font-semibold">V6プラス</div>
+            <button type="button" onClick={() => copyValue("V6プラス")} className="font-semibold text-left hover:underline">V6プラス</button>
           </div>
         )}
 
@@ -242,13 +242,6 @@ ${fixedIpText}
             >
               別タブで開く
             </button>
-
-            <button
-              onClick={copyFixedIps}
-              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
-            >
-              固定IPをコピー
-            </button>
           </div>
         </div>
 
@@ -260,17 +253,20 @@ ${fixedIpText}
                 value={device.name}
                 readOnly
               />
-              <input
-                className="px-3 py-2 rounded-md bg-input border border-border"
-                value={device.ip}
-                readOnly
-              />
+              <button
+                type="button"
+                onClick={() => copyValue(device.ip)}
+                className="px-3 py-2 rounded-md bg-input border border-border text-left font-semibold hover:bg-muted"
+                title="クリックでコピー"
+              >
+                {device.ip}
+              </button>
             </div>
           ))}
         </div>
 
         <p className="text-sm text-muted-foreground">
-          固定IPはPDF手順に合わせて固定です。コピーしてTP-Linkのアドレス予約に入力してください。
+          固定IPはPDF手順に合わせて固定です。IPアドレスをクリックすると個別にコピーできます。
         </p>
 
         {showDhcpServerAdvFrame && (
@@ -289,3 +285,5 @@ ${fixedIpText}
     </div>
   );
 }
+
+
