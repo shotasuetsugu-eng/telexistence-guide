@@ -337,7 +337,7 @@ export async function deleteMapStore(id: number) {
 }
 
 /** ===== MAP STORE API ROUTES ===== */
-export export function registerMapStoreApiRoutes(app: any) {
+export function registerMapStoreApiRoutes(app: any) {
   app.get("/api/map-stores", async (_req: any, res: any) => {
     try {
       const stores = await getMapStores();
@@ -365,4 +365,5 @@ export export function registerMapStoreApiRoutes(app: any) {
     }
   });
 }
+
 
