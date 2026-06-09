@@ -83,6 +83,9 @@ return (
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-4">
         <h2 className="text-xl font-semibold text-foreground">TP-Link ルーター設定</h2>
+        <p className="text-sm text-muted-foreground">
+          このページの設定値・固定IPリストはWi-Fi未接続でも確認できます。TP-Link管理画面を開く時だけ、対象ルーターのWi-Fiまたは有線LANに接続してください。
+        </p>
 
         <div className="flex flex-wrap gap-3">
           <button
