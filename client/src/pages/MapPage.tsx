@@ -124,7 +124,6 @@ export default function MapPage() {
   const [status, setStatus] = useState("");
   const [newChain, setNewChain] = useState<ConvenienceStore["chain"]>("7-Eleven");
   const [newMapsUrl, setNewMapsUrl] = useState("");
-  const [newDisplayName, setNewDisplayName] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
   const resolveMapsUrlMutation = trpc.maps.resolveGoogleMapsUrl.useMutation({
     onError: (error) => toast.error(error.message),
@@ -214,15 +213,9 @@ export default function MapPage() {
     event.preventDefault();
 
     const mapsUrl = normalizeUrl(newMapsUrl);
-    const displayName = newDisplayName.trim();
 
     if (!mapsUrl) {
       toast.error("Googleマップリンクを入力してください");
-      return;
-    }
-
-    if (!displayName) {
-      toast.error("表示名を入力してください");
       return;
     }
 
@@ -231,12 +224,17 @@ export default function MapPage() {
     try {
       resolved = await resolveMapsUrlMutation.mutateAsync({ url: mapsUrl });
     } catch (error) {
-      console.warn("Google Maps URL resolve failed. Use manual display name.", error);
+      console.warn("Google Maps URL resolve failed. Continue with URL fallback.", error);
     }
+
+    const autoName =
+      resolved.name ||
+      getStoreNameFromMapsUrl(mapsUrl) ||
+      "店舗名未設定";
 
     const nextStore: ConvenienceStore = {
       chain: newChain,
-      name: displayName,
+      name: autoName,
       address: resolved.address || mapsUrl,
       mapsUrl,
       location: resolved.location || currentLocation || fallbackLocation,
@@ -250,8 +248,7 @@ export default function MapPage() {
       setSelectedStore(savedStore);
       setActiveChain(newChain);
       setNewMapsUrl("");
-      setNewDisplayName("");
-      toast.success("店舗リンクを追加しました");
+      toast.success(`店舗リンクを追加しました: ${savedStore.name}`);
     } catch (error: any) {
       toast.error(error.message ?? "店舗リンクの追加に失敗しました");
     }
@@ -315,14 +312,7 @@ export default function MapPage() {
             ))}
           </div>
 
-        <div className="cyber-border rounded-lg bg-card p-3">            <input
-              type="text"
-              value={newDisplayName}
-              onChange={(event) => setNewDisplayName(event.target.value)}
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-              placeholder="表示名 例：ローソン 丸の内二重橋前店"
-            />
-
+        <div className="cyber-border rounded-lg bg-card p-3">
           <input
             type="text"
             value={storeSearch}
@@ -446,6 +436,10 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+
 
 
 
