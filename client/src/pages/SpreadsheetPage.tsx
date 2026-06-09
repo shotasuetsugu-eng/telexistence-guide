@@ -86,6 +86,7 @@ export default function SpreadsheetPage() {
   const isAdmin = user?.role === "admin";
 
   const isShiftPage = window.location.pathname.includes("/shift");
+  const isMeasurementPage = window.location.pathname.includes("/measurement-values");
   const [activeShift, setActiveShift] = useState<"shiftFs" | "shiftTs">("shiftFs");
   const [links, setLinks] = useState<Record<IntegrationKey, IntegrationLink>>(defaultLinks);
   const [viewerSettings, setViewerSettings] = useState<ViewerSettings>(defaultViewerSettings);
@@ -99,7 +100,8 @@ export default function SpreadsheetPage() {
 
   const currentKey: SheetKey = isShiftPage ? activeShift : "storeList";
   const current = links[currentKey];
-  const embedUrl = toSpreadsheetEmbedUrl(current.url);
+  const measurementCurrent = storeList.find((item) => item.label === "メジャメント数値");
+  const displayCurrent = isMeasurementPage && measurementCurrent ? measurementCurrent : current;  const embedUrl = toSpreadsheetEmbedUrl(displayCurrent.url);
 
   const zoomScale = viewerSettings.zoom / 100;
   const iframeWidth = `${100 / zoomScale}%`;
@@ -140,7 +142,7 @@ export default function SpreadsheetPage() {
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-semibold text-foreground">
-          {current.label || (isShiftPage ? "Shift" : "店舗一覧")}
+          {displayCurrent.label || (isShiftPage ? "Shift" : "店舗一覧")}
         </h2>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -215,7 +217,7 @@ export default function SpreadsheetPage() {
         >
           <iframe
             src={embedUrl}
-            title={current.label || "Spreadsheet"}
+            title={displayCurrent.label || "Spreadsheet"}
             className="border-0 bg-white"
             style={{
               width: iframeWidth,
@@ -281,7 +283,7 @@ export default function SpreadsheetPage() {
               表示名
             </label>
             <input
-              value={current.label}
+              value={displayCurrent.label}
               onChange={(event) => updateCurrent("label", event.target.value)}
               placeholder={isShiftPage ? "FS / TS" : "店舗一覧"}
               className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
@@ -293,7 +295,7 @@ export default function SpreadsheetPage() {
               スプレッドシートURL
             </label>
             <input
-              value={current.url}
+              value={displayCurrent.url}
               onChange={(event) => updateCurrent("url", event.target.value)}
               placeholder="https://docs.google.com/spreadsheets/d/xxxxx/edit?usp=sharing"
               className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
@@ -322,6 +324,7 @@ export default function SpreadsheetPage() {
     </div>
   );
 }
+
 
 
 
