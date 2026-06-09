@@ -154,7 +154,7 @@ export default function MapPage() {
   });
 
  useEffect(() => {
-  window.localStorage.removeItem(storageKey);
+  
   setStores([]);
   setSelectedStore(null);
 }, []);
@@ -471,6 +471,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 
