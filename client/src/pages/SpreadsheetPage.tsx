@@ -1,332 +1,180 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useMemo, useState } from "react";
 
-type IntegrationKey = "dashboard" | "autail" | "shiftFs" | "shiftTs" | "storeList";
-type SheetKey = "shiftFs" | "shiftTs" | "storeList";
-
-type IntegrationLink = {
+type SheetItem = {
   label: string;
   url: string;
 };
 
-type ViewerSettings = {
-  height: number;
-  zoom: number;
+const measurementSheet: SheetItem = {
+  label: "メジャメント数値",
+  url: "https://docs.google.com/spreadsheets/d/1FEU1wA1Rzp_FU4h4OQ7qhreawlsOqwUdqY2z9rs6e_E/edit?gid=268657057#gid=268657057",
 };
 
-const storageKey = "tx-integrations-links";
-const viewerStorageKey = "tx-spreadsheet-viewer-settings";
+const shiftList: SheetItem[] = [
+  {
+    label: "Shift",
+    url: "https://docs.google.com/spreadsheets/d/1FEU1wA1Rzp_FU4h4OQ7qhreawlsOqwUdqY2z9rs6e_E/edit?gid=268657057#gid=268657057",
+  },
+];
 
-const defaultLinks: Record<IntegrationKey, IntegrationLink> = {
-  dashboard: { label: "Dashboard", url: "" },
-  autail: { label: "Autail", url: "" },
-  shiftFs: { label: "FS", url: "https://docs.google.com/spreadsheets/d/1P1kcKNJvlr8uA0XWxfFdpKU2RWFt8bj1RQUD6hH9Zhg/edit?gid=1323337038#gid=1323337038" },
-  shiftTs: { label: "TS", url: "https://docs.google.com/spreadsheets/d/1MyrxpLeKCLu1KNdfWLTGio38mFkDhPmpVNn-hLTgSWw/edit?gid=1212632163#gid=1212632163" },
-  storeList: { label: "店舗一覧", url: "https://docs.google.com/spreadsheets/d/1Y4Cw1XcLdb-EZhklHkgq8v2LO9ma8PRnqCnPNJW-aVE/edit?gid=1336532237#gid=1336532237" },
-};
-
-const defaultViewerSettings: ViewerSettings = {
-  height: 900,
-  zoom: 100,
-};
-
-function loadLinks(): Record<IntegrationKey, IntegrationLink> {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
-
-    return {
-      dashboard: { ...defaultLinks.dashboard, ...(saved.dashboard ?? {}) },
-      autail: { ...defaultLinks.autail, ...(saved.autail ?? {}) },
-      shiftFs: { ...defaultLinks.shiftFs, ...(saved.shiftFs ?? {}) },
-      shiftTs: { ...defaultLinks.shiftTs, ...(saved.shiftTs ?? {}) },
-      storeList: { ...defaultLinks.storeList, ...(saved.storeList ?? {}) },
-    };
-  } catch {
-    return defaultLinks;
-  }
-}
-
-function saveLinks(nextLinks: Record<IntegrationKey, IntegrationLink>) {
-  window.localStorage.setItem(storageKey, JSON.stringify(nextLinks));
-}
-
-function loadViewerSettings(): ViewerSettings {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(viewerStorageKey) ?? "{}");
-
-    return {
-      height: Number(saved.height ?? defaultViewerSettings.height),
-      zoom: Number(saved.zoom ?? defaultViewerSettings.zoom),
-    };
-  } catch {
-    return defaultViewerSettings;
-  }
-}
-
-function saveViewerSettings(nextSettings: ViewerSettings) {
-  window.localStorage.setItem(viewerStorageKey, JSON.stringify(nextSettings));
-}
+const storeList: SheetItem[] = [
+  {
+    label: "店舗一覧",
+    url: "https://docs.google.com/spreadsheets/d/1FEU1wA1Rzp_FU4h4OQ7qhreawlsOqwUdqY2z9rs6e_E/edit?gid=268657057#gid=268657057",
+  },
+];
 
 function toSpreadsheetEmbedUrl(url: string) {
   const trimmed = url.trim();
-
   if (!trimmed) return "";
 
-  const match = trimmed.match(/\/spreadsheets\/d\/([^/]+)/);
+  const match = trimmed.match(/\/spreadsheets\/d\/([^/?#]+)/);
+  const gidMatch = trimmed.match(/[?&#]gid=([^&#]+)/);
 
-  if (match?.[1]) {
-    return `https://docs.google.com/spreadsheets/d/${match[1]}/preview`;
-  }
+  if (!match?.[1]) return trimmed;
 
-  return trimmed;
+  const gid = gidMatch?.[1];
+  const gidPart = gid ? `?gid=${gid}` : "";
+
+  return `https://docs.google.com/spreadsheets/d/${match[1]}/preview${gidPart}`;
 }
 
 export default function SpreadsheetPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-
   const isShiftPage = window.location.pathname.includes("/shift");
+  const isStorePage = window.location.pathname.includes("/stores");
   const isMeasurementPage = window.location.pathname.includes("/measurement-values");
-  const [activeShift, setActiveShift] = useState<"shiftFs" | "shiftTs">("shiftFs");
-  const [links, setLinks] = useState<Record<IntegrationKey, IntegrationLink>>(defaultLinks);
-  const [viewerSettings, setViewerSettings] = useState<ViewerSettings>(defaultViewerSettings);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    setLinks(loadLinks());
-    setViewerSettings(loadViewerSettings());
-  }, []);
+  const pageList = useMemo(() => {
+    if (isMeasurementPage) return [measurementSheet];
+    if (isShiftPage) return shiftList;
+    if (isStorePage) return storeList;
+    return storeList;
+  }, [isMeasurementPage, isShiftPage, isStorePage]);
 
-  const currentKey: SheetKey = isShiftPage ? activeShift : "storeList";
-  const current = links[currentKey];
-  const measurementCurrent = storeList.find((item) => item.label === "メジャメント数値");
-  const displayCurrent = isMeasurementPage && measurementCurrent ? measurementCurrent : current;  const embedUrl = toSpreadsheetEmbedUrl(displayCurrent.url);
+  const [currentUrl, setCurrentUrl] = useState(pageList[0]?.url ?? "");
+  const [currentLabel, setCurrentLabel] = useState(pageList[0]?.label ?? "Spreadsheet");
+  const [height, setHeight] = useState(900);
+  const [zoom, setZoom] = useState(100);
 
-  const zoomScale = viewerSettings.zoom / 100;
-  const iframeWidth = `${100 / zoomScale}%`;
-  const iframeHeight = `${viewerSettings.height / zoomScale}px`;
+  const embedUrl = toSpreadsheetEmbedUrl(currentUrl);
+  const iframeHeight = `${height / (zoom / 100)}px`;
 
-  const updateCurrent = (field: keyof IntegrationLink, value: string) => {
-    setLinks((prev) => ({
-      ...prev,
-      [currentKey]: {
-        ...prev[currentKey],
-        [field]: value,
-      },
-    }));
+  const title = isMeasurementPage
+    ? "メジャメント数値"
+    : isShiftPage
+      ? "Shift"
+      : "店舗一覧";
+
+  const openSheet = () => {
+    if (currentUrl) {
+      window.open(currentUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
-  const updateViewerSettings = (nextSettings: ViewerSettings) => {
-    setViewerSettings(nextSettings);
-    saveViewerSettings(nextSettings);
+  const resetSize = () => {
+    setHeight(900);
+    setZoom(100);
   };
 
-  const handleSave = () => {
-    saveLinks(links);
-    setStatus("保存しました");
-    setTimeout(() => setStatus(""), 2000);
+  const selectSheet = (item: SheetItem) => {
+    setCurrentLabel(item.label);
+    setCurrentUrl(item.url);
   };
-
-  const resetViewerSize = () => {
-    updateViewerSettings(defaultViewerSettings);
-  };
-
-  const sheetViewer = (
-    <div
-      className={
-        isFullscreen
-          ? "fixed inset-3 z-50 cyber-border rounded-lg bg-background p-3 shadow-2xl"
-          : "cyber-border rounded-lg bg-card p-3"
-      }
-    >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-foreground">
-          {displayCurrent.label || (isShiftPage ? "Shift" : "店舗一覧")}
-        </h2>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsFullscreen((prev) => !prev)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:border-primary/50 hover:text-primary"
-          >
-            {isFullscreen ? "通常表示" : "全画面表示"}
-          </button>
-
-          <button
-            type="button"
-            onClick={resetViewerSize}
-            className="rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          >
-            サイズ初期化
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-3 grid gap-3 md:grid-cols-2">
-        <div className="rounded-md border border-border bg-background p-3">
-          <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">高さ</span>
-            <span className="font-semibold text-primary">{viewerSettings.height}px</span>
-          </div>
-          <input
-            type="range"
-            min="500"
-            max="1600"
-            step="50"
-            value={viewerSettings.height}
-            onChange={(event) =>
-              updateViewerSettings({
-                ...viewerSettings,
-                height: Number(event.target.value),
-              })
-            }
-            className="w-full"
-          />
-        </div>
-
-        <div className="rounded-md border border-border bg-background p-3">
-          <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">表示倍率</span>
-            <span className="font-semibold text-primary">{viewerSettings.zoom}%</span>
-          </div>
-          <input
-            type="range"
-            min="75"
-            max="130"
-            step="5"
-            value={viewerSettings.zoom}
-            onChange={(event) =>
-              updateViewerSettings({
-                ...viewerSettings,
-                zoom: Number(event.target.value),
-              })
-            }
-            className="w-full"
-          />
-        </div>
-      </div>
-
-      {embedUrl ? (
-        <div
-          className="w-full overflow-auto rounded-md border border-border bg-white"
-          style={{
-            height: isFullscreen ? "calc(100vh - 150px)" : `${viewerSettings.height}px`,
-          }}
-        >
-          <iframe
-            src={embedUrl}
-            title={displayCurrent.label || "Spreadsheet"}
-            className="border-0 bg-white"
-            style={{
-              width: iframeWidth,
-              height: isFullscreen ? `calc((100vh - 150px) / ${zoomScale})` : iframeHeight,
-              transform: `scale(${zoomScale})`,
-              transformOrigin: "top left",
-            }}
-          />
-        </div>
-      ) : (
-        <div className="rounded-md border border-border bg-background p-6 text-sm text-muted-foreground">
-          スプレッドシートURLが未設定です。上の設定欄に表示名とURLを入力して保存してください。
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black tracking-tight text-foreground">
-          {isShiftPage ? "Shift" : links.storeList.label || "店舗一覧"}
-        </h1>
-        <p className="mono-sub">// SPREADSHEET_VIEW</p>
+      <div className="glitch-text text-3xl font-bold text-primary" data-text={title}>
+        {title}
       </div>
+      <p className="mono-sub text-2xl">// SPREADSHEET_VIEW</p>
 
-      {isShiftPage && (
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveShift("shiftFs")}
-            className={`rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${
-              activeShift === "shiftFs"
-                ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {links.shiftFs.label || "FS"}
-          </button>
+      <section className="cyber-border rounded-lg p-4 bg-card space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-foreground">{currentLabel}</h2>
 
-          <button
-            type="button"
-            onClick={() => setActiveShift("shiftTs")}
-            className={`rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${
-              activeShift === "shiftTs"
-                ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {links.shiftTs.label || "TS"}
-          </button>
-        </div>
-      )}
-
-      {isAdmin && (
-        <div className="cyber-border rounded-lg bg-card p-4 space-y-3">
-          <h2 className="font-semibold text-foreground">
-            スプレッドシート設定
-          </h2>
-
-          <div className="space-y-2">
-            <label className="block text-xs text-muted-foreground">
-              表示名
-            </label>
-            <input
-              value={displayCurrent.label}
-              onChange={(event) => updateCurrent("label", event.target.value)}
-              placeholder={isShiftPage ? "FS / TS" : "店舗一覧"}
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-xs text-muted-foreground">
-              スプレッドシートURL
-            </label>
-            <input
-              value={displayCurrent.url}
-              onChange={(event) => updateCurrent("url", event.target.value)}
-              placeholder="https://docs.google.com/spreadsheets/d/xxxxx/edit?usp=sharing"
-              className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap gap-2">
             <button
-              type="button"
-              onClick={handleSave}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              onClick={openSheet}
+              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
             >
-              保存
+              別タブで開く
             </button>
 
-            {status && (
-              <span className="text-sm text-primary">
-                {status}
-              </span>
-            )}
+            <button
+              onClick={resetSize}
+              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
+            >
+              サイズ初期化
+            </button>
           </div>
         </div>
-      )}
 
-      {sheetViewer}
+        {pageList.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {pageList.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => selectSheet(item)}
+                className={`px-3 py-2 rounded-md border border-border ${
+                  currentLabel === item.label ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label className="space-y-1">
+            <span className="text-sm text-muted-foreground">高さ</span>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span>表示高さ</span>
+                <span className="font-semibold text-primary">{height}px</span>
+              </div>
+              <input
+                type="range"
+                min="500"
+                max="1400"
+                value={height}
+                onChange={(event) => setHeight(Number(event.target.value))}
+                className="w-full"
+              />
+            </div>
+          </label>
+
+          <label className="space-y-1">
+            <span className="text-sm text-muted-foreground">表示倍率</span>
+            <div className="rounded-md border border-border bg-input p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span>倍率</span>
+                <span className="font-semibold text-primary">{zoom}%</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="150"
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+                className="w-full"
+              />
+            </div>
+          </label>
+        </div>
+
+        <iframe
+          title={currentLabel}
+          src={embedUrl}
+          className="w-full rounded-md border border-border bg-background"
+          style={{
+            height: iframeHeight,
+            transform: `scale(${zoom / 100})`,
+            transformOrigin: "top left",
+            width: `${100 / (zoom / 100)}%`,
+          }}
+        />
+      </section>
     </div>
   );
 }
-
-
-
-
-
-
