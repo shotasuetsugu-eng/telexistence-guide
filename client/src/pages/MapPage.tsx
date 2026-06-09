@@ -60,7 +60,15 @@ function getStoreNameFromMapsUrl(url: string) {
 }
 
 function loadStores() {
-  return [];
+  try {
+    const saved = window.localStorage.getItem(storageKey);
+    if (!saved) return [];
+
+    const parsed = JSON.parse(saved) as ConvenienceStore[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 async function loadStoresFromApi(): Promise<ConvenienceStore[]> {
@@ -142,7 +150,7 @@ export default function MapPage() {
 
   const saveStores = (nextStores: ConvenienceStore[]) => {
     setStores(nextStores);
-    
+    window.localStorage.setItem(storageKey, JSON.stringify(nextStores));
   };
 
   const visibleStores = useMemo(
@@ -451,6 +459,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
 
 
 
