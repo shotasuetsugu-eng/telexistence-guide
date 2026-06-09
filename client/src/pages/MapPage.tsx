@@ -566,7 +566,9 @@ export default function MapPage() {
             initialCenter={selectedStore?.location ?? currentLocation}
             initialZoom={16}
             currentLocation={currentLocation ?? fallbackLocation}
-            destination={selectedStore?.location ?? currentLocation}
+            stores={visibleStores}
+            selectedStore={selectedStore}
+            onSelectStore={selectStore}
             route={[]}
           />
         </div>
@@ -575,6 +577,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 

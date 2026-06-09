@@ -12,6 +12,15 @@ L.Icon.Default.mergeOptions({
 
 type LatLng = { lat: number; lng: number };
 
+type ConvenienceStore = {
+  id?: number;
+  chain: "7-Eleven" | "FamilyMart" | "Lawson";
+  name: string;
+  address: string;
+  mapsUrl: string;
+  location: LatLng;
+};
+
 type MapViewProps = {
   className?: string;
   initialCenter?: LatLng;
@@ -19,7 +28,60 @@ type MapViewProps = {
   currentLocation?: LatLng | null;
   destination?: LatLng | null;
   route?: LatLng[];
+  stores?: ConvenienceStore[];
+  selectedStore?: ConvenienceStore | null;
+  onSelectStore?: (store: ConvenienceStore) => void;
 };
+
+const logoUrlByChain: Record<ConvenienceStore["chain"], string> = {
+  "7-Eleven": "/map-icons/seven-eleven.png",
+  FamilyMart: "/map-icons/familymart.png",
+  Lawson: "/map-icons/lawson.png",
+};
+
+function isSameStore(a?: ConvenienceStore | null, b?: ConvenienceStore | null) {
+  if (!a || !b) return false;
+  if (a.id && b.id) return a.id === b.id;
+  return a.name === b.name && a.mapsUrl === b.mapsUrl;
+}
+
+function getStoreLogoIcon(chain: ConvenienceStore["chain"], isSelected: boolean) {
+  const size = isSelected ? 58 : 46;
+  const logoUrl = logoUrlByChain[chain];
+
+  return L.divIcon({
+    className: "store-logo-marker-wrapper",
+    html: `
+      <div style="
+        width:${size}px;
+        height:${size}px;
+        border-radius:12px;
+        background:#ffffff;
+        border:${isSelected ? 4 : 2}px solid ${isSelected ? "#00f5d4" : "#ffffff"};
+        box-shadow:0 0 ${isSelected ? 18 : 10}px rgba(0,245,212,0.75);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        overflow:hidden;
+      ">
+        <img
+          src="${logoUrl}"
+          alt="${chain}"
+          style="
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            padding:4px;
+            box-sizing:border-box;
+          "
+        />
+      </div>
+    `,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
+  });
+}
 
 function ChangeView({ center, zoom }: { center: LatLng; zoom: number }) {
   const map = useMap();
@@ -38,6 +100,9 @@ export function MapView({
   currentLocation,
   destination,
   route = [],
+  stores = [],
+  selectedStore,
+  onSelectStore,
 }: MapViewProps) {
   return (
     <div className={className}>
@@ -53,13 +118,24 @@ export function MapView({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {currentLocation && (
+        {stores.length === 0 && currentLocation && (
           <Marker position={[currentLocation.lat, currentLocation.lng]} />
         )}
 
-        {destination && (
+        {stores.length === 0 && destination && (
           <Marker position={[destination.lat, destination.lng]} />
         )}
+
+        {stores.map((store, index) => (
+          <Marker
+            key={`${store.id ?? store.mapsUrl ?? store.name}-${index}`}
+            position={[store.location.lat, store.location.lng]}
+            icon={getStoreLogoIcon(store.chain, isSameStore(store, selectedStore))}
+            eventHandlers={{
+              click: () => onSelectStore?.(store),
+            }}
+          />
+        ))}
 
         {route.length > 0 && (
           <Polyline positions={route.map((p) => [p.lat, p.lng])} />
