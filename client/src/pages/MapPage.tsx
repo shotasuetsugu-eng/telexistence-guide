@@ -245,25 +245,33 @@ export default function MapPage() {
       location: resolved.location || currentLocation || fallbackLocation,
     };
 
+    // 先に画面へ表示する。API失敗で止めない。
+    let savedStore = nextStore;
+
     try {
       const created = await createStoreOnApi(nextStore);
-      const savedStore = { ...nextStore, id: created.id };
-
-      saveStores([...stores, savedStore]);
-      setSelectedStore(savedStore);
-      setActiveChain(newChain);
-      setNewMapsUrl("");
-      toast.success(`店舗リンクを追加しました: ${savedStore.name}`);
-    } catch (error: any) {
-      toast.error(error.message ?? "店舗リンクの追加に失敗しました");
+      savedStore = { ...nextStore, id: created.id };
+    } catch (error) {
+      console.warn("Map store API save failed. Showing store on screen only.", error);
+      toast.error("DB保存に失敗しました。画面には追加します。");
     }
+
+    saveStores([...stores, savedStore]);
+    setSelectedStore(savedStore);
+    setActiveChain(newChain);
+    setNewMapsUrl("");
+    toast.success(`店舗リンクを追加しました: ${savedStore.name}`);
   };
 
   const deleteStore = async (storeName: string) => {
     const targetStore = stores.find((store) => store.name === storeName);
 
     if (targetStore?.id) {
-      await deleteStoreOnApi(targetStore.id);
+      try {
+        await deleteStoreOnApi(targetStore.id);
+      } catch (error) {
+        console.warn("Map store API delete failed. Deleting from screen only.", error);
+      }
     }
 
     const nextStores = stores.filter((store) => store.name !== storeName);
@@ -275,6 +283,8 @@ export default function MapPage() {
     if (fallback) {
       setSelectedStore(fallback);
       setCurrentLocation(fallback.location);
+    } else {
+      setSelectedStore(null);
     }
   };
 
@@ -441,6 +451,9 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
 
 
 
