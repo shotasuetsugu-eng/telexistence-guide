@@ -216,6 +216,16 @@ return (
       <section className="cyber-border rounded-lg p-4 bg-card space-y-4">
         <h2 className="text-xl font-semibold text-foreground">TP-Link ルーター設定</h2>
 
+        {/* ROUTER_SETTING_ADMIN_BUTTON */}
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={openRouter}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+          >
+            TP-Link管理画面を開く
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label className="space-y-1 md:col-span-2">
             <span className="text-sm text-muted-foreground">店舗タイプ</span>
@@ -433,6 +443,7 @@ return (
     </div>
   );
 }
+
 
 
 
