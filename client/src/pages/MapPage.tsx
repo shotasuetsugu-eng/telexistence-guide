@@ -102,7 +102,51 @@ function getStoreNameFromMapsUrl(url: string) {
 }
 
 function loadStores() {
+  const saved = window.localStorage.getItem(storageKey);
+  if (saved) return JSON.parse(saved) as ConvenienceStore[];
   return defaultStores;
+}
+
+async function loadStoresFromApi(): Promise<ConvenienceStore[]> {
+  const response = await fetch("/api/map-stores");
+  if (!response.ok) throw new Error("Failed to load map stores");
+  const rows = await response.json();
+
+  return rows.map((row: any) => ({
+    id: row.id,
+    chain: row.chain,
+    name: row.name,
+    address: row.address,
+    location: {
+      lat: Number(row.lat),
+      lng: Number(row.lng),
+    },
+  }));
+}
+
+async function createStoreOnApi(store: ConvenienceStore) {
+  const response = await fetch("/api/map-stores", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chain: store.chain,
+      name: store.name,
+      address: store.address,
+      lat: String(store.location.lat),
+      lng: String(store.location.lng),
+    }),
+  });
+
+  if (!response.ok) throw new Error("Failed to create map store");
+  return response.json();
+}
+
+async function deleteStoreOnApi(id: number) {
+  const response = await fetch(`/api/map-stores/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) throw new Error("Failed to delete map store");
 }
 export default function MapPage() {
   const { user } = useAuth();
@@ -186,17 +230,24 @@ export default function MapPage() {
       mapsUrl: resolved.url,
       location,
     };
-    saveStores([...stores, nextStore]);
-    setSelectedStore(nextStore);
+    const created = await createStoreOnApi(nextStore);
+    const savedStore = { ...nextStore, id: created.id };
+    saveStores([...stores, savedStore]);
+    setSelectedStore(savedStore);
     setActiveChain(newChain);
     setNewMapsUrl("");
     toast.success("店舗リンクを追加しました");
   };
 
-  const deleteStore = (storeName: string) => {
+  const deleteStore = async (storeName: string) => {
+    const targetStore = stores.find((store) => store.name === storeName);
+
+    if (targetStore?.id) {
+      await deleteStoreOnApi(targetStore.id);
+    }
+
     const nextStores = stores.filter((store) => store.name !== storeName);
     saveStores(nextStores);
-    setStores(nextStores);
 
     const sameChainStores = nextStores.filter((store) => store.chain === activeChain);
     const fallback = sameChainStores[0] ?? nextStores[0] ?? null;
@@ -370,6 +421,10 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+
 
 
 

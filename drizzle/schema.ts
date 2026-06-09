@@ -128,3 +128,20 @@ export const linkSettings = pgTable("link_settings", {
 
 export type LinkSetting = typeof linkSettings.$inferSelect;
 export type InsertLinkSetting = typeof linkSettings.$inferInsert;
+
+/**
+ * Map Stores - コンビニマップ店舗
+ */
+export const mapStores = pgTable("map_stores", {
+  id: serial("id").primaryKey(),
+  chain: varchar("chain", { length: 50 }).notNull(),
+  name: varchar("name", { length: 500 }).notNull(),
+  address: text("address").notNull(),
+  lat: text("lat").notNull(),
+  lng: text("lng").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type MapStore = typeof mapStores.$inferSelect;
+export type InsertMapStore = typeof mapStores.$inferInsert;

@@ -8,7 +8,7 @@ import {
   procedureSteps, InsertProcedureStep,
   checklists, InsertChecklist,
   checklistItems, InsertChecklistItem,
-  documents, InsertDocument,
+  documents, mapStores, InsertDocument,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -308,3 +308,30 @@ export async function searchAll(query: string) {
 }
 
 
+
+
+/** ===== MAP STORES ===== */
+export async function getMapStores() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mapStores).orderBy(mapStores.id);
+}
+
+export async function createMapStore(data: {
+  chain: string;
+  name: string;
+  address: string;
+  lat: string;
+  lng: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(mapStores).values(data).returning({ id: mapStores.id });
+  return { id: result[0].id };
+}
+
+export async function deleteMapStore(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(mapStores).where(eq(mapStores.id, id));
+}
