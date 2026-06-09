@@ -3,12 +3,13 @@ import { MapView } from "@/components/Map";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { ExternalLink, LocateFixed, MapPin, Plus, Store, Trash2 } from "lucide-react";
+import { ExternalLink, LocateFixed, Pencil, Plus, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type LatLng = { lat: number; lng: number };
 
 type ConvenienceStore = {
+  id?: number;
   chain: "7-Eleven" | "FamilyMart" | "Lawson";
   name: string;
   address: string;
@@ -153,11 +154,53 @@ export default function MapPage() {
     onError: (error) => toast.error(error.message),
   });
 
- useEffect(() => {
-  
-  setStores([]);
-  setSelectedStore(null);
-}, []);
+  useEffect(() => {
+    let isMounted = true;
+
+    const applyLoadedStores = (nextStores: ConvenienceStore[]) => {
+      setStores(nextStores);
+      window.localStorage.setItem(storageKey, JSON.stringify(nextStores));
+
+      const firstStore = nextStores[0] ?? null;
+      setSelectedStore(firstStore);
+
+      if (firstStore) {
+        setActiveChain(firstStore.chain);
+        setCurrentLocation(firstStore.location);
+      }
+    };
+
+    const loadMapStores = async () => {
+      try {
+        const apiStores = await loadStoresFromApi();
+        console.log("FORCE_MAP_API_STORES", apiStores);
+
+        if (!isMounted) return;
+
+        if (apiStores.length > 0) {
+          applyLoadedStores(apiStores);
+          return;
+        }
+
+        const localStores = loadStores();
+        applyLoadedStores(localStores);
+      } catch (error) {
+        console.warn("FORCE_MAP_API_STORES_FAILED", error);
+
+        if (!isMounted) return;
+
+        const localStores = loadStores();
+        console.log("FORCE_MAP_API_STORES", localStores);
+        applyLoadedStores(localStores);
+      }
+    };
+
+    void loadMapStores();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const saveStores = (nextStores: ConvenienceStore[]) => {
     setStores(nextStores);
@@ -233,6 +276,16 @@ export default function MapPage() {
 
     toast.success("表示名を更新しました");
   };
+
+  const editDisplayName = (store: ConvenienceStore | null) => {
+    if (!store) return;
+
+    const nextName = window.prompt("表示名を入力してください", store.name);
+    if (nextName === null) return;
+
+    void updateDisplayName(store, nextName);
+  };
+
   const addStore = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -243,7 +296,11 @@ export default function MapPage() {
       return;
     }
 
-    let resolved: Partial<ConvenienceStore> = {};
+    let resolved: {
+      name?: string;
+      address?: string;
+      location?: LatLng | null;
+    } = {};
 
     try {
       resolved = await resolveMapsUrlMutation.mutateAsync({ url: mapsUrl });
@@ -276,7 +333,6 @@ export default function MapPage() {
     }
 
     saveStores([...stores, savedStore]);
-    window.localStorage.setItem(storageKey, JSON.stringify([...stores, savedStore]));
     setSelectedStore(savedStore);
     setActiveChain(newChain);
     setNewMapsUrl("");
@@ -383,13 +439,24 @@ export default function MapPage() {
                   Googleマップで経路表示
                 </button>
                 {isAdmin && (
-                  <button
-                    onClick={() => deleteStore(store.name)}
-                    className="ml-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    削除
-                  </button>
+                  <div className="inline-flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => editDisplayName(store)}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      表示名編集
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteStore(store.name)}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      削除
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
@@ -443,15 +510,25 @@ export default function MapPage() {
               Googleマップで経路表示
             </button>
 
-            {isAdmin && stores.some((store) => store.name === selectedStore.name) && (
-              <button
-                type="button"
-                onClick={() => deleteStore(selectedStore.name)}
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3" />
-                削除
-              </button>
+            {isAdmin && selectedStore && stores.some((store) => store.name === selectedStore.name) && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => editDisplayName(selectedStore)}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                >
+                  <Pencil className="h-3 w-3" />
+                  表示名編集
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteStore(selectedStore.name)}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  削除
+                </button>
+              </>
             )}
           </div>
         </div>
