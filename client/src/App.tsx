@@ -32,6 +32,7 @@ function Router() {
         <Route path="/admin" component={AdminPanel} />        <Route path="/map" component={MapPage} />
         <Route path="/shift" component={SpreadsheetPage} />
         <Route path="/stores" component={SpreadsheetPage} />
+          <Route path="/measurement-values" component={SpreadsheetPage} />
         <Route path="/integrations" component={Integrations} />
           <Route path="/router-setup" component={RouterSetup} />
           <Route path="/Wifi-setup" component={RouterSetup} />
@@ -56,6 +57,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
