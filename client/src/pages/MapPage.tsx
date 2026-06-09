@@ -201,8 +201,15 @@ export default function MapPage() {
   const deleteStore = (storeName: string) => {
     const nextStores = stores.filter((store) => store.name !== storeName);
     saveStores(nextStores);
-    const fallback = nextStores.find((store) => store.chain === activeChain) ?? nextStores[0] ?? defaultStores[0];
-    setSelectedStore(fallback);
+    setStores(nextStores);
+
+    const sameChainStores = nextStores.filter((store) => store.chain === activeChain);
+    const fallback = sameChainStores[0] ?? nextStores[0] ?? null;
+
+    if (fallback) {
+      setSelectedStore(fallback);
+      setCurrentLocation(fallback.location);
+    }
   };
 
   return (
@@ -368,6 +375,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 
