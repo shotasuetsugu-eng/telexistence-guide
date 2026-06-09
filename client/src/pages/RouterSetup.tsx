@@ -13,9 +13,6 @@ export default function RouterSetup() {
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
 
-  const [showNetworkBasicFrame, setShowNetworkBasicFrame] = useState(false);
-  const [showDhcpServerAdvFrame, setShowDhcpServerAdvFrame] = useState(false);
-
   const networkBasicUrl = "http://192.168.200.1/#networkBasic";
   const dhcpServerAdvUrl = "http://192.168.200.1/#dhcpServerAdv";
 
@@ -60,18 +57,10 @@ ${fixedIpText}
   };
 
   const showNetworkBasicPage = () => {
-    setShowNetworkBasicFrame(true);
-  };
-
-  const openNetworkBasicNewTab = () => {
     window.open(networkBasicUrl, "_blank", "noopener,noreferrer");
   };
 
   const showDhcpServerAdvPage = () => {
-    setShowDhcpServerAdvFrame(true);
-  };
-
-  const openDhcpServerAdvNewTab = () => {
     window.open(dhcpServerAdvUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -159,21 +148,12 @@ return (
             {storeType === "SEJ" ? "SEJネットワーク設定" : "FMネットワーク設定"}
           </h2>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={showNetworkBasicPage}
-              className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
-            >
-              設定画面を表示
-            </button>
-
-            <button
-              onClick={openNetworkBasicNewTab}
-              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
-            >
-              別タブで開く
-            </button>
-          </div>
+          <button
+            onClick={showNetworkBasicPage}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+          >
+            設定画面を開く
+          </button>
         </div>
 
         {storeType === "SEJ" ? (
@@ -209,42 +189,18 @@ return (
             <button type="button" onClick={() => copyValue("V6プラス")} className="font-semibold text-left hover:underline">V6プラス</button>
           </div>
         )}
-
-        {showNetworkBasicFrame && (
-          <div className="space-y-2">
-            <div className="w-full overflow-x-auto rounded-md border border-border bg-background">
-              <iframe
-                title="Internet Network Basic"
-                src={networkBasicUrl}
-                className="h-[720px] w-[1280px] max-w-none bg-background"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
-            </p>
-          </div>
-        )}
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-foreground">固定IPリスト</h2>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={showDhcpServerAdvPage}
-              className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
-            >
-              設定画面を表示
-            </button>
-
-            <button
-              onClick={openDhcpServerAdvNewTab}
-              className="px-4 py-2 rounded-md border border-border hover:bg-muted"
-            >
-              別タブで開く
-            </button>
-          </div>
+          <button
+            onClick={showDhcpServerAdvPage}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+          >
+            設定画面を開く
+          </button>
         </div>
 
         <div className="space-y-2">
@@ -270,21 +226,6 @@ return (
         <p className="text-sm text-muted-foreground">
           固定IPはPDF手順に合わせて固定です。IPアドレスをクリックすると個別にコピーできます。
         </p>
-
-        {showDhcpServerAdvFrame && (
-          <div className="space-y-2">
-            <div className="w-full overflow-x-auto rounded-md border border-border bg-background">
-              <iframe
-                title="TP-Link DHCP Server Advanced"
-                src={dhcpServerAdvUrl}
-                className="h-[720px] w-[1280px] max-w-none bg-background"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              表示されない場合は、ChromeまたはTP-Link側の制限です。その場合は「別タブで開く」を使ってください。
-            </p>
-          </div>
-        )}
       </section>
     </div>
   );
