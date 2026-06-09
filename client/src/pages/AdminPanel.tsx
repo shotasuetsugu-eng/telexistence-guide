@@ -260,7 +260,6 @@ function ProceduresAdmin() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [categoryId, setCategoryId] = useState<number | "">("");
   const [content, setContent] = useState("");
   const [procedureFile, setProcedureFile] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -280,9 +279,10 @@ function ProceduresAdmin() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || categoryId === "") return;
-    createMutation.mutate({ categoryId, title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
-    setTitle(""); setDescription(""); setContent(""); setCategoryId("");
+    const defaultCategoryId = categories?.[0]?.id;
+    if (!title.trim() || !defaultCategoryId) return;
+    createMutation.mutate({ categoryId: defaultCategoryId, title: title.trim(), description: description.trim() || undefined, content: content.trim() || undefined });
+    setTitle(""); setDescription(""); setContent("");
   };
 
   const startEdit = (proc: { id: number; title: string; description: string | null; content: string | null }) => {
@@ -357,11 +357,6 @@ function ProceduresAdmin() {
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <option value="">カテゴリを選択</option>
-          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-        </select>
         <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="メモ（任意）" rows={3}
           className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
         <input id="procedure-main-file" type="file" onChange={(e) => setProcedureFile(e.target.files?.[0] ?? null)}
