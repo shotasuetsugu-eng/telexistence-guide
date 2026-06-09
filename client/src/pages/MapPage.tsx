@@ -127,7 +127,7 @@ export default function MapPage() {
 
   const saveStores = (nextStores: ConvenienceStore[]) => {
     setStores(nextStores);
-    window.localStorage.setItem(storageKey, JSON.stringify(nextStores));
+    
   };
 
   const visibleStores = useMemo(
