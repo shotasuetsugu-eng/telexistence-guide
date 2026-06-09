@@ -91,7 +91,7 @@ async function loadStoresFromApi(): Promise<ConvenienceStore[]> {
     chain: row.chain || "7-Eleven",
     name: row.name || "店舗名未設定",
     address: row.address || "",
-    mapsUrl: row.address || "",
+    mapsUrl: row.mapsUrl || row.address || "",
     location: {
       lat: Number(row.lat || 35.681236),
       lng: Number(row.lng || 139.767125),
@@ -471,6 +471,9 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
 
 
 
