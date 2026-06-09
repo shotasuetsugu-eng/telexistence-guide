@@ -127,7 +127,10 @@ async function deleteStoreOnApi(id: number) {
     method: "DELETE",
   });
 
-  if (!response.ok) throw new Error("Failed to delete map store");
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to delete map store");
+  }
 }
 
 async function updateStoreNameOnApi(id: number, name: string) {
@@ -339,18 +342,22 @@ export default function MapPage() {
     toast.success(`店舗リンクを追加しました: ${savedStore.name}`);
   };
 
-  const deleteStore = async (storeName: string) => {
-    const targetStore = stores.find((store) => store.name === storeName);
-
-    if (targetStore?.id) {
+  const deleteStore = async (targetStore: ConvenienceStore) => {
+    if (targetStore.id) {
       try {
         await deleteStoreOnApi(targetStore.id);
+        console.log("MAP_STORE_DELETED", targetStore.id);
       } catch (error) {
-        console.warn("Map store API delete failed. Deleting from screen only.", error);
+        console.warn("Map store API delete failed.", error);
+        toast.error("DB削除に失敗しました。リロード後に復活するため、削除を中止しました。");
+        return;
       }
     }
 
-    const nextStores = stores.filter((store) => store.name !== storeName);
+    const nextStores = stores.filter((store) => {
+      if (targetStore.id) return store.id !== targetStore.id;
+      return store !== targetStore;
+    });
     saveStores(nextStores);
 
     const sameChainStores = nextStores.filter((store) => store.chain === activeChain);
@@ -450,7 +457,7 @@ export default function MapPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => deleteStore(store.name)}
+                      onClick={() => deleteStore(store)}
                       className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -510,7 +517,10 @@ export default function MapPage() {
               Googleマップで経路表示
             </button>
 
-            {isAdmin && selectedStore && stores.some((store) => store.name === selectedStore.name) && (
+            {isAdmin && selectedStore && stores.some((store) => {
+              if (selectedStore.id) return store.id === selectedStore.id;
+              return store === selectedStore;
+            }) && (
               <>
                 <button
                   type="button"
@@ -522,7 +532,7 @@ export default function MapPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteStore(selectedStore.name)}
+                  onClick={() => deleteStore(selectedStore)}
                   className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="h-3 w-3" />
