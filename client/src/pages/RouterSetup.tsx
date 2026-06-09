@@ -400,21 +400,12 @@ return (
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
-        <h2 className="text-xl font-semibold text-foreground">実行</h2>
-        <div className="flex flex-wrap gap-3">
-          <button onClick={downloadPowerShell} className="px-4 py-2 rounded-md bg-primary text-primary-foreground">
-            PowerShellを作成
-          </button>
-          <button onClick={openRouter} className="px-4 py-2 rounded-md border border-border hover:bg-muted">
-            TP-Link管理画面を開く
-          </button>
-          <button onClick={copySettings} className="px-4 py-2 rounded-md border border-border hover:bg-muted">
-            設定値をコピー
-          </button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          PowerShellはPC側の固定IPとDNSを自動設定し、TP-Link管理画面を開きます。SSIDやDHCPはコピーされた値を管理画面へ入力してください。
-        </p>
+        <button
+          onClick={openRouter}
+          className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+        >
+          TP-Link管理画面を開く
+        </button>
       </section>
       {showRouterFrame && (
         <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -442,6 +433,7 @@ return (
     </div>
   );
 }
+
 
 
 
