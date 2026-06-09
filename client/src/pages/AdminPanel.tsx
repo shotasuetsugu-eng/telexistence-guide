@@ -240,6 +240,10 @@ function ProceduresAdmin() {
     onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを削除しました"); },
     onError: (err) => toast.error(err.message),
   });
+  const createCategoryMutation = trpc.categories.create.useMutation({
+    onSuccess: () => { utils.categories.list.invalidate(); },
+    onError: (err) => toast.error(err.message),
+  });
 
   // Steps management
   const createStepMutation = trpc.procedureSteps.create.useMutation({
@@ -259,7 +263,7 @@ function ProceduresAdmin() {
   });
 
   const [createRows, setCreateRows] = useState([
-    { id: 1, title: "", description: "", content: "", file: null as File | null },
+    { id: 1, categoryName: "", title: "", description: "", content: "", file: null as File | null },
   ]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -278,7 +282,7 @@ function ProceduresAdmin() {
 
   const updateCreateRow = (
     rowId: number,
-    field: "title" | "description" | "content" | "file",
+    field: "categoryName" | "title" | "description" | "content" | "file",
     value: string | File | null
   ) => {
     setCreateRows((rows) =>
@@ -289,7 +293,7 @@ function ProceduresAdmin() {
   const addCreateRow = () => {
     setCreateRows((rows) => [
       ...rows,
-      { id: Date.now(), title: "", description: "", content: "", file: null },
+      { id: Date.now(), categoryName: "", title: "", description: "", content: "", file: null },
     ]);
   };
 
@@ -297,14 +301,17 @@ function ProceduresAdmin() {
     setCreateRows((rows) => rows.filter((row) => row.id !== rowId));
   };
 
-  const handleCreate = (e: React.FormEvent, rowId: number) => {
+  const handleCreate = async (e: React.FormEvent, rowId: number) => {
     e.preventDefault();
-    const defaultCategoryId = categories?.[0]?.id;
     const row = createRows.find((item) => item.id === rowId);
-    if (!row?.title.trim() || !defaultCategoryId) return;
+    if (!row?.title.trim()) return;
 
-    createMutation.mutate({
-      categoryId: defaultCategoryId,
+    const categoryName = row.categoryName.trim() || "Smartboarding";
+    const existingCategory = categories?.find((category) => category.name.trim().toLowerCase() === categoryName.toLowerCase());
+    const categoryId = existingCategory?.id ?? (await createCategoryMutation.mutateAsync({ name: categoryName })).id;
+
+    await createMutation.mutateAsync({
+      categoryId,
       title: row.title.trim(),
       description: row.description.trim() || undefined,
       content: row.content.trim() || undefined,
@@ -407,6 +414,8 @@ function ProceduresAdmin() {
                 </button>
               )}
             </div>
+            <input type="text" value={row.categoryName} onChange={(e) => updateCreateRow(row.id, "categoryName", e.target.value)} placeholder="分類名（例：カメラ、ルーター、BOX）"
+              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             <input type="text" value={row.title} onChange={(e) => updateCreateRow(row.id, "title", e.target.value)} placeholder="表示名"
               className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             <input type="text" value={row.description} onChange={(e) => updateCreateRow(row.id, "description", e.target.value)} placeholder="リンクURL"
@@ -416,7 +425,7 @@ function ProceduresAdmin() {
             <input id={`procedure-main-file-${row.id}`} type="file" onChange={(e) => updateCreateRow(row.id, "file", e.target.files?.[0] ?? null)}
               className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
             {row.file && <p className="text-xs text-muted-foreground">選択中: {row.file.name} ({(row.file.size / 1024).toFixed(1)} KB)</p>}
-            <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
+            <Button type="submit" size="sm" disabled={createMutation.isPending || createCategoryMutation.isPending}>{createMutation.isPending || createCategoryMutation.isPending ? "作成中..." : "作成"}</Button>
           </form>
         ))}
       </div>
