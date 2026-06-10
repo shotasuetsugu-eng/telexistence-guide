@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type StoreType = "SEJ" | "FM";
 
@@ -12,6 +12,7 @@ export default function RouterSetup() {
   const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
 
   const networkBasicUrl = "http://192.168.200.1/#networkBasic";
   const dhcpServerAdvUrl = "http://192.168.200.1/#dhcpServerAdv";
@@ -26,6 +27,18 @@ export default function RouterSetup() {
   const fixedIpText = devices
     .map((device) => `${device.name}: ${device.ip}`)
     .join("\n");
+
+  useEffect(() => {
+    const updateOnlineStatus = () => setIsOnline(navigator.onLine);
+
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+
+    return () => {
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
+  }, []);
 
   const settingText = `
 [TP-Link Router Settings]
@@ -86,6 +99,15 @@ return (
         <p className="text-sm text-muted-foreground">
           このページの設定値・固定IPリストはWi-Fi未接続でも確認できます。TP-Link管理画面を開く時だけ、対象ルーターのWi-Fiまたは有線LANに接続してください。
         </p>
+        <div className={`rounded-md border px-3 py-2 text-sm ${
+          isOnline
+            ? "border-primary/30 bg-primary/10 text-primary"
+            : "border-border bg-muted/40 text-muted-foreground"
+        }`}>
+          {isOnline
+            ? "オンライン: ページを再読み込みすると最新版に更新できます。"
+            : "オフライン: 保存済みのページを表示しています。更新はオンライン復帰後にできます。"}
+        </div>
 
         <div className="flex flex-wrap gap-3">
           <button
