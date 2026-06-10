@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree } from "lucide-react";
 
 type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins";
 
@@ -244,6 +244,14 @@ function ProceduresAdmin() {
     onSuccess: () => { utils.categories.list.invalidate(); },
     onError: (err) => toast.error(err.message),
   });
+  const updateCategoryMutation = trpc.categories.update.useMutation({
+    onSuccess: () => { utils.categories.list.invalidate(); toast.success("目次を更新しました"); },
+    onError: (err) => toast.error(err.message),
+  });
+  const deleteCategoryMutation = trpc.categories.delete.useMutation({
+    onSuccess: () => { utils.categories.list.invalidate(); utils.procedures.list.invalidate(); toast.success("目次を削除しました"); },
+    onError: (err) => toast.error(err.message),
+  });
 
   // Steps management
   const createStepMutation = trpc.procedureSteps.create.useMutation({
@@ -265,10 +273,14 @@ function ProceduresAdmin() {
   const [createRows, setCreateRows] = useState([
     { id: 1, categoryName: "", title: "", description: "", content: "", file: null as File | null },
   ]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState<number | "">("");
   const [expandedProcId, setExpandedProcId] = useState<number | null>(null);
   const [stepTitle, setStepTitle] = useState("");
   const [stepDescription, setStepDescription] = useState("");
@@ -301,6 +313,28 @@ function ProceduresAdmin() {
     setCreateRows((rows) => rows.filter((row) => row.id !== rowId));
   };
 
+  const createSmartboardingCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    createCategoryMutation.mutate({ name });
+    setNewCategoryName("");
+  };
+
+  const startCategoryEdit = (category: { id: number; name: string }) => {
+    setEditingCategoryId(category.id);
+    setEditCategoryName(category.name);
+  };
+
+  const saveCategoryEdit = () => {
+    if (!editingCategoryId || !editCategoryName.trim()) return;
+
+    updateCategoryMutation.mutate({ id: editingCategoryId, name: editCategoryName.trim() });
+    setEditingCategoryId(null);
+    setEditCategoryName("");
+  };
+
   const handleCreate = async (e: React.FormEvent, rowId: number) => {
     e.preventDefault();
     const row = createRows.find((item) => item.id === rowId);
@@ -324,8 +358,9 @@ function ProceduresAdmin() {
     );
   };
 
-  const startEdit = (proc: { id: number; title: string; description: string | null; content: string | null }) => {
+  const startEdit = (proc: { id: number; categoryId: number; title: string; description: string | null; content: string | null }) => {
     setEditingId(proc.id);
+    setEditCategoryId(proc.categoryId);
     setEditTitle(proc.title);
     setEditDescription(proc.description || "");
     setEditContent(proc.content || "");
@@ -333,7 +368,13 @@ function ProceduresAdmin() {
 
   const handleUpdate = () => {
     if (!editingId || !editTitle.trim()) return;
-    updateMutation.mutate({ id: editingId, title: editTitle.trim(), description: editDescription.trim() || undefined, content: editContent.trim() || undefined });
+    updateMutation.mutate({
+      id: editingId,
+      categoryId: editCategoryId === "" ? undefined : editCategoryId,
+      title: editTitle.trim(),
+      description: editDescription.trim() || undefined,
+      content: editContent.trim() || undefined,
+    });
   };
 
   // Get steps for expanded procedure
@@ -391,6 +432,54 @@ function ProceduresAdmin() {
   return (
     <div className="space-y-4">
       <div className="cyber-border rounded-lg p-4 bg-card space-y-3">
+        <h3 className="font-semibold text-foreground flex items-center gap-2"><ListTree className="h-4 w-4 text-primary" />Smartboarding目次</h3>
+        <form onSubmit={createSmartboardingCategory} className="flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            placeholder="目次名を追加（例：HW、SW、作業一般）"
+            className="min-w-0 flex-1 px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          <Button type="submit" size="sm" disabled={createCategoryMutation.isPending}>追加</Button>
+        </form>
+        <div className="grid gap-2 md:grid-cols-2">
+          {categories?.map((category) => (
+            <div key={category.id} className="rounded-md border border-border/70 bg-muted/20 p-2">
+              {editingCategoryId === category.id ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editCategoryName}
+                    onChange={(e) => setEditCategoryName(e.target.value)}
+                    className="min-w-0 flex-1 px-2 py-1 rounded bg-input border border-border text-sm text-foreground"
+                  />
+                  <Button type="button" size="sm" onClick={saveCategoryEdit} disabled={updateCategoryMutation.isPending}>保存</Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setEditingCategoryId(null)}>取消</Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-foreground">{category.name}</span>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => startCategoryEdit(category)} className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { if (confirm(`${category.name} を削除しますか？`)) deleteCategoryMutation.mutate({ id: category.id }); }}
+                      className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="cyber-border rounded-lg p-4 bg-card space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
           <Button type="button" size="sm" variant="outline" onClick={addCreateRow}>
@@ -438,6 +527,11 @@ function ProceduresAdmin() {
             <div key={proc.id} className="cyber-border rounded-lg bg-card">
               {editingId === proc.id ? (
                 <div className="p-3 space-y-2">
+                  <select value={editCategoryId} onChange={(e) => setEditCategoryId(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    <option value="">目次を選択</option>
+                    {categories?.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
                   <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
