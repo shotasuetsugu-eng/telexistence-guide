@@ -1,4 +1,4 @@
-const CACHE_NAME = "tx-guide-offline-v2";
+const CACHE_NAME = "tx-guide-offline-v3";
 const APP_SHELL_URLS = ["/", "/Wifi-setup", "/router-setup"];
 
 self.addEventListener("install", (event) => {
@@ -46,9 +46,18 @@ async function fetchAndCacheNavigation(request) {
       (await cache.match(request)) ||
       (await cache.match("/")) ||
       (await cache.match("/Wifi-setup")) ||
+      (await matchAnyCachedNavigation()) ||
       offlineFallback()
     );
   }
+}
+
+async function matchAnyCachedNavigation() {
+  const cache = await caches.open(CACHE_NAME);
+  const keys = await cache.keys();
+  const navigationKey = keys.find((request) => request.mode === "navigate" || request.headers.get("accept")?.includes("text/html"));
+
+  return navigationKey ? cache.match(navigationKey) : undefined;
 }
 
 async function cacheAppShell() {

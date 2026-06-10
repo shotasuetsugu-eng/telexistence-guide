@@ -9,6 +9,7 @@ import { getLoginUrl } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
+const OFFLINE_CACHE_NAME = "tx-guide-offline-v3";
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -60,10 +61,45 @@ createRoot(document.getElementById("root")!).render(
   </trpc.Provider>
 );
 
+async function cacheOfflineAppShell() {
+  if (!("caches" in window) || !navigator.onLine) return;
+
+  const cache = await caches.open(OFFLINE_CACHE_NAME);
+  const urls = new Set<string>(["/", "/Wifi-setup", "/router-setup"]);
+
+  document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>("script[src], link[href]").forEach((element) => {
+    const assetUrl = element instanceof HTMLScriptElement ? element.src : element.href;
+    const url = new URL(assetUrl, window.location.origin);
+
+    if (url.origin === window.location.origin && !url.pathname.startsWith("/api/")) {
+      urls.add(`${url.pathname}${url.search}`);
+    }
+  });
+
+  await Promise.all(
+    Array.from(urls).map(async (url) => {
+      try {
+        const response = await fetch(url, { cache: "reload", credentials: "same-origin" });
+        if (response.ok) await cache.put(url, response);
+      } catch (error) {
+        console.warn("[OfflineCache] Failed to cache", url, error);
+      }
+    })
+  );
+}
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch((error) => {
-      console.warn("[ServiceWorker] Registration failed", error);
-    });
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => navigator.serviceWorker.ready)
+      .then(() => cacheOfflineAppShell())
+      .catch((error) => {
+        console.warn("[ServiceWorker] Registration failed", error);
+      });
+  });
+
+  window.addEventListener("online", () => {
+    void cacheOfflineAppShell();
   });
 }
