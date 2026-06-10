@@ -29,6 +29,17 @@ function normalizeUrl(url: string) {
   if (/^https?:\/\//i.test(value)) return value;
   return `https://${value}`;
 }
+function getStoreDisplayAddress(address?: string | null) {
+  const value = address?.trim() ?? "";
+
+  if (!value) return "";
+
+  if (/^https?:\/\//i.test(value)) return "";
+  if (/^maps\.app\.goo\.gl/i.test(value)) return "";
+  if (/^www\.google\./i.test(value)) return "";
+
+  return value;
+}
 
 function getLocationFromMapsUrl(url: string): LatLng | null {
   const decoded = decodeURIComponent(url);
@@ -344,7 +355,7 @@ export default function MapPage() {
     const nextStore: ConvenienceStore = {
       chain: newChain,
       name: autoName,
-      address: resolved.address || mapsUrl,
+      address: resolved.address || "",
       mapsUrl,
       location: resolvedLocation,
     };
@@ -484,7 +495,11 @@ export default function MapPage() {
                   <Store className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <span className="min-w-0">
                     <span className="block font-semibold text-foreground">{store.name}</span>
-                    <span className="block text-xs text-muted-foreground mt-1">{store.address}</span>
+                                        {getStoreDisplayAddress(store.address) && (
+                      <span className="block text-xs text-muted-foreground mt-1">
+                        {getStoreDisplayAddress(store.address)}
+                      </span>
+                    )}
                   </span>
                 </button>
                 <button
@@ -528,7 +543,11 @@ export default function MapPage() {
             <Store className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div className="min-w-0">
               <p className="font-semibold text-foreground">{selectedStore?.name ?? "店舗が選択されていません"}</p>
-              <p className="text-xs text-muted-foreground">{selectedStore?.address ?? ""}</p>
+                            {selectedStore && getStoreDisplayAddress(selectedStore.address) && (
+                <p className="text-xs text-muted-foreground">
+                  {getStoreDisplayAddress(selectedStore.address)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -585,6 +604,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 
