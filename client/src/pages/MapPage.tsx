@@ -247,14 +247,16 @@ export default function MapPage() {
 
   const openGoogleRoute = (store: ConvenienceStore) => {
     setSelectedStore(store);
-    const destination = encodeURIComponent(
-      store.location ? `${store.location.lat},${store.location.lng}` : `${store.name} ${store.address}`
-    );
-    const origin = currentLocation
-      ? `&origin=${currentLocation.lat},${currentLocation.lng}`
-      : "";
+
+    const mapsUrl = normalizeUrl(store.mapsUrl);
+    if (mapsUrl) {
+      window.open(mapsUrl, "_blank");
+      return;
+    }
+
+    const destination = encodeURIComponent(`${store.name} ${store.address}`);
     window.open(
-      `https://www.google.com/maps/dir/?api=1${origin}&destination=${destination}&travelmode=walking`,
+      `https://www.google.com/maps/search/?api=1&query=${destination}`,
       "_blank"
     );
   };
@@ -327,6 +329,13 @@ export default function MapPage() {
       console.warn("Google Maps URL resolve failed. Continue with URL fallback.", error);
     }
 
+    const resolvedLocation = resolved.location || getLocationFromMapsUrl(mapsUrl);
+
+    if (!resolvedLocation) {
+      toast.error("このGoogleマップリンクから位置情報を取得できません。短縮URLではなく、@緯度,経度 が入ったGoogleマップURLを貼ってください。");
+      return;
+    }
+
     const autoName =
       resolved.name ||
       getStoreNameFromMapsUrl(mapsUrl) ||
@@ -337,10 +346,9 @@ export default function MapPage() {
       name: autoName,
       address: resolved.address || mapsUrl,
       mapsUrl,
-      location: resolved.location || currentLocation || fallbackLocation,
+      location: resolvedLocation,
     };
 
-    // 先に画面へ表示する。API失敗で止めない。
     let savedStore = nextStore;
 
     try {
@@ -577,6 +585,10 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+
 
 
 
