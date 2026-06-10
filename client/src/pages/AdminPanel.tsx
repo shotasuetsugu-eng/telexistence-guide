@@ -271,7 +271,7 @@ function ProceduresAdmin() {
   });
 
   const [createRows, setCreateRows] = useState([
-    { id: 1, categoryName: "", title: "", description: "", content: "", file: null as File | null },
+    { id: 1, categoryId: "" as number | "", title: "", description: "", content: "", file: null as File | null },
   ]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
@@ -294,8 +294,8 @@ function ProceduresAdmin() {
 
   const updateCreateRow = (
     rowId: number,
-    field: "categoryName" | "title" | "description" | "content" | "file",
-    value: string | File | null
+    field: "categoryId" | "title" | "description" | "content" | "file",
+    value: number | "" | string | File | null
   ) => {
     setCreateRows((rows) =>
       rows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row))
@@ -305,7 +305,7 @@ function ProceduresAdmin() {
   const addCreateRow = () => {
     setCreateRows((rows) => [
       ...rows,
-      { id: Date.now(), categoryName: "", title: "", description: "", content: "", file: null },
+      { id: Date.now(), categoryId: "", title: "", description: "", content: "", file: null },
     ]);
   };
 
@@ -338,14 +338,10 @@ function ProceduresAdmin() {
   const handleCreate = async (e: React.FormEvent, rowId: number) => {
     e.preventDefault();
     const row = createRows.find((item) => item.id === rowId);
-    if (!row?.title.trim()) return;
+    if (!row?.title.trim() || row.categoryId === "") return;
 
-    const categoryName = row.categoryName.trim() || "Smartboarding";
-    const existingCategory = categories?.find((category) => category.name.trim().toLowerCase() === categoryName.toLowerCase());
-    const categoryId = existingCategory?.id ?? (await createCategoryMutation.mutateAsync({ name: categoryName })).id;
-
-    await createMutation.mutateAsync({
-      categoryId,
+    createMutation.mutate({
+      categoryId: row.categoryId,
       title: row.title.trim(),
       description: row.description.trim() || undefined,
       content: row.content.trim() || undefined,
@@ -503,8 +499,14 @@ function ProceduresAdmin() {
                 </button>
               )}
             </div>
-            <input type="text" value={row.categoryName} onChange={(e) => updateCreateRow(row.id, "categoryName", e.target.value)} placeholder="分類名（例：カメラ、ルーター、BOX）"
-              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            <select value={row.categoryId} onChange={(e) => updateCreateRow(row.id, "categoryId", e.target.value ? Number(e.target.value) : "")}
+              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+              <option value="">追加先の目次を選択</option>
+              {categories?.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+            </select>
+            {categories?.length === 0 && (
+              <p className="text-xs text-muted-foreground">先に上の「Smartboarding目次」で HW / SW / 作業一般 などを追加してください。</p>
+            )}
             <input type="text" value={row.title} onChange={(e) => updateCreateRow(row.id, "title", e.target.value)} placeholder="表示名"
               className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             <input type="text" value={row.description} onChange={(e) => updateCreateRow(row.id, "description", e.target.value)} placeholder="リンクURL"
@@ -514,7 +516,7 @@ function ProceduresAdmin() {
             <input id={`procedure-main-file-${row.id}`} type="file" onChange={(e) => updateCreateRow(row.id, "file", e.target.files?.[0] ?? null)}
               className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
             {row.file && <p className="text-xs text-muted-foreground">選択中: {row.file.name} ({(row.file.size / 1024).toFixed(1)} KB)</p>}
-            <Button type="submit" size="sm" disabled={createMutation.isPending || createCategoryMutation.isPending}>{createMutation.isPending || createCategoryMutation.isPending ? "作成中..." : "作成"}</Button>
+            <Button type="submit" size="sm" disabled={createMutation.isPending || row.categoryId === ""}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
           </form>
         ))}
       </div>
