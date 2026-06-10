@@ -12,7 +12,11 @@ import {BookOpen,
   HardDrive,
   Map,
   LayoutDashboard,
-  Sparkles, Wifi} from "lucide-react";
+  Sparkles,
+  Wifi,
+  ExternalLink,
+  ClipboardList,
+  Pencil} from "lucide-react";
 import { useState } from "react";
 
 const publicNavItems = [
@@ -42,6 +46,11 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = user?.role === "admin";
+  const [progressSheetUrl, setProgressSheetUrl] = useState<string>(
+    () => window.localStorage.getItem("tx.progressSheetUrl") || ""
+  );
+  const [editingSheet, setEditingSheet] = useState(false);
+  const [sheetInput, setSheetInput] = useState("");
 
   return (
     <div className="min-h-screen bg-background crt-scanlines">
@@ -83,6 +92,35 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
               </button>
             );
           })}
+
+          <div className="group relative">
+            {progressSheetUrl ? (
+              <a href={progressSheetUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                <ClipboardList className="h-4 w-4 shrink-0" />
+                <span className="font-medium flex-1">進捗状況引継ぎシート</span>
+                <ExternalLink className="h-3 w-3 opacity-50" />
+              </a>
+            ) : (
+              <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-muted-foreground">
+                <ClipboardList className="h-4 w-4 shrink-0" />
+                <span className="font-medium flex-1">進捗状況引継ぎシート</span>
+              </div>
+            )}
+            {isAdmin && !editingSheet && (
+              <button onClick={() => { setSheetInput(progressSheetUrl); setEditingSheet(true); }} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-primary transition-all" title="リンクを設定">
+                <Pencil className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          {isAdmin && editingSheet && (
+            <div className="px-3 py-2 space-y-2">
+              <input type="url" value={sheetInput} onChange={(e) => setSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/..." className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground" autoFocus />
+              <div className="flex gap-2">
+                <button onClick={() => { window.localStorage.setItem("tx.progressSheetUrl", sheetInput); setProgressSheetUrl(sheetInput); setEditingSheet(false); }} className="flex-1 px-2 py-1 text-xs rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors">保存</button>
+                <button onClick={() => setEditingSheet(false)} className="flex-1 px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">キャンセル</button>
+              </div>
+            </div>
+          )}
 
           <div className="my-3 border-t border-sidebar-border" />
           <p className="mono-sub px-3 py-2">INTEGRATIONS</p>
@@ -239,6 +277,9 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+
+
 
 
 
