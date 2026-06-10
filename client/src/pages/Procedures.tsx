@@ -1,4 +1,5 @@
-import { ExternalLink, Link as LinkIcon, ListTree } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronRight, ExternalLink, Link as LinkIcon, ListTree } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 function normalizeUrl(url?: string | null) {
@@ -16,21 +17,64 @@ function normalizeUrl(url?: string | null) {
 export default function Procedures() {
   const { data: procedures = [], isLoading } = trpc.procedures.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
+  const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({});
+
   const categorizedProcedures = categories
     .map((category) => ({
       ...category,
       items: procedures.filter((item) => item.categoryId === category.id),
     }))
     .filter((category) => category.items.length > 0);
+
   const uncategorizedProcedures = procedures.filter(
     (item) => !categories.some((category) => category.id === item.categoryId)
   );
-  const procedureGroups = [
-    ...categorizedProcedures,
-    ...(uncategorizedProcedures.length > 0
-      ? [{ id: 0, name: "未分類", items: uncategorizedProcedures }]
-      : []),
-  ];
+
+  const procedureGroups = useMemo(
+    () => [
+      ...categorizedProcedures,
+      ...(uncategorizedProcedures.length > 0
+        ? [{ id: 0, name: "未分類", items: uncategorizedProcedures }]
+        : []),
+    ],
+    [categorizedProcedures, uncategorizedProcedures]
+  );
+
+  const groupKey = procedureGroups.map((group) => group.id).join(",");
+
+  useEffect(() => {
+    setOpenGroups((current) => {
+      const next = { ...current };
+
+      procedureGroups.forEach((group) => {
+        if (next[group.id] === undefined) {
+          next[group.id] = true;
+        }
+      });
+
+      return next;
+    });
+  }, [groupKey]);
+
+  const toggleGroup = (groupId: number) => {
+    setOpenGroups((current) => ({
+      ...current,
+      [groupId]: !(current[groupId] ?? true),
+    }));
+  };
+
+  const openAndScrollToGroup = (groupId: number) => {
+    setOpenGroups((current) => ({
+      ...current,
+      [groupId]: true,
+    }));
+
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(`smartboarding-category-${groupId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -56,61 +100,86 @@ export default function Procedures() {
             </div>
             <div className="space-y-1">
               {procedureGroups.map((group) => (
-                <a
+                <button
                   key={group.id}
-                  href={`#smartboarding-category-${group.id}`}
-                  className="block rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                  type="button"
+                  onClick={() => openAndScrollToGroup(group.id)}
+                  className="w-full text-left flex items-center justify-between rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-primary/10 hover:text-primary"
                 >
-                  {group.name}
-                  <span className="ml-2 text-xs opacity-70">{group.items.length}</span>
-                </a>
+                  <span>{group.name}</span>
+                  <span className="text-xs opacity-70">{group.items.length}</span>
+                </button>
               ))}
             </div>
           </nav>
 
           <div className="space-y-5">
-            {procedureGroups.map((group) => (
-              <section key={group.id} id={`smartboarding-category-${group.id}`} className="space-y-2 scroll-mt-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-foreground">{group.name}</h2>
-                  <span className="text-xs text-muted-foreground">{group.items.length}件</span>
-                </div>
+            {procedureGroups.map((group) => {
+              const isOpen = openGroups[group.id] ?? true;
 
-                <div className="grid gap-3">
-                  {group.items.map((item) => {
-                    const url = normalizeUrl(item.description);
-
-                    return (
-                      <a
-                        key={item.id}
-                        href={url || undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`cyber-border rounded-lg p-4 bg-card text-left transition-all group flex items-center justify-between ${
-                          url ? "hover:bg-card/80" : "opacity-60 pointer-events-none"
+              return (
+                <section
+                  key={group.id}
+                  id={`smartboarding-category-${group.id}`}
+                  className="space-y-2 scroll-mt-4"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.id)}
+                    className="w-full cyber-border rounded-lg bg-card px-4 py-3 flex items-center justify-between text-left hover:bg-primary/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ChevronRight
+                        className={`h-4 w-4 text-primary transition-transform ${
+                          isOpen ? "rotate-90" : ""
                         }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <LinkIcon className="h-5 w-5 text-primary shrink-0" />
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                              {item.title}
-                            </h3>
-                            {!url && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                リンクURLが未設定です
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                      />
+                      <h2 className="text-lg font-bold text-foreground">{group.name}</h2>
+                      <span className="text-xs text-muted-foreground">{group.items.length}件</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {isOpen ? "閉じる" : "開く"}
+                    </span>
+                  </button>
 
-                        <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
-                      </a>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+                  {isOpen && (
+                    <div className="grid gap-3">
+                      {group.items.map((item) => {
+                        const url = normalizeUrl(item.description);
+
+                        return (
+                          <a
+                            key={item.id}
+                            href={url || undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`cyber-border rounded-lg p-4 bg-card text-left transition-all group flex items-center justify-between ${
+                              url ? "hover:bg-card/80" : "opacity-60 pointer-events-none"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <LinkIcon className="h-5 w-5 text-primary shrink-0" />
+                              <div className="min-w-0">
+                                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                                  {item.title}
+                                </h3>
+                                {!url && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    リンクURLが未設定です
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
           </div>
         </div>
       ) : (
