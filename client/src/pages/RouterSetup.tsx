@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 type StoreType = "SEJ" | "FM";
+type OpenFrame = "router" | "network" | "dhcp" | null;
 
 type StaticDevice = {
   name: string;
@@ -85,10 +86,15 @@ export default function RouterSetup() {
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
   );
+  const [openFrame, setOpenFrame] = useState<OpenFrame>(null);
 
   const normalizedRouterUrl = useMemo(() => normalizeRouterUrl(routerUrl), [routerUrl]);
   const networkBasicUrl = `${normalizedRouterUrl}/#networkBasic`;
   const dhcpServerAdvUrl = `${normalizedRouterUrl}/#dhcpServerAdv`;
+
+  const toggleFrame = (frame: OpenFrame) => {
+    setOpenFrame((current) => (current === frame ? null : frame));
+  };
 
   const devices: StaticDevice[] = [
     { name: "Robot", ip: "192.168.200.8" },
@@ -138,18 +144,6 @@ Secondary DNS: 1.1.1.1`
 ${fixedIpText}
 `.trim();
 
-  const openRouter = () => {
-    window.open(normalizedRouterUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
-  };
-
-  const showNetworkBasicPage = () => {
-    window.open(networkBasicUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
-  };
-
-  const showDhcpServerAdvPage = () => {
-    window.open(dhcpServerAdvUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
-  };
-
   const copySettings = async () => {
     await navigator.clipboard.writeText(settingText);
     alert("設定値をコピーしました");
@@ -185,13 +179,15 @@ ${fixedIpText}
 
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={openRouter}
+            type="button"
+            onClick={() => toggleFrame("router")}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
           >
-            TP-Link管理画面をWeb版で開く
+            {openFrame === "router" ? "TP-Link管理画面を閉じる" : "TP-Link管理画面を表示"}
           </button>
 
           <button
+            type="button"
             onClick={copySettings}
             className="px-4 py-2 rounded-md border border-border hover:bg-muted"
           >
@@ -240,7 +236,9 @@ ${fixedIpText}
           </label>
         </div>
 
-        <RouterFrame title="TP-Link管理画面" url={normalizedRouterUrl} />
+        {openFrame === "router" && (
+          <RouterFrame title="TP-Link管理画面" url={normalizedRouterUrl} />
+        )}
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -250,10 +248,11 @@ ${fixedIpText}
           </h2>
 
           <button
-            onClick={showNetworkBasicPage}
+            type="button"
+            onClick={() => toggleFrame("network")}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
           >
-            設定画面をWeb版で開く
+            {openFrame === "network" ? "設定画面を閉じる" : "設定画面を表示"}
           </button>
         </div>
 
@@ -291,7 +290,9 @@ ${fixedIpText}
           </div>
         )}
 
-        <RouterFrame title="ネットワーク設定画面" url={networkBasicUrl} />
+        {openFrame === "network" && (
+          <RouterFrame title="ネットワーク設定画面" url={networkBasicUrl} />
+        )}
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -299,10 +300,11 @@ ${fixedIpText}
           <h2 className="text-xl font-semibold text-foreground">固定IPリスト</h2>
 
           <button
-            onClick={showDhcpServerAdvPage}
+            type="button"
+            onClick={() => toggleFrame("dhcp")}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
           >
-            設定画面をWeb版で開く
+            {openFrame === "dhcp" ? "設定画面を閉じる" : "設定画面を表示"}
           </button>
         </div>
 
@@ -330,7 +332,9 @@ ${fixedIpText}
           固定IPはPDF手順に合わせて固定です。IPアドレスをクリックすると個別にコピーできます。
         </p>
 
-        <RouterFrame title="固定IP設定画面" url={dhcpServerAdvUrl} />
+        {openFrame === "dhcp" && (
+          <RouterFrame title="固定IP設定画面" url={dhcpServerAdvUrl} />
+        )}
       </section>
     </div>
   );
