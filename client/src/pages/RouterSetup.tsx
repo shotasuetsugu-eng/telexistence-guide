@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type StoreType = "SEJ" | "FM";
 
@@ -7,15 +7,88 @@ type StaticDevice = {
   ip: string;
 };
 
+function normalizeRouterUrl(url: string) {
+  const value = url.trim();
+
+  if (!value) return "http://192.168.200.1";
+
+  const withProtocol =
+    value.startsWith("http://") || value.startsWith("https://")
+      ? value
+      : `http://${value}`;
+
+  return withProtocol.replace(/\/+$/, "");
+}
+
+function RouterFrame({
+  title,
+  url,
+}: {
+  title: string;
+  url: string;
+}) {
+  const [frameKey, setFrameKey] = useState(0);
+
+  const openInNewTab = () => {
+    window.open(url, "_blank", "noopener,noreferrer,width=1280,height=900");
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-background/60 p-3 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-semibold text-foreground">{title}</div>
+          <div className="text-xs text-muted-foreground">
+            表示先: {url}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setFrameKey((value) => value + 1)}
+            className="px-3 py-2 rounded-md border border-border hover:bg-muted text-sm"
+          >
+            この画面を再読み込み
+          </button>
+          <button
+            type="button"
+            onClick={openInNewTab}
+            className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm"
+          >
+            別タブで開く
+          </button>
+        </div>
+      </div>
+
+      <div className="h-[720px] overflow-hidden rounded-lg border border-border bg-white">
+        <iframe
+          key={frameKey}
+          src={url}
+          title={title}
+          className="h-full w-full bg-white"
+        />
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        表示されない場合は、対象TP-LinkルーターのWi-Fiまたは有線LANに接続してから「この画面を再読み込み」を押してください。ブラウザがページ内表示を止める場合は「別タブで開く」を使ってください。
+      </p>
+    </div>
+  );
+}
+
 export default function RouterSetup() {
   const [storeType, setStoreType] = useState<StoreType>("SEJ");
   const [ssid, setSsid] = useState("TX-SCARA");
   const [wifiPassword, setWifiPassword] = useState("Telexistence2017");
   const [routerUrl, setRouterUrl] = useState("http://192.168.200.1");
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine
+  );
 
-  const networkBasicUrl = "http://192.168.200.1/#networkBasic";
-  const dhcpServerAdvUrl = "http://192.168.200.1/#dhcpServerAdv";
+  const normalizedRouterUrl = useMemo(() => normalizeRouterUrl(routerUrl), [routerUrl]);
+  const networkBasicUrl = `${normalizedRouterUrl}/#networkBasic`;
+  const dhcpServerAdvUrl = `${normalizedRouterUrl}/#dhcpServerAdv`;
 
   const devices: StaticDevice[] = [
     { name: "Robot", ip: "192.168.200.8" },
@@ -48,7 +121,7 @@ Store Type: ${storeType}
 [Common]
 SSID: ${ssid}
 Wi-Fi Password: ${wifiPassword}
-Router URL: ${routerUrl}
+Router URL: ${normalizedRouterUrl}
 
 [Internet Setting]
 ${storeType === "SEJ"
@@ -66,7 +139,7 @@ ${fixedIpText}
 `.trim();
 
   const openRouter = () => {
-    window.open(routerUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
+    window.open(normalizedRouterUrl, "_blank", "noopener,noreferrer,width=1280,height=900");
   };
 
   const showNetworkBasicPage = () => {
@@ -87,7 +160,7 @@ ${fixedIpText}
     alert(`${value} をコピーしました`);
   };
 
-return (
+  return (
     <div className="space-y-6">
       <div className="glitch-text text-3xl font-bold text-primary" data-text="Router Setup">
         Router Setup
@@ -99,6 +172,7 @@ return (
         <p className="text-sm text-muted-foreground">
           このページの設定値・固定IPリストはWi-Fi未接続でも確認できます。TP-Link管理画面を開く時だけ、対象ルーターのWi-Fiまたは有線LANに接続してください。
         </p>
+
         <div className={`rounded-md border px-3 py-2 text-sm ${
           isOnline
             ? "border-primary/30 bg-primary/10 text-primary"
@@ -165,6 +239,8 @@ return (
             />
           </label>
         </div>
+
+        <RouterFrame title="TP-Link管理画面" url={normalizedRouterUrl} />
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -214,6 +290,8 @@ return (
             <button type="button" onClick={() => copyValue("V6プラス")} className="font-semibold text-left hover:underline">V6プラス</button>
           </div>
         )}
+
+        <RouterFrame title="ネットワーク設定画面" url={networkBasicUrl} />
       </section>
 
       <section className="cyber-border rounded-lg p-4 bg-card space-y-3">
@@ -251,9 +329,9 @@ return (
         <p className="text-sm text-muted-foreground">
           固定IPはPDF手順に合わせて固定です。IPアドレスをクリックすると個別にコピーできます。
         </p>
+
+        <RouterFrame title="固定IP設定画面" url={dhcpServerAdvUrl} />
       </section>
     </div>
   );
 }
-
-
