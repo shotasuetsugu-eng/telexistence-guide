@@ -101,6 +101,11 @@
   position: relative;
   display: inline-block;
 }
+.glitch-text[data-text="Telexistence"],
+.glitch-text[data-text="Telexistence"]::before,
+.glitch-text[data-text="Telexistence"]::after {
+  color: #ffffff;
+}
 .glitch-text::before,
 .glitch-text::after {
   content: attr(data-text);
