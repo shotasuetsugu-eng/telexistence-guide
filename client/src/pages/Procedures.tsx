@@ -48,7 +48,7 @@ export default function Procedures() {
 
       procedureGroups.forEach((group) => {
         if (next[group.id] === undefined) {
-          next[group.id] = true;
+          next[group.id] = false;
         }
       });
 

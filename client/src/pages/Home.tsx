@@ -67,6 +67,10 @@ function linkifyText(value: string) {
 
 
 function getDashboardScheduleTask(item: any): string {
+  if (typeof item === "string" || typeof item === "number") {
+    return String(item).trim();
+  }
+
   const values = Object.values(item || {})
     .filter((value) => typeof value === "string" || typeof value === "number")
     .join(" ");
