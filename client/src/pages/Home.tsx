@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc";
 type DeploySchedule = {
   id: number;
   deployDate: string;
+  endDate: string;
   storeName: string;
   area: string;
   chain: string;
@@ -35,6 +36,22 @@ function deployStatus(item: DeploySchedule) {
   if (new Date() >= deployStart) return "進行中";
   const daysLeft = Math.max(0, Math.ceil((deployDayStart.getTime() - todayStart.getTime()) / 86400000));
   return `あと${daysLeft}日`;
+}
+
+function dateOnly(value: string) {
+  return String(value || "").slice(0, 10);
+}
+
+function displayDateRange(item: Pick<DeploySchedule, "deployDate" | "endDate">) {
+  const start = dateOnly(item.deployDate);
+  const end = dateOnly(item.endDate || item.deployDate);
+  return start === end ? start : `${start} - ${end}`;
+}
+
+function isDateInSchedule(item: Pick<DeploySchedule, "deployDate" | "endDate">, date: string) {
+  const start = dateOnly(item.deployDate);
+  const end = dateOnly(item.endDate || item.deployDate);
+  return start <= date && date <= end;
 }
 
 function linkifyText(value: string) {
@@ -70,7 +87,7 @@ export default function Home() {
         setDeploySchedules(schedules);
         const members = new Set(schedules.flatMap((item: any) => Array.isArray(item.members) ? item.members : []));
         setDeploySummary({
-          today: schedules.filter((item: any) => String(item.deployDate).slice(0, 10) === today).length,
+          today: schedules.filter((item: DeploySchedule) => isDateInSchedule(item, today)).length,
           month: schedules.length,
           active: schedules.filter((item: DeploySchedule) => deployStatus(item) === "進行中").length,
           done: schedules.filter((item: any) => item.completedAt).length,
@@ -128,7 +145,7 @@ export default function Home() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-foreground">{detailSchedule.storeName}</h2>
-                <p className="text-sm text-muted-foreground">{detailSchedule.deployDate?.slice(0, 10)} / {detailSchedule.workType || "-"}</p>
+                <p className="text-sm text-muted-foreground">{displayDateRange(detailSchedule)} / {detailSchedule.workType || "-"}</p>
               </div>
               <button onClick={() => setDetailSchedule(null)} className="rounded border border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
                 閉じる
@@ -240,7 +257,7 @@ export default function Home() {
             <div className="grid grid-cols-7 gap-1 text-center text-sm">
               {calendarDays.map((day, index) => {
                 const date = day ? `${currentMonth}-${String(day).padStart(2, "0")}` : "";
-                const hasDeploy = deploySchedules.some((item) => item.deployDate.slice(0, 10) === date);
+                const hasDeploy = deploySchedules.some((item) => isDateInSchedule(item, date));
                 const isToday = date === new Date().toISOString().slice(0, 10);
                 return (
                   <div key={`${day}-${index}`} className={`relative h-8 rounded grid place-items-center ${hasDeploy ? "bg-primary/15 text-primary border border-primary/40" : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}>
@@ -269,7 +286,7 @@ export default function Home() {
                   const status = deployStatus(item);
                   return (
                     <tr key={item.id} className="border-t border-border">
-                      <td className="px-2 py-3 font-medium text-muted-foreground">{item.deployDate.slice(0, 10)}</td>
+                      <td className="px-2 py-3 font-medium text-muted-foreground">{displayDateRange(item)}</td>
                       <td className="px-2 py-2">
                         <p className="font-semibold text-foreground">{item.storeName}</p>
                         <p className="text-xs text-muted-foreground">{[item.area, item.chain].filter(Boolean).join(" / ")}</p>

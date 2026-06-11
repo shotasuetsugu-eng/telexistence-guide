@@ -7,6 +7,7 @@ import { toast } from "sonner";
 type DeploySchedule = {
   id: number;
   deployDate: string;
+  endDate: string;
   storeName: string;
   area: string;
   chain: string;
@@ -50,6 +51,7 @@ const workTypeColorClasses = [
 
 const emptyForm: DeployForm = {
   deployDate: new Date().toISOString().slice(0, 10),
+  endDate: new Date().toISOString().slice(0, 10),
   storeName: "",
   area: "",
   chain: "",
@@ -71,6 +73,22 @@ function statusOf(item: DeploySchedule) {
   if (new Date() >= deployStart) return "進行中";
   const daysLeft = Math.max(0, Math.ceil((deployDayStart.getTime() - todayStart.getTime()) / 86400000));
   return `あと${daysLeft}日`;
+}
+
+function dateOnly(value: string) {
+  return String(value || "").slice(0, 10);
+}
+
+function displayDateRange(item: Pick<DeploySchedule, "deployDate" | "endDate">) {
+  const start = dateOnly(item.deployDate);
+  const end = dateOnly(item.endDate || item.deployDate);
+  return start === end ? start : `${start} - ${end}`;
+}
+
+function isDateInSchedule(item: Pick<DeploySchedule, "deployDate" | "endDate">, date: string) {
+  const start = dateOnly(item.deployDate);
+  const end = dateOnly(item.endDate || item.deployDate);
+  return start <= date && date <= end;
 }
 
 function statusClass(status: string) {
@@ -166,7 +184,7 @@ export default function DeployCalendar() {
     const today = new Date().toISOString().slice(0, 10);
     return {
       total: schedules.length,
-      today: schedules.filter((item) => item.deployDate === today).length,
+      today: schedules.filter((item) => isDateInSchedule(item, today)).length,
       planned: schedules.filter((item) => statusOf(item).startsWith("あと")).length,
       active: schedules.filter((item) => statusOf(item) === "進行中").length,
       done: schedules.filter((item) => statusOf(item) === "完了").length,
@@ -190,7 +208,7 @@ export default function DeployCalendar() {
   };
 
   const resetForm = () => {
-    setForm({ ...emptyForm, deployDate: `${month}-01` });
+    setForm({ ...emptyForm, deployDate: `${month}-01`, endDate: `${month}-01` });
     setEditingId(null);
     setShowForm(false);
   };
@@ -263,6 +281,7 @@ export default function DeployCalendar() {
     event.preventDefault();
     const payload = {
       deployDate: form.deployDate,
+      endDate: form.endDate && form.endDate >= form.deployDate ? form.endDate : form.deployDate,
       storeName: form.storeName,
       area: form.area,
       chain: form.chain,
@@ -292,6 +311,7 @@ export default function DeployCalendar() {
     setShowForm(true);
     setForm({
       deployDate: item.deployDate.slice(0, 10),
+      endDate: dateOnly(item.endDate || item.deployDate),
       storeName: item.storeName,
       area: item.area,
       chain: item.chain,
@@ -327,9 +347,10 @@ export default function DeployCalendar() {
   };
 
   const exportCsv = () => {
-    const header = ["date", "store", "area", "chain", "work", "members", "status", "start", "memo"];
+    const header = ["start_date", "end_date", "store", "area", "chain", "work", "members", "status", "start", "memo"];
     const lines = filteredSchedules.map((item) => [
-      item.deployDate,
+      dateOnly(item.deployDate),
+      dateOnly(item.endDate || item.deployDate),
       item.storeName,
       item.area,
       item.chain,
@@ -356,7 +377,7 @@ export default function DeployCalendar() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-foreground">{detailSchedule.storeName}</h2>
-                <p className="text-sm text-muted-foreground">{detailSchedule.deployDate?.slice(0, 10)} / {detailSchedule.workType || "-"}</p>
+                <p className="text-sm text-muted-foreground">{displayDateRange(detailSchedule)} / {detailSchedule.workType || "-"}</p>
               </div>
               <Button size="sm" variant="outline" onClick={() => setDetailSchedule(null)}>閉じる</Button>
             </div>
@@ -406,7 +427,7 @@ export default function DeployCalendar() {
             <div className="grid grid-cols-7 gap-2 text-center text-sm">
               {calendarDays.map((day, index) => {
                 const date = day ? `${month}-${String(day).padStart(2, "0")}` : "";
-                const deployOnDate = schedules.find((item) => item.deployDate.slice(0, 10) === date);
+                const deployOnDate = schedules.find((item) => isDateInSchedule(item, date));
                 const workTypeClass = workTypeClassFor(deployOnDate?.workType || "未分類");
                 const isToday = date === new Date().toISOString().slice(0, 10);
                 return (
@@ -524,7 +545,16 @@ export default function DeployCalendar() {
 
           {isAdmin && showForm && (
             <form onSubmit={submitSchedule} className="grid gap-2 rounded border border-border p-3 md:grid-cols-2">
-              <input type="date" value={form.deployDate} onChange={(e) => setForm({ ...form, deployDate: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  開始日
+                  <input type="date" value={form.deployDate} onChange={(e) => setForm({ ...form, deployDate: e.target.value, endDate: form.endDate || e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm text-foreground" />
+                </label>
+                <label className="grid gap-1 text-xs text-muted-foreground">
+                  終了日
+                  <input type="date" value={form.endDate || form.deployDate} min={form.deployDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm text-foreground" />
+                </label>
+              </div>
               <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
                 <input placeholder="店舗名" value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" required />
                 <select value="" onChange={(e) => e.target.value && setForm({ ...form, storeName: e.target.value })} className={optionSelectClass}>
@@ -587,7 +617,7 @@ export default function DeployCalendar() {
                   const status = statusOf(item);
                   return (
                     <tr key={item.id} className="border-t border-border">
-                      <td className="p-2">{item.deployDate?.slice(0, 10)}</td>
+                      <td className="p-2">{displayDateRange(item)}</td>
                       <td className="p-2"><p className="font-medium text-foreground">{item.storeName}</p><p className="text-xs text-muted-foreground">{item.area} {item.chain}</p></td>
                       <td className="p-2"><p>{item.workType}</p><p className="text-xs text-muted-foreground">{item.description}</p></td>
                       <td className="p-2">
