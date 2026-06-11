@@ -67,49 +67,41 @@ function linkifyText(value: string) {
 
 
 function getDashboardScheduleTask(item: any): string {
-  return String(
-    item.workContent ||
-      item.work_content ||
-      item.task ||
-      item.work ||
-      item.title ||
-      item.type ||
-      ""
-  ).trim();
+  const values = Object.values(item || {})
+    .filter((value) => typeof value === "string" || typeof value === "number")
+    .join(" ");
+
+  return values.trim();
 }
 
-function getDashboardCalendarStyle(task: string) {
-  const value = task.toLowerCase();
+function getDashboardCalendarStyle(item: any) {
+  const text = getDashboardScheduleTask(item).toLowerCase();
 
-  if (task.includes("Arm") || value.includes("arm")) {
+  if (text.includes("arm") || text.includes("arm交換")) {
     return {
-      cell: "bg-cyan-500/15 text-cyan-300 border border-cyan-400/50",
-      dot: "bg-cyan-400",
+      cell: "bg-cyan-500/25 text-cyan-200 border border-cyan-300/70 shadow-[0_0_10px_rgba(34,211,238,0.35)]",
+      dot: "bg-cyan-300",
     };
   }
 
-  if (
-    task.includes("V2") ||
-    task.includes("Ｖ２") ||
-    task.includes("集荷")
-  ) {
+  if (text.includes("v2") || text.includes("ｖ２") || text.includes("集荷")) {
     return {
-      cell: "bg-yellow-500/15 text-yellow-300 border border-yellow-400/50",
-      dot: "bg-yellow-400",
+      cell: "bg-yellow-500/25 text-yellow-200 border border-yellow-300/70 shadow-[0_0_10px_rgba(250,204,21,0.35)]",
+      dot: "bg-yellow-300",
     };
   }
 
-  if (task.includes("移動")) {
+  if (text.includes("移動")) {
     return {
-      cell: "bg-purple-500/15 text-purple-300 border border-purple-400/50",
-      dot: "bg-purple-400",
+      cell: "bg-purple-500/25 text-purple-200 border border-purple-300/70 shadow-[0_0_10px_rgba(216,180,254,0.35)]",
+      dot: "bg-purple-300",
     };
   }
 
-  if (task.includes("Deployment") || value.includes("deploy")) {
+  if (text.includes("deployment") || text.includes("deploy")) {
     return {
-      cell: "bg-green-500/15 text-green-300 border border-green-400/50",
-      dot: "bg-green-400",
+      cell: "bg-green-500/25 text-green-200 border border-green-300/70 shadow-[0_0_10px_rgba(74,222,128,0.35)]",
+      dot: "bg-green-300",
     };
   }
 
@@ -486,5 +478,7 @@ export default function Home() {
     </div>
   );
 }
+
+
 
 
