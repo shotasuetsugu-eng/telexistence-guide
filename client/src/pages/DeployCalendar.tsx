@@ -474,7 +474,7 @@ export default function DeployCalendar() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `deploy-${month}.csv`;
+    anchor.download = `fs-team-calendar-${month}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -512,9 +512,9 @@ export default function DeployCalendar() {
       )}
       <div className="space-y-2">
         <h1 className="text-2xl font-black tracking-tight text-foreground">
-          <span className="glitch-text" data-text="Deploy Calendar">Deploy Calendar</span>
+          <span className="glitch-text" data-text="FS Team Calendar">FS Team Calendar</span>
         </h1>
-        <p className="mono-sub">// TEAM_AND_SITE_SCHEDULE</p>
+        <p className="mono-sub">// FS_TEAM_SCHEDULE</p>
       </div>
 
       <div className="cyber-border rounded-lg bg-card p-3 grid gap-3 md:grid-cols-4">
@@ -796,4 +796,5 @@ export default function DeployCalendar() {
     </div>
   );
 }
+
 

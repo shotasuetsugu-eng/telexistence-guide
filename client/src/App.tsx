@@ -39,6 +39,7 @@ function Router() {
           <Route path="/router-setup" component={RouterSetup} />
           <Route path="/Wifi-setup" component={RouterSetup} />
         <Route path="/deploy-calendar" component={DeployCalendar} />
+        <Route path="/fs-team-calendar" component={DeployCalendar} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -60,6 +61,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
