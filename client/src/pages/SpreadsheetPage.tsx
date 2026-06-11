@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 type IntegrationKey = "dashboard" | "autail" | "shiftFs" | "shiftTs" | "storeList";
@@ -91,6 +91,8 @@ export default function SpreadsheetPage() {
   const [viewerSettings, setViewerSettings] = useState<ViewerSettings>(defaultViewerSettings);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [status, setStatus] = useState("");
+  const [viewerKey, setViewerKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
     setLinks(loadLinks());
@@ -130,6 +132,19 @@ export default function SpreadsheetPage() {
     updateViewerSettings(defaultViewerSettings);
   };
 
+  const goBackInViewer = () => {
+    try {
+      iframeRef.current?.contentWindow?.history.back();
+    } catch {
+      setStatus("埋め込み画面内では戻れません");
+      setTimeout(() => setStatus(""), 2000);
+    }
+  };
+
+  const reloadViewer = () => {
+    setViewerKey((current) => current + 1);
+  };
+
   const sheetViewer = (
     <div
       className={
@@ -144,6 +159,22 @@ export default function SpreadsheetPage() {
         </h2>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={goBackInViewer}
+            className="rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-primary hover:border-primary/50"
+          >
+            戻る
+          </button>
+
+          <button
+            type="button"
+            onClick={reloadViewer}
+            className="rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-primary hover:border-primary/50"
+          >
+            シートに戻る
+          </button>
+
           <button
             type="button"
             onClick={() => setIsFullscreen((prev) => !prev)}
@@ -214,8 +245,11 @@ export default function SpreadsheetPage() {
           }}
         >
           <iframe
+            key={`${embedUrl}-${viewerKey}`}
+            ref={iframeRef}
             src={embedUrl}
             title={current.label || "Spreadsheet"}
+            sandbox="allow-same-origin allow-scripts allow-forms allow-downloads"
             className="border-0 bg-white"
             style={{
               width: iframeWidth,
