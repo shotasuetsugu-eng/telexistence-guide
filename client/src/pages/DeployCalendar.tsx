@@ -261,6 +261,25 @@ export default function DeployCalendar() {
 const isScheduleCompleted = (item: any) => {
     return completedScheduleKeys.includes(getScheduleCompleteKey(item));
   };
+  const completeScheduleByUser = (item: any) => {
+    const storeName =
+      item.storeName ||
+      item.store ||
+      item.shopName ||
+      item.name ||
+      "この予定";
+
+    const ok = window.confirm(storeName + " を本当に完了しますか？");
+
+    if (!ok) return;
+
+    const key = getScheduleCompleteKey(item);
+    const nextKeys = Array.from(new Set([...completedScheduleKeys, key]));
+
+    localStorage.setItem("fsTeamCalendarCompletedKeys", JSON.stringify(nextKeys));
+    setCompletedScheduleKeys(nextKeys);
+  };
+
 
   const openCompleteConfirm = (item: any) => {
     setCompleteTarget(item);
@@ -960,6 +979,7 @@ const isScheduleCompleted = (item: any) => {
 </div>
   );
 }
+
 
 
 
