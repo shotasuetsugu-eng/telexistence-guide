@@ -238,7 +238,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold text-foreground">Deploy Calendar</h2>
+            <h2 className="text-lg font-bold text-foreground">FS Team Calendar</h2>
           </div>
           <button
             onClick={() => setLocation("/deploy-calendar")}
@@ -389,3 +389,4 @@ export default function Home() {
     </div>
   );
 }
+
