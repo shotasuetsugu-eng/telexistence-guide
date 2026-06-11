@@ -355,7 +355,7 @@ export default function MapPage() {
     const nextStore: ConvenienceStore = {
       chain: newChain,
       name: autoName,
-      address: resolved.address || "",
+      address: resolved.address || mapsUrl,
       mapsUrl,
       location: resolvedLocation,
     };
@@ -604,6 +604,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 
