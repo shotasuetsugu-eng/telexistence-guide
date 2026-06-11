@@ -1,4 +1,5 @@
-import { BookOpen, CheckSquare, FileText, Layers } from "lucide-react";
+import { BookOpen, CalendarDays, CheckSquare, FileText, Layers } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -9,6 +10,26 @@ export default function Home() {
   const { data: procedures = [] } = trpc.procedures.list.useQuery();
   const { data: checklists = [] } = trpc.checklists.list.useQuery();
   const { data: documents = [] } = trpc.documents.list.useQuery();
+  const [deploySummary, setDeploySummary] = useState({ today: 0, month: 0, active: 0, done: 0, members: 0 });
+
+  useEffect(() => {
+    const month = new Date().toISOString().slice(0, 7);
+    fetch(`/api/deploy-schedules?month=${month}`)
+      .then((response) => response.ok ? response.json() : [])
+      .then((items) => {
+        const today = new Date().toISOString().slice(0, 10);
+        const schedules = Array.isArray(items) ? items : [];
+        const members = new Set(schedules.flatMap((item: any) => Array.isArray(item.members) ? item.members : []));
+        setDeploySummary({
+          today: schedules.filter((item: any) => String(item.deployDate).slice(0, 10) === today).length,
+          month: schedules.length,
+          active: schedules.filter((item: any) => item.startTime && !item.completedAt).length,
+          done: schedules.filter((item: any) => item.completedAt).length,
+          members: members.size,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -51,6 +72,29 @@ export default function Home() {
             <p className="text-xs text-muted-foreground">資料</p>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="cyber-border rounded-lg bg-card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <h2 className="font-semibold text-foreground">今日のDeploy</h2>
+          </div>
+          <p className="text-3xl font-black text-primary">{deploySummary.today}<span className="ml-1 text-sm text-muted-foreground">件</span></p>
+          <p className="text-xs text-muted-foreground">当日のDeploy予定件数</p>
+        </div>
+        <button onClick={() => setLocation("/deploy-calendar")} className="cyber-border rounded-lg bg-card p-4 text-left hover:bg-card/80 transition-all space-y-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <h2 className="font-semibold text-foreground">今月のDeploy</h2>
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-sm">
+            <p><span className="block text-lg font-bold text-primary">{deploySummary.month}</span><span className="text-xs text-muted-foreground">予定</span></p>
+            <p><span className="block text-lg font-bold text-amber-400">{deploySummary.active}</span><span className="text-xs text-muted-foreground">進行中</span></p>
+            <p><span className="block text-lg font-bold text-primary">{deploySummary.done}</span><span className="text-xs text-muted-foreground">完了</span></p>
+            <p><span className="block text-lg font-bold text-primary">{deploySummary.members}</span><span className="text-xs text-muted-foreground">担当</span></p>
+          </div>
+        </button>
       </div>
 
       {/* Quick Access */}

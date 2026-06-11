@@ -12,9 +12,10 @@ import {BookOpen,
   HardDrive,
   Map,
   LayoutDashboard,
-  Sparkles,
-  Wifi,
-  ExternalLink,
+	  Sparkles,
+	  Wifi,
+	  CalendarDays,
+	  ExternalLink,
   ClipboardList,
   Pencil} from "lucide-react";
 import { useState } from "react";
@@ -31,9 +32,10 @@ const integrationNavItems = [
     { path: "/Wifi-setup", label: "ルーター設定", icon: Wifi },
   { icon: FileText, label: "メジャメント数値", path: "/measurement-values" },
 { icon: LayoutDashboard, label: "Shift", path: "/shift" },
-  { icon: HardDrive, label: "店舗一覧", path: "/stores" },
-  { icon: Map, label: "マップ", path: "/map" },
-  { icon: LayoutDashboard, label: "Dashboard", path: "/integrations" },
+	  { icon: HardDrive, label: "店舗一覧", path: "/stores" },
+	  { icon: Map, label: "マップ", path: "/map" },
+	  { icon: CalendarDays, label: "Deploy Calendar", path: "/deploy-calendar" },
+	  { icon: LayoutDashboard, label: "Dashboard", path: "/integrations" },
   { icon: Sparkles, label: "Autail", path: "/integrations" },
 ];
 

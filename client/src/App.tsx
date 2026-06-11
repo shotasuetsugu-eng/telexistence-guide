@@ -17,6 +17,7 @@ import SpreadsheetPage from "./pages/SpreadsheetPage";
 import MeasurementValuesPage from "./pages/MeasurementValuesPage";
 import Integrations from "./pages/Integrations";
 import RouterSetup from "./pages/RouterSetup";
+import DeployCalendar from "./pages/DeployCalendar";
 import CyberLayout from "./components/CyberLayout";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
         <Route path="/integrations" component={Integrations} />
           <Route path="/router-setup" component={RouterSetup} />
           <Route path="/Wifi-setup" component={RouterSetup} />
+        <Route path="/deploy-calendar" component={DeployCalendar} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

@@ -450,6 +450,156 @@ export function registerMapStoreApiRoutes(app: any) {
       res.status(500).json({ error: error.message ?? "Failed to delete map store" });
     }
   });
+
+  app.get("/api/deploy-schedules", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) {
+        res.json([]);
+        return;
+      }
+      await ensureDeploySchedulesTable(db);
+      const month = String(req.query?.month ?? "");
+      const whereMonth = /^\d{4}-\d{2}$/.test(month);
+      const result = whereMonth
+        ? await db.execute(sql`SELECT * FROM deploy_schedules WHERE to_char(deploy_date, 'YYYY-MM') = ${month} ORDER BY deploy_date ASC, id ASC`)
+        : await db.execute(sql`SELECT * FROM deploy_schedules ORDER BY deploy_date ASC, id ASC`);
+      res.json(normalizeDeployRows(result));
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to get deploy schedules" });
+    }
+  });
+
+  app.post("/api/deploy-schedules", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeploySchedulesTable(db);
+      const body = req.body ?? {};
+      const members = Array.isArray(body.members) ? body.members : [];
+      const result = await db.execute(sql`
+        INSERT INTO deploy_schedules (deploy_date, store_name, area, chain, work_type, description, members, start_time, memo)
+        VALUES (${String(body.deployDate)}, ${String(body.storeName)}, ${String(body.area ?? "")}, ${String(body.chain ?? "")}, ${String(body.workType ?? "")}, ${String(body.description ?? "")}, ${JSON.stringify(members)}, ${body.startTime ? String(body.startTime) : null}, ${String(body.memo ?? "")})
+        RETURNING id
+      `);
+      res.json({ id: getDeployRows(result)[0]?.id });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to create deploy schedule" });
+    }
+  });
+
+  app.patch("/api/deploy-schedules/:id", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeploySchedulesTable(db);
+      const body = req.body ?? {};
+      const members = Array.isArray(body.members) ? body.members : [];
+      await db.execute(sql`
+        UPDATE deploy_schedules SET
+          deploy_date = ${String(body.deployDate)},
+          store_name = ${String(body.storeName)},
+          area = ${String(body.area ?? "")},
+          chain = ${String(body.chain ?? "")},
+          work_type = ${String(body.workType ?? "")},
+          description = ${String(body.description ?? "")},
+          members = ${JSON.stringify(members)},
+          start_time = ${body.startTime ? String(body.startTime) : null},
+          memo = ${String(body.memo ?? "")},
+          updated_at = now()
+        WHERE id = ${Number(req.params.id)}
+      `);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to update deploy schedule" });
+    }
+  });
+
+  app.patch("/api/deploy-schedules/:id/start", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeploySchedulesTable(db);
+      const startTime = String(req.body?.startTime ?? "").trim();
+      await db.execute(sql`UPDATE deploy_schedules SET start_time = ${startTime}, updated_at = now() WHERE id = ${Number(req.params.id)}`);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to start deploy schedule" });
+    }
+  });
+
+  app.patch("/api/deploy-schedules/:id/complete", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeploySchedulesTable(db);
+      await db.execute(sql`UPDATE deploy_schedules SET completed_at = now(), updated_at = now() WHERE id = ${Number(req.params.id)}`);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to complete deploy schedule" });
+    }
+  });
+
+  app.delete("/api/deploy-schedules/:id", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeploySchedulesTable(db);
+      await db.execute(sql`DELETE FROM deploy_schedules WHERE id = ${Number(req.params.id)}`);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to delete deploy schedule" });
+    }
+  });
+}
+
+async function ensureDeploySchedulesTable(db: any) {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS deploy_schedules (
+      id SERIAL PRIMARY KEY,
+      deploy_date date NOT NULL,
+      store_name text NOT NULL,
+      area text DEFAULT '' NOT NULL,
+      chain varchar(50) DEFAULT '' NOT NULL,
+      work_type text DEFAULT '' NOT NULL,
+      description text DEFAULT '' NOT NULL,
+      members text DEFAULT '[]' NOT NULL,
+      start_time varchar(20),
+      completed_at timestamp,
+      memo text DEFAULT '' NOT NULL,
+      created_at timestamp DEFAULT now() NOT NULL,
+      updated_at timestamp DEFAULT now() NOT NULL
+    );
+  `);
+}
+
+function getDeployRows(result: any) {
+  return Array.isArray(result) ? result : result?.rows ?? [];
+}
+
+function normalizeDeployRows(result: any) {
+  return getDeployRows(result).map((row: any) => ({
+    id: row.id,
+    deployDate: row.deploy_date,
+    storeName: row.store_name,
+    area: row.area,
+    chain: row.chain,
+    workType: row.work_type,
+    description: row.description,
+    members: parseDeployMembers(row.members),
+    startTime: row.start_time,
+    completedAt: row.completed_at,
+    memo: row.memo,
+  }));
+}
+
+function parseDeployMembers(value: unknown) {
+  try {
+    const parsed = JSON.parse(String(value ?? "[]"));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 
