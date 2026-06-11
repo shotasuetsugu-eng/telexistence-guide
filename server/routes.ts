@@ -461,8 +461,14 @@ export function registerMapStoreApiRoutes(app: any) {
       await ensureDeploySchedulesTable(db);
       const month = String(req.query?.month ?? "");
       const whereMonth = /^\d{4}-\d{2}$/.test(month);
+      const monthStart = `${month}-01`;
+      const monthEnd = whereMonth ? new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).toISOString().slice(0, 10) : "";
       const result = whereMonth
-        ? await db.execute(sql`SELECT * FROM deploy_schedules WHERE to_char(deploy_date, 'YYYY-MM') = ${month} ORDER BY deploy_date ASC, id ASC`)
+        ? await db.execute(sql`
+            SELECT * FROM deploy_schedules
+            WHERE deploy_date <= ${monthEnd} AND COALESCE(end_date, deploy_date) >= ${monthStart}
+            ORDER BY deploy_date ASC, id ASC
+          `)
         : await db.execute(sql`SELECT * FROM deploy_schedules ORDER BY deploy_date ASC, id ASC`);
       res.json(normalizeDeployRows(result));
     } catch (error: any) {
@@ -477,9 +483,12 @@ export function registerMapStoreApiRoutes(app: any) {
       await ensureDeploySchedulesTable(db);
       const body = req.body ?? {};
       const members = Array.isArray(body.members) ? body.members : [];
+      const deployDate = String(body.deployDate);
+      const endDate = String(body.endDate || body.deployDate);
+      const dayPlan = Array.isArray(body.dayPlan) ? body.dayPlan : [];
       const result = await db.execute(sql`
-        INSERT INTO deploy_schedules (deploy_date, store_name, area, chain, work_type, description, members, start_time, memo)
-        VALUES (${String(body.deployDate)}, ${String(body.storeName)}, ${String(body.area ?? "")}, ${String(body.chain ?? "")}, ${String(body.workType ?? "")}, ${String(body.description ?? "")}, ${JSON.stringify(members)}, ${body.startTime ? String(body.startTime) : null}, ${String(body.memo ?? "")})
+        INSERT INTO deploy_schedules (deploy_date, end_date, day_plan, store_name, area, chain, work_type, description, members, start_time, memo)
+        VALUES (${deployDate}, ${endDate}, ${JSON.stringify(dayPlan)}, ${String(body.storeName)}, ${String(body.area ?? "")}, ${String(body.chain ?? "")}, ${String(body.workType ?? "")}, ${String(body.description ?? "")}, ${JSON.stringify(members)}, ${body.startTime ? String(body.startTime) : null}, ${String(body.memo ?? "")})
         RETURNING id
       `);
       res.json({ id: getDeployRows(result)[0]?.id });
@@ -495,9 +504,14 @@ export function registerMapStoreApiRoutes(app: any) {
       await ensureDeploySchedulesTable(db);
       const body = req.body ?? {};
       const members = Array.isArray(body.members) ? body.members : [];
+      const deployDate = String(body.deployDate);
+      const endDate = String(body.endDate || body.deployDate);
+      const dayPlan = Array.isArray(body.dayPlan) ? body.dayPlan : [];
       await db.execute(sql`
         UPDATE deploy_schedules SET
-          deploy_date = ${String(body.deployDate)},
+          deploy_date = ${deployDate},
+          end_date = ${endDate},
+          day_plan = ${JSON.stringify(dayPlan)},
           store_name = ${String(body.storeName)},
           area = ${String(body.area ?? "")},
           chain = ${String(body.chain ?? "")},
@@ -609,6 +623,8 @@ async function ensureDeploySchedulesTable(db: any) {
     CREATE TABLE IF NOT EXISTS deploy_schedules (
       id SERIAL PRIMARY KEY,
       deploy_date date NOT NULL,
+      end_date date,
+      day_plan text DEFAULT '[]' NOT NULL,
       store_name text NOT NULL,
       area text DEFAULT '' NOT NULL,
       chain varchar(50) DEFAULT '' NOT NULL,
@@ -622,6 +638,9 @@ async function ensureDeploySchedulesTable(db: any) {
       updated_at timestamp DEFAULT now() NOT NULL
     );
   `);
+  await db.execute(sql`ALTER TABLE deploy_schedules ADD COLUMN IF NOT EXISTS end_date date`);
+  await db.execute(sql`ALTER TABLE deploy_schedules ADD COLUMN IF NOT EXISTS day_plan text DEFAULT '[]' NOT NULL`);
+  await db.execute(sql`UPDATE deploy_schedules SET end_date = deploy_date WHERE end_date IS NULL`);
 }
 
 async function ensureDeployOptionsTable(db: any) {
@@ -647,6 +666,8 @@ function normalizeDeployRows(result: any) {
   return getDeployRows(result).map((row: any) => ({
     id: row.id,
     deployDate: row.deploy_date,
+    endDate: row.end_date ?? row.deploy_date,
+    dayPlan: parseDeployDayPlan(row.day_plan),
     storeName: row.store_name,
     area: row.area,
     chain: row.chain,
@@ -657,6 +678,19 @@ function normalizeDeployRows(result: any) {
     completedAt: row.completed_at,
     memo: row.memo,
   }));
+}
+
+function parseDeployDayPlan(value: unknown) {
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    return Array.isArray(parsed)
+      ? parsed
+          .map((item: any) => ({ date: String(item?.date ?? ""), type: String(item?.type ?? "") }))
+          .filter((item) => item.date && item.type)
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 function parseDeployMembers(value: unknown) {
