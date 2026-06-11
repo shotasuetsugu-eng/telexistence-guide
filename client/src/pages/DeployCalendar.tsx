@@ -30,7 +30,7 @@ type DeployOption = {
   imageUrl?: string;
 };
 
-type HighlightColor = "cyan" | "green" | "amber" | "purple" | "sky" | "rose";
+type HighlightColor = "white" | "cyan" | "green" | "amber" | "purple" | "sky" | "rose";
 
 type UserHighlightProfile = {
   memberName: string;
@@ -48,6 +48,13 @@ const highlightColorOptions: Array<{
   sample: string;
 }> = [
   {
+    value: "white",
+    label: "白",
+    row: "ring-2 ring-white/90 border-white/60 bg-white/[0.03] shadow-[0_0_18px_rgba(255,255,255,0.35)]",
+    cell: "ring-2 ring-white/90 shadow-[0_0_18px_rgba(255,255,255,0.45)]",
+    chip: "border-white/80 bg-white/15 text-white",
+    sample: "bg-white",
+  },  {
     value: "cyan",
     label: "水色",
     row: "ring-2 ring-primary/80 bg-primary/5",
@@ -99,24 +106,24 @@ const highlightColorOptions: Array<{
 
 function loadUserHighlightProfile(): UserHighlightProfile {
   if (typeof window === "undefined") {
-    return { memberName: "", highlightColor: "cyan" };
+    return { memberName: "", highlightColor: "white" };
   }
 
   try {
     const saved = window.localStorage.getItem(profileStorageKey);
-    if (!saved) return { memberName: "", highlightColor: "cyan" };
+    if (!saved) return { memberName: "", highlightColor: "white" };
 
     const parsed = JSON.parse(saved) as Partial<UserHighlightProfile>;
     const highlightColor = highlightColorOptions.some((item) => item.value === parsed.highlightColor)
       ? parsed.highlightColor as HighlightColor
-      : "cyan";
+      : "white";
 
     return {
       memberName: String(parsed.memberName ?? ""),
       highlightColor,
     };
   } catch {
-    return { memberName: "", highlightColor: "cyan" };
+    return { memberName: "", highlightColor: "white" };
   }
 }
 
@@ -834,6 +841,7 @@ export default function DeployCalendar() {
     </div>
   );
 }
+
 
 
 
