@@ -88,6 +88,7 @@ export default function DeployCalendar() {
   const [chainFilter, setChainFilter] = useState("");
   const [options, setOptions] = useState<DeployOption[]>([]);
   const [optionDraft, setOptionDraft] = useState({ field: "member", value: "" });
+  const [showOptionList, setShowOptionList] = useState(true);
 
   const loadSchedules = async () => {
     const response = await fetch(`/api/deploy-schedules?month=${month}`, { cache: "no-store" });
@@ -361,16 +362,24 @@ export default function DeployCalendar() {
                 <input placeholder="プルダウン候補を登録" value={optionDraft.value} onChange={(e) => setOptionDraft({ ...optionDraft, value: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
                 <Button size="sm" type="submit">候補登録</Button>
               </form>
-              <div className="flex flex-wrap gap-2">
-                {options.map((item) => {
-                  const label = optionFields.find((field) => field.field === item.field)?.label ?? item.field;
-                  return (
-                    <button key={item.id} type="button" onClick={() => deleteOption(item.id)} className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-cyber-red hover:text-cyber-red">
-                      {label}: {item.value} x
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">登録済み候補 {options.length}件</span>
+                <Button size="sm" type="button" variant="outline" onClick={() => setShowOptionList((visible) => !visible)}>
+                  {showOptionList ? "候補一覧を非表示" : "候補一覧を表示"}
+                </Button>
               </div>
+              {showOptionList && (
+                <div className="flex flex-wrap gap-2">
+                  {options.map((item) => {
+                    const label = optionFields.find((field) => field.field === item.field)?.label ?? item.field;
+                    return (
+                      <button key={item.id} type="button" onClick={() => deleteOption(item.id)} className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-cyber-red hover:text-cyber-red">
+                        {label}: {item.value} x
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
