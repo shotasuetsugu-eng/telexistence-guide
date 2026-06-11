@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarDays, CheckCircle2, Clock3, Download, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock3, Download, Plus, Sun, Trash2, Users } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -21,6 +21,22 @@ type DeploySchedule = {
 type DeployForm = Omit<DeploySchedule, "id" | "members" | "completedAt"> & {
   membersText: string;
 };
+
+type DeployOption = {
+  id: number;
+  field: string;
+  value: string;
+};
+
+const optionFields = [
+  { field: "member", label: "メンバー" },
+  { field: "chain", label: "チェーン" },
+  { field: "startTime", label: "開始時間" },
+  { field: "area", label: "エリア" },
+  { field: "storeName", label: "店舗名" },
+  { field: "workType", label: "作業内容" },
+  { field: "description", label: "詳細" },
+];
 
 const emptyForm: DeployForm = {
   deployDate: new Date().toISOString().slice(0, 10),
@@ -50,6 +66,11 @@ function toMonth(value: Date) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function formatMonthLabel(value: string) {
+  const [year, month] = value.split("-");
+  return `${year}年${Number(month)}月`;
+}
+
 function uniqueValues(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.map((value) => String(value ?? "").trim()).filter(Boolean))).sort();
 }
@@ -65,6 +86,8 @@ export default function DeployCalendar() {
   const [memberFilter, setMemberFilter] = useState("");
   const [areaFilter, setAreaFilter] = useState("");
   const [chainFilter, setChainFilter] = useState("");
+  const [options, setOptions] = useState<DeployOption[]>([]);
+  const [optionDraft, setOptionDraft] = useState({ field: "member", value: "" });
 
   const loadSchedules = async () => {
     const response = await fetch(`/api/deploy-schedules?month=${month}`, { cache: "no-store" });
@@ -72,17 +95,28 @@ export default function DeployCalendar() {
     setSchedules(await response.json());
   };
 
+  const loadOptions = async () => {
+    const response = await fetch("/api/deploy-options", { cache: "no-store" });
+    if (!response.ok) throw new Error("Failed to load deploy options");
+    setOptions(await response.json());
+  };
+
   useEffect(() => {
     loadSchedules().catch((error) => toast.error(error.message));
   }, [month]);
 
-  const members = useMemo(() => Array.from(new Set(schedules.flatMap((item) => item.members))).filter(Boolean), [schedules]);
-  const areas = useMemo(() => Array.from(new Set(schedules.map((item) => item.area))).filter(Boolean), [schedules]);
-  const chains = useMemo(() => Array.from(new Set(schedules.map((item) => item.chain))).filter(Boolean), [schedules]);
-  const storeNames = useMemo(() => uniqueValues(schedules.map((item) => item.storeName)), [schedules]);
-  const workTypes = useMemo(() => uniqueValues(schedules.map((item) => item.workType)), [schedules]);
-  const descriptions = useMemo(() => uniqueValues(schedules.map((item) => item.description)), [schedules]);
-  const startTimes = useMemo(() => uniqueValues(schedules.map((item) => item.startTime)), [schedules]);
+  useEffect(() => {
+    loadOptions().catch((error) => toast.error(error.message));
+  }, []);
+
+  const optionValues = (field: string) => options.filter((item) => item.field === field).map((item) => item.value);
+  const members = useMemo(() => uniqueValues([...schedules.flatMap((item) => item.members), ...optionValues("member")]), [schedules, options]);
+  const areas = useMemo(() => uniqueValues([...schedules.map((item) => item.area), ...optionValues("area")]), [schedules, options]);
+  const chains = useMemo(() => uniqueValues([...schedules.map((item) => item.chain), ...optionValues("chain")]), [schedules, options]);
+  const storeNames = useMemo(() => uniqueValues([...schedules.map((item) => item.storeName), ...optionValues("storeName")]), [schedules, options]);
+  const workTypes = useMemo(() => uniqueValues([...schedules.map((item) => item.workType), ...optionValues("workType")]), [schedules, options]);
+  const descriptions = useMemo(() => uniqueValues([...schedules.map((item) => item.description), ...optionValues("description")]), [schedules, options]);
+  const startTimes = useMemo(() => uniqueValues([...schedules.map((item) => item.startTime), ...optionValues("startTime")]), [schedules, options]);
 
   const filteredSchedules = schedules.filter((item) => {
     if (memberFilter && !item.members.includes(memberFilter)) return false;
@@ -122,6 +156,29 @@ export default function DeployCalendar() {
     const currentMembers = form.membersText.split(",").map((item) => item.trim()).filter(Boolean);
     if (!member || currentMembers.includes(member)) return;
     setForm({ ...form, membersText: [...currentMembers, member].join(", ") });
+  };
+
+  const submitOption = async (event: FormEvent) => {
+    event.preventDefault();
+    const value = optionDraft.value.trim();
+    if (!value) return;
+    const response = await fetch("/api/deploy-options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ field: optionDraft.field, value }),
+    });
+    if (!response.ok) {
+      toast.error("候補の登録に失敗しました");
+      return;
+    }
+    toast.success("プルダウン候補を登録しました");
+    setOptionDraft({ ...optionDraft, value: "" });
+    await loadOptions();
+  };
+
+  const deleteOption = async (id: number) => {
+    await fetch(`/api/deploy-options/${id}`, { method: "DELETE" });
+    await loadOptions();
   };
 
   const submitSchedule = async (event: FormEvent) => {
@@ -225,26 +282,62 @@ export default function DeployCalendar() {
         <select value={chainFilter} onChange={(e) => setChainFilter(e.target.value)} className="rounded bg-input border border-border px-3 py-2 text-sm"><option value="">すべてのチェーン</option>{chains.map((chain) => <option key={chain}>{chain}</option>)}</select>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[240px_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
         <aside className="space-y-4">
-          <div className="cyber-border rounded-lg bg-card p-3">
-            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-2">{["日","月","火","水","木","金","土"].map((day) => <span key={day}>{day}</span>)}</div>
-            <div className="grid grid-cols-7 gap-1 text-center text-sm">
+          <div className="cyber-border rounded-lg bg-card p-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-semibold text-foreground">{formatMonthLabel(month)}</h2>
+              <button onClick={() => setMonth(toMonth(new Date()))} className="rounded border border-primary/40 px-2 py-1 text-xs text-primary hover:bg-primary/10">
+                今日
+              </button>
+            </div>
+            <div className="grid grid-cols-7 gap-2 text-center text-xs text-muted-foreground">{["日","月","火","水","木","金","土"].map((day) => <span key={day}>{day}</span>)}</div>
+            <div className="grid grid-cols-7 gap-2 text-center text-sm">
               {calendarDays.map((day, index) => {
                 const date = day ? `${month}-${String(day).padStart(2, "0")}` : "";
                 const hasDeploy = schedules.some((item) => item.deployDate.slice(0, 10) === date);
-                return <div key={`${day}-${index}`} className={`h-8 rounded grid place-items-center ${hasDeploy ? "bg-primary/15 text-primary border border-primary/40" : "text-muted-foreground"}`}>{day ?? ""}</div>;
+                const isToday = date === new Date().toISOString().slice(0, 10);
+                return (
+                  <div
+                    key={`${day}-${index}`}
+                    className={`relative h-10 rounded grid place-items-center ${hasDeploy ? "bg-primary/15 text-primary border border-primary/40" : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}
+                  >
+                    {day ?? ""}
+                    {hasDeploy && <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-primary" />}
+                  </div>
+                );
               })}
+            </div>
+            <div className="grid grid-cols-4 gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" />設置</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-cyber-green" />切替</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400" />点検</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-400" />その他</span>
             </div>
           </div>
 
-          <div className="cyber-border rounded-lg bg-card p-3 space-y-3">
+          <div className="cyber-border rounded-lg bg-card p-4 space-y-3">
             <h2 className="font-semibold text-foreground">今月のサマリー</h2>
-            <p className="flex justify-between text-sm"><span>予定</span><span className="text-primary">{summary.total}件</span></p>
-            <p className="flex justify-between text-sm"><span>今日</span><span className="text-primary">{summary.today}件</span></p>
-            <p className="flex justify-between text-sm"><span>進行中</span><span className="text-amber-400">{summary.active}件</span></p>
-            <p className="flex justify-between text-sm"><span>完了</span><span className="text-primary">{summary.done}件</span></p>
-            <p className="flex justify-between text-sm"><span>メンバー</span><span className="text-primary">{summary.memberCount}名</span></p>
+            <div className="rounded border border-border bg-input/40 p-3 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4 text-primary" />今月の予定</span>
+              <span className="text-xl font-black text-primary">{summary.total}<span className="ml-1 text-xs text-muted-foreground">件</span></span>
+            </div>
+            <div className="rounded border border-border bg-input/40 p-3 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><Sun className="h-4 w-4 text-cyber-green" />今日</span>
+              <span className="text-xl font-black text-primary">{summary.today}<span className="ml-1 text-xs text-muted-foreground">件</span></span>
+            </div>
+            <div className="rounded border border-border bg-input/40 p-3 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><Clock3 className="h-4 w-4 text-amber-400" />進行中</span>
+              <span className="text-xl font-black text-amber-400">{summary.active}<span className="ml-1 text-xs text-muted-foreground">件</span></span>
+            </div>
+            <div className="rounded border border-border bg-input/40 p-3 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-primary" />完了</span>
+              <span className="text-xl font-black text-primary">{summary.done}<span className="ml-1 text-xs text-muted-foreground">件</span></span>
+            </div>
+            <div className="rounded border border-border bg-input/40 p-3 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="h-4 w-4 text-primary" />メンバー</span>
+              <span className="text-xl font-black text-primary">{summary.memberCount}<span className="ml-1 text-xs text-muted-foreground">名</span></span>
+            </div>
           </div>
         </aside>
 
@@ -256,6 +349,28 @@ export default function DeployCalendar() {
               {isAdmin && <Button size="sm" variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-1" />CSV</Button>}
             </div>
           </div>
+
+          {isAdmin && showForm && (
+            <div className="space-y-3 rounded border border-border p-3">
+              <form onSubmit={submitOption} className="grid gap-2 md:grid-cols-[180px_1fr_auto]">
+                <select value={optionDraft.field} onChange={(e) => setOptionDraft({ ...optionDraft, field: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm">
+                  {optionFields.map((item) => <option key={item.field} value={item.field}>{item.label}</option>)}
+                </select>
+                <input placeholder="プルダウン候補を登録" value={optionDraft.value} onChange={(e) => setOptionDraft({ ...optionDraft, value: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <Button size="sm" type="submit">候補登録</Button>
+              </form>
+              <div className="flex flex-wrap gap-2">
+                {options.map((item) => {
+                  const label = optionFields.find((field) => field.field === item.field)?.label ?? item.field;
+                  return (
+                    <button key={item.id} type="button" onClick={() => deleteOption(item.id)} className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-cyber-red hover:text-cyber-red">
+                      {label}: {item.value} x
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {isAdmin && showForm && (
             <form onSubmit={submitSchedule} className="grid gap-2 rounded border border-border p-3 md:grid-cols-2">

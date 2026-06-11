@@ -551,6 +551,56 @@ export function registerMapStoreApiRoutes(app: any) {
       res.status(500).json({ error: error.message ?? "Failed to delete deploy schedule" });
     }
   });
+
+  app.get("/api/deploy-options", async (_req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) {
+        res.json([]);
+        return;
+      }
+      await ensureDeployOptionsTable(db);
+      const result = await db.execute(sql`SELECT * FROM deploy_options ORDER BY field ASC, value ASC`);
+      res.json(getDeployRows(result).map((row: any) => ({ id: row.id, field: row.field, value: row.value })));
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to get deploy options" });
+    }
+  });
+
+  app.post("/api/deploy-options", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeployOptionsTable(db);
+      const field = String(req.body?.field ?? "").trim();
+      const value = String(req.body?.value ?? "").trim();
+      if (!field || !value) {
+        res.status(400).json({ error: "field and value are required" });
+        return;
+      }
+      const result = await db.execute(sql`
+        INSERT INTO deploy_options (field, value)
+        VALUES (${field}, ${value})
+        ON CONFLICT (field, value) DO UPDATE SET updated_at = now()
+        RETURNING id
+      `);
+      res.json({ id: getDeployRows(result)[0]?.id });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to create deploy option" });
+    }
+  });
+
+  app.delete("/api/deploy-options/:id", async (req: any, res: any) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+      await ensureDeployOptionsTable(db);
+      await db.execute(sql`DELETE FROM deploy_options WHERE id = ${Number(req.params.id)}`);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message ?? "Failed to delete deploy option" });
+    }
+  });
 }
 
 async function ensureDeploySchedulesTable(db: any) {
@@ -569,6 +619,19 @@ async function ensureDeploySchedulesTable(db: any) {
       memo text DEFAULT '' NOT NULL,
       created_at timestamp DEFAULT now() NOT NULL,
       updated_at timestamp DEFAULT now() NOT NULL
+    );
+  `);
+}
+
+async function ensureDeployOptionsTable(db: any) {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS deploy_options (
+      id SERIAL PRIMARY KEY,
+      field varchar(50) NOT NULL,
+      value text NOT NULL,
+      created_at timestamp DEFAULT now() NOT NULL,
+      updated_at timestamp DEFAULT now() NOT NULL,
+      UNIQUE(field, value)
     );
   `);
 }
