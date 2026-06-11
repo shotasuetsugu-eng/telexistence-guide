@@ -3,6 +3,25 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
+type DeploySchedule = {
+  id: number;
+  deployDate: string;
+  storeName: string;
+  area: string;
+  chain: string;
+  workType: string;
+  description: string;
+  members: string[];
+  startTime: string | null;
+  completedAt: string | null;
+};
+
+function deployStatus(item: DeploySchedule) {
+  if (item.completedAt) return "完了";
+  if (item.startTime) return "進行中";
+  return "予定";
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
 
@@ -11,6 +30,7 @@ export default function Home() {
   const { data: checklists = [] } = trpc.checklists.list.useQuery();
   const { data: documents = [] } = trpc.documents.list.useQuery();
   const [deploySummary, setDeploySummary] = useState({ today: 0, month: 0, active: 0, done: 0, members: 0 });
+  const [deploySchedules, setDeploySchedules] = useState<DeploySchedule[]>([]);
 
   useEffect(() => {
     const month = new Date().toISOString().slice(0, 7);
@@ -19,6 +39,7 @@ export default function Home() {
       .then((items) => {
         const today = new Date().toISOString().slice(0, 10);
         const schedules = Array.isArray(items) ? items : [];
+        setDeploySchedules(schedules);
         const members = new Set(schedules.flatMap((item: any) => Array.isArray(item.members) ? item.members : []));
         setDeploySummary({
           today: schedules.filter((item: any) => String(item.deployDate).slice(0, 10) === today).length,
@@ -30,6 +51,11 @@ export default function Home() {
       })
       .catch(() => {});
   }, []);
+
+  const upcomingDeploys = deploySchedules
+    .slice()
+    .sort((a, b) => a.deployDate.localeCompare(b.deployDate))
+    .slice(0, 8);
 
   return (
     <div className="space-y-8">
@@ -96,6 +122,66 @@ export default function Home() {
           </div>
         </button>
       </div>
+
+      <section className="cyber-border rounded-lg bg-card p-4 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Deploy Calendar</h2>
+          </div>
+          <button
+            onClick={() => setLocation("/deploy-calendar")}
+            className="rounded border border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+          >
+            カレンダーを開く
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="px-2 py-2">日付</th>
+                <th className="px-2 py-2">店舗</th>
+                <th className="px-2 py-2">作業内容</th>
+                <th className="px-2 py-2">担当</th>
+                <th className="px-2 py-2">進捗</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upcomingDeploys.map((item) => {
+                const status = deployStatus(item);
+                return (
+                  <tr key={item.id} className="border-t border-border">
+                    <td className="px-2 py-3 text-muted-foreground">{item.deployDate.slice(0, 10)}</td>
+                    <td className="px-2 py-3">
+                      <p className="font-semibold text-foreground">{item.storeName}</p>
+                      <p className="text-xs text-muted-foreground">{[item.area, item.chain].filter(Boolean).join(" / ")}</p>
+                    </td>
+                    <td className="px-2 py-3">
+                      <p className="text-foreground">{item.workType || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
+                    </td>
+                    <td className="px-2 py-3 text-muted-foreground">{item.members.join(", ") || "-"}</td>
+                    <td className="px-2 py-3">
+                      <span className={status === "進行中" ? "text-amber-400" : status === "完了" ? "text-primary" : "text-sky-400"}>
+                        {status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+              {upcomingDeploys.length === 0 && (
+                <tr>
+                  <td className="px-2 py-6 text-center text-muted-foreground" colSpan={5}>
+                    今月のDeploy予定はまだありません
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
