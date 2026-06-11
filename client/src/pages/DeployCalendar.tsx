@@ -269,7 +269,7 @@ const isScheduleCompleted = (item: any) => {
       item.name ||
       "この予定";
 
-    const ok = window.confirm(storeName + " を本当に完了しますか？");
+    const ok = window.confirm("ステータスを本当に完了しますか？");
 
     if (!ok) return;
 
@@ -986,6 +986,7 @@ const isScheduleCompleted = (item: any) => {
 </div>
   );
 }
+
 
 
 
