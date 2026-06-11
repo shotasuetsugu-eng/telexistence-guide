@@ -929,7 +929,14 @@ const isScheduleCompleted = (item: any) => {
                           )}
                           <Button size="sm" variant="outline" onClick={() => editSchedule(item)}>編集</Button>
                           <Button size="sm" variant="outline" onClick={() => deleteSchedule(item.id)}><Trash2 className="h-3 w-3" /></Button>
-                        </div> : <span className="text-xs text-muted-foreground">閲覧のみ</span>}
+                        </div> : <span className="text-xs text-muted-foreground"><button
+  type="button"
+  className="complete-check-button"
+  onClick={() => completeScheduleByUser(renderMemberChip)}
+  title="完了にする"
+>
+  ✓
+</button></span>}
                       </td>
                     </tr>
                   );
@@ -979,6 +986,7 @@ const isScheduleCompleted = (item: any) => {
 </div>
   );
 }
+
 
 
 
