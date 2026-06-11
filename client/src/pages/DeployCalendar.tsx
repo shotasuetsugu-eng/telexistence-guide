@@ -244,6 +244,43 @@ export default function DeployCalendar() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [month, setMonth] = useState(toMonth(new Date()));
+  const [completeTarget, setCompleteTarget] = useState<any | null>(null);
+  const [completedScheduleKeys, setCompletedScheduleKeys] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("fsTeamCalendarCompletedKeys") || "[]");
+    } catch {
+      return [];
+    }
+  });  const getScheduleCompleteKey = (item: any) => {
+    const date = item.date || "";
+    const storeName = item.storeName || item.store || item.shopName || item.name || "";
+    const taskName = item.task || item.workContent || item.work || item.title || "";
+
+    return String(item.id || (date + "-" + storeName + "-" + taskName));
+  };
+const isScheduleCompleted = (item: any) => {
+    return completedScheduleKeys.includes(getScheduleCompleteKey(item));
+  };
+
+  const openCompleteConfirm = (item: any) => {
+    setCompleteTarget(item);
+  };
+
+  const cancelComplete = () => {
+    setCompleteTarget(null);
+  };
+
+  const confirmComplete = () => {
+    if (!completeTarget) return;
+
+    const key = getScheduleCompleteKey(completeTarget);
+    const nextKeys = Array.from(new Set([...completedScheduleKeys, key]));
+
+    localStorage.setItem("fsTeamCalendarCompletedKeys", JSON.stringify(nextKeys));
+    setCompletedScheduleKeys(nextKeys);
+    setCompleteTarget(null);
+  };
+
   const [schedules, setSchedules] = useState<DeploySchedule[]>([]);
   const [form, setForm] = useState<DeployForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -599,17 +636,62 @@ export default function DeployCalendar() {
             <div className="grid grid-cols-7 gap-2 text-center text-sm">
               {calendarDays.map((day, index) => {
                 const date = day ? `${month}-${String(day).padStart(2, "0")}` : "";
-                const deployOnDate = schedules.find((item) => isDateInSchedule(item, date));
+                const schedulesOnDate = date
+                  ? schedules.filter((item) => isDateInSchedule(item, date))
+                  : [];
+
+                const deployOnDate = schedulesOnDate[0];
                 const workTypeClass = workTypeClassFor(deployOnDate?.workType || "未分類");
+                const workTypesOnDate = uniqueValues(
+                  schedulesOnDate.map((item) => item.workType || "未分類")
+                ).slice(0, 4);
+
                 const isToday = date === new Date().toISOString().slice(0, 10);
-                const isMine = deployOnDate ? isOwnSchedule(deployOnDate) : false;
+                const hasOwnScheduleOnDate = schedulesOnDate.some((item) => isOwnSchedule(item));
+
                 return (
                   <div
                     key={`${day}-${index}`}
-                    className={`relative h-10 rounded grid place-items-center ${deployOnDate ? `${workTypeClass.fill} ${workTypeClass.text} border ${workTypeClass.border}` : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""} ${isMine ? selectedHighlight.cell : ""}`}
+                    title={
+                      schedulesOnDate.length > 0
+                        ? `${schedulesOnDate.length}件: ${schedulesOnDate.map((item) => item.storeName).join(" / ")}`
+                        : undefined
+                    }
+                    className={`relative h-10 rounded grid place-items-center ${
+                      schedulesOnDate.length > 0
+                        ? `${workTypeClass.fill} ${workTypeClass.text} border ${workTypeClass.border}`
+                        : "text-muted-foreground"
+                    } ${isToday ? "ring-1 ring-primary" : ""} ${
+                      hasOwnScheduleOnDate
+                        ? `${selectedHighlight.cell} outline outline-2 outline-offset-2 outline-white/90`
+                        : ""
+                    }`}
                   >
                     {day ?? ""}
-                    {deployOnDate && <span className={`absolute bottom-1 h-1.5 w-1.5 rounded-full ${workTypeClass.dot}`} />}
+
+                    {schedulesOnDate.length > 1 && (
+                      <span className="absolute right-0.5 top-0.5 rounded-full bg-background/90 px-1 text-[10px] font-bold text-foreground">
+                        {schedulesOnDate.length}
+                      </span>
+                    )}
+
+                    {hasOwnScheduleOnDate && (
+                      <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.95)]" />
+                    )}
+
+                    {schedulesOnDate.length > 0 && (
+                      <div className="absolute bottom-1 flex max-w-[90%] gap-0.5">
+                        {workTypesOnDate.map((workType) => {
+                          const dotClass = workTypeClassFor(workType);
+                          return (
+                            <span
+                              key={workType}
+                              className={`h-1.5 w-1.5 rounded-full ${dotClass.dot}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -784,7 +866,7 @@ export default function DeployCalendar() {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-sm">
-              <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">日付</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">詳細</th><th className="p-2">操作</th></tr></thead>
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">日付</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">詳細</th><th className="p-2">完了</th></tr></thead>
               <tbody>
                 {filteredSchedules.map((item) => {
                   const status = statusOf(item);
@@ -838,9 +920,49 @@ export default function DeployCalendar() {
           </div>
         </section>
       </div>
-    </div>
+    
+      {completeTarget && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <h3>完了確認</h3>
+
+            <p>
+              <strong>
+                {completeTarget.storeName ||
+                  completeTarget.store ||
+                  completeTarget.shopName ||
+                  completeTarget.name ||
+                  "この予定"}
+              </strong>
+              を完了にしますか？
+            </p>
+
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="confirm-cancel-button"
+                onClick={cancelComplete}
+              >
+                キャンセル
+              </button>
+
+              <button
+                type="button"
+                className="confirm-ok-button"
+                onClick={confirmComplete}
+              >
+                確認
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+</div>
   );
 }
+
+
+
 
 
 
