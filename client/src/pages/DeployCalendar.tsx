@@ -158,6 +158,8 @@ export default function DeployCalendar() {
     setForm({ ...form, membersText: [...currentMembers, member].join(", ") });
   };
 
+  const optionSelectClass = "rounded bg-input border border-border px-3 py-2 text-sm";
+
   const submitOption = async (event: FormEvent) => {
     event.preventDefault();
     const value = optionDraft.value.trim();
@@ -374,17 +376,35 @@ export default function DeployCalendar() {
 
           {isAdmin && showForm && (
             <form onSubmit={submitSchedule} className="grid gap-2 rounded border border-border p-3 md:grid-cols-2">
-              <datalist id="deploy-store-options">{storeNames.map((value) => <option key={value} value={value} />)}</datalist>
-              <datalist id="deploy-area-options">{areas.map((value) => <option key={value} value={value} />)}</datalist>
-              <datalist id="deploy-chain-options">{chains.map((value) => <option key={value} value={value} />)}</datalist>
-              <datalist id="deploy-work-options">{workTypes.map((value) => <option key={value} value={value} />)}</datalist>
-              <datalist id="deploy-description-options">{descriptions.map((value) => <option key={value} value={value} />)}</datalist>
-              <datalist id="deploy-start-options">{startTimes.map((value) => <option key={value} value={value} />)}</datalist>
               <input type="date" value={form.deployDate} onChange={(e) => setForm({ ...form, deployDate: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
-              <input list="deploy-store-options" placeholder="店舗名" value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" required />
-              <input list="deploy-area-options" placeholder="エリア" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
-              <input list="deploy-chain-options" placeholder="チェーン" value={form.chain} onChange={(e) => setForm({ ...form, chain: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
-              <input list="deploy-work-options" placeholder="作業内容" value={form.workType} onChange={(e) => setForm({ ...form, workType: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+              <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input placeholder="店舗名" value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" required />
+                <select value="" onChange={(e) => e.target.value && setForm({ ...form, storeName: e.target.value })} className={optionSelectClass}>
+                  <option value="">店舗名候補</option>
+                  {storeNames.map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input placeholder="エリア" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <select value="" onChange={(e) => e.target.value && setForm({ ...form, area: e.target.value })} className={optionSelectClass}>
+                  <option value="">エリア候補</option>
+                  {areas.map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input placeholder="チェーン" value={form.chain} onChange={(e) => setForm({ ...form, chain: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <select value="" onChange={(e) => e.target.value && setForm({ ...form, chain: e.target.value })} className={optionSelectClass}>
+                  <option value="">チェーン候補</option>
+                  {chains.map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input placeholder="作業内容" value={form.workType} onChange={(e) => setForm({ ...form, workType: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <select value="" onChange={(e) => e.target.value && setForm({ ...form, workType: e.target.value })} className={optionSelectClass}>
+                  <option value="">作業内容候補</option>
+                  {workTypes.map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
               <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
                 <input placeholder="担当メンバー（カンマ区切り）" value={form.membersText} onChange={(e) => setForm({ ...form, membersText: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
                 <select value="" onChange={(e) => addMemberToForm(e.target.value)} className="rounded bg-input border border-border px-3 py-2 text-sm">
@@ -392,8 +412,20 @@ export default function DeployCalendar() {
                   {members.map((member) => <option key={member} value={member}>{member}</option>)}
                 </select>
               </div>
-              <input list="deploy-start-options" placeholder="開始時間 例 10:00" value={form.startTime ?? ""} onChange={(e) => setForm({ ...form, startTime: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
-              <input list="deploy-description-options" placeholder="詳細" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+              <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input placeholder="開始時間 例 10:00" value={form.startTime ?? ""} onChange={(e) => setForm({ ...form, startTime: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <select value="" onChange={(e) => e.target.value && setForm({ ...form, startTime: e.target.value })} className={optionSelectClass}>
+                  <option value="">開始時間候補</option>
+                  {startTimes.map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+                <input placeholder="詳細" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <select value="" onChange={(e) => e.target.value && setForm({ ...form, description: e.target.value })} className={optionSelectClass}>
+                  <option value="">詳細候補</option>
+                  {descriptions.map((value) => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </div>
               <textarea placeholder="メモ" value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm md:col-span-2" />
               <div className="flex gap-2 md:col-span-2"><Button size="sm" type="submit">保存</Button><Button size="sm" type="button" variant="outline" onClick={resetForm}>キャンセル</Button></div>
             </form>
