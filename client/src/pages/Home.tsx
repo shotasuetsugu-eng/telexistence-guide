@@ -17,6 +17,13 @@ type DeploySchedule = {
   memo: string;
 };
 
+type DeployOption = {
+  id: number;
+  field: string;
+  value: string;
+  imageUrl?: string;
+};
+
 function deployStatus(item: DeploySchedule) {
   if (item.completedAt) return "完了";
   const [year, month, day] = item.deployDate.slice(0, 10).split("-").map(Number);
@@ -50,6 +57,7 @@ export default function Home() {
   const { data: documents = [] } = trpc.documents.list.useQuery();
   const [deploySummary, setDeploySummary] = useState({ today: 0, month: 0, active: 0, done: 0, members: 0 });
   const [deploySchedules, setDeploySchedules] = useState<DeploySchedule[]>([]);
+  const [deployOptions, setDeployOptions] = useState<DeployOption[]>([]);
   const [detailSchedule, setDetailSchedule] = useState<DeploySchedule | null>(null);
 
   useEffect(() => {
@@ -70,12 +78,23 @@ export default function Home() {
         });
       })
       .catch(() => {});
+
+    fetch("/api/deploy-options")
+      .then((response) => response.ok ? response.json() : [])
+      .then((items) => setDeployOptions(Array.isArray(items) ? items : []))
+      .catch(() => {});
   }, []);
 
   const upcomingDeploys = deploySchedules
     .slice()
     .sort((a, b) => a.deployDate.localeCompare(b.deployDate))
     .slice(0, 5);
+  const memberImageMap = useMemo(() => {
+    const pairs = deployOptions
+      .filter((item) => item.field === "member" && item.imageUrl)
+      .map((item) => [item.value, item.imageUrl || ""] as const);
+    return new Map(pairs);
+  }, [deployOptions]);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
   const calendarDays = useMemo(() => {
@@ -89,6 +108,16 @@ export default function Home() {
 
   const showDeployDetails = (item: DeploySchedule) => {
     setDetailSchedule(item);
+  };
+
+  const renderMemberChip = (member: string) => {
+    const imageUrl = memberImageMap.get(member);
+    return (
+      <span key={member} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-input/50 px-2 py-1 text-xs font-semibold text-foreground">
+        {imageUrl && <img src={imageUrl} alt="" className="h-5 w-5 rounded-full object-cover ring-1 ring-primary/50" />}
+        {member}
+      </span>
+    );
   };
 
   return (
@@ -249,7 +278,11 @@ export default function Home() {
                         <p className="font-semibold text-foreground">{item.workType || "-"}</p>
                         <p className="text-xs text-muted-foreground">{item.description}</p>
                       </td>
-                      <td className="px-2 py-2 font-semibold text-foreground">{item.members.join(", ") || "-"}</td>
+                      <td className="px-2 py-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.members.length > 0 ? item.members.map(renderMemberChip) : <span className="text-xs text-muted-foreground">-</span>}
+                        </div>
+                      </td>
                       <td className="px-2 py-2">
                         <span className={`font-semibold ${status === "進行中" ? "text-amber-400" : status === "完了" ? "text-primary" : "text-sky-400"}`}>
                           {status}

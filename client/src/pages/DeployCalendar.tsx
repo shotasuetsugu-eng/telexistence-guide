@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarDays, CheckCircle2, Clock3, Download, Plus, Sun, Trash2, Users } from "lucide-react";
+import { useEffect, useMemo, useState, type ClipboardEvent, type FormEvent } from "react";
+import { CalendarDays, CheckCircle2, Clock3, Download, ImagePlus, Plus, Sun, Trash2, Users } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ type DeployOption = {
   id: number;
   field: string;
   value: string;
+  imageUrl?: string;
 };
 
 const optionFields = [
@@ -115,6 +116,7 @@ export default function DeployCalendar() {
   const [chainFilter, setChainFilter] = useState("");
   const [options, setOptions] = useState<DeployOption[]>([]);
   const [optionDraft, setOptionDraft] = useState({ field: "member", value: "" });
+  const [optionImageUrl, setOptionImageUrl] = useState("");
   const [showOptionList, setShowOptionList] = useState(true);
   const [detailSchedule, setDetailSchedule] = useState<DeploySchedule | null>(null);
 
@@ -146,6 +148,12 @@ export default function DeployCalendar() {
   const workTypes = useMemo(() => uniqueValues([...schedules.map((item) => item.workType), ...optionValues("workType")]), [schedules, options]);
   const descriptions = useMemo(() => uniqueValues([...schedules.map((item) => item.description), ...optionValues("description")]), [schedules, options]);
   const startTimes = useMemo(() => uniqueValues([...schedules.map((item) => item.startTime), ...optionValues("startTime")]), [schedules, options]);
+  const memberImageMap = useMemo(() => {
+    const pairs = options
+      .filter((item) => item.field === "member" && item.imageUrl)
+      .map((item) => [item.value, item.imageUrl || ""] as const);
+    return new Map(pairs);
+  }, [options]);
 
   const filteredSchedules = schedules.filter((item) => {
     if (memberFilter && !item.members.includes(memberFilter)) return false;
@@ -195,6 +203,38 @@ export default function DeployCalendar() {
 
   const optionSelectClass = "rounded bg-input border border-border px-3 py-2 text-sm";
 
+  const readOptionImage = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("画像ファイルを選択してください");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setOptionDraft((current) => ({ ...current, field: "member" }));
+      setOptionImageUrl(String(reader.result ?? ""));
+      toast.success("メンバー候補の画像をセットしました");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleOptionImagePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+    const file = imageItem?.getAsFile();
+    if (!file) return;
+    event.preventDefault();
+    readOptionImage(file);
+  };
+
+  const renderMemberChip = (member: string) => {
+    const imageUrl = memberImageMap.get(member);
+    return (
+      <span key={member} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-input/50 px-2 py-1 text-xs font-semibold text-foreground">
+        {imageUrl && <img src={imageUrl} alt="" className="h-5 w-5 rounded-full object-cover ring-1 ring-primary/50" />}
+        {member}
+      </span>
+    );
+  };
+
   const submitOption = async (event: FormEvent) => {
     event.preventDefault();
     const value = optionDraft.value.trim();
@@ -202,7 +242,7 @@ export default function DeployCalendar() {
     const response = await fetch("/api/deploy-options", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ field: optionDraft.field, value }),
+      body: JSON.stringify({ field: optionDraft.field, value, imageUrl: optionDraft.field === "member" ? optionImageUrl : "" }),
     });
     if (!response.ok) {
       toast.error("候補の登録に失敗しました");
@@ -210,6 +250,7 @@ export default function DeployCalendar() {
     }
     toast.success("プルダウン候補を登録しました");
     setOptionDraft({ ...optionDraft, value: "" });
+    setOptionImageUrl("");
     await loadOptions();
   };
 
@@ -434,9 +475,29 @@ export default function DeployCalendar() {
                 <select value={optionDraft.field} onChange={(e) => setOptionDraft({ ...optionDraft, field: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm">
                   {optionFields.map((item) => <option key={item.field} value={item.field}>{item.label}</option>)}
                 </select>
-                <input placeholder="プルダウン候補を登録" value={optionDraft.value} onChange={(e) => setOptionDraft({ ...optionDraft, value: e.target.value })} className="rounded bg-input border border-border px-3 py-2 text-sm" />
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    placeholder="プルダウン候補を登録"
+                    value={optionDraft.value}
+                    onChange={(e) => setOptionDraft({ ...optionDraft, value: e.target.value })}
+                    onPaste={handleOptionImagePaste}
+                    className="rounded bg-input border border-border px-3 py-2 text-sm"
+                  />
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded border border-border px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10">
+                    <ImagePlus className="h-4 w-4" />
+                    画像
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && readOptionImage(e.target.files[0])} />
+                  </label>
+                </div>
                 <Button size="sm" type="submit">候補登録</Button>
               </form>
+              {optionImageUrl && (
+                <div className="flex items-center gap-3 rounded border border-border bg-input/30 p-2">
+                  <img src={optionImageUrl} alt="" className="h-10 w-10 rounded-full object-cover ring-1 ring-primary/50" />
+                  <span className="text-xs text-muted-foreground">この画像をメンバー候補に保存します</span>
+                  <Button size="sm" type="button" variant="outline" onClick={() => setOptionImageUrl("")}>画像を外す</Button>
+                </div>
+              )}
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-muted-foreground">登録済み候補 {options.length}件</span>
                 <Button size="sm" type="button" variant="outline" onClick={() => setShowOptionList((visible) => !visible)}>
@@ -449,7 +510,10 @@ export default function DeployCalendar() {
                     const label = optionFields.find((field) => field.field === item.field)?.label ?? item.field;
                     return (
                       <button key={item.id} type="button" onClick={() => deleteOption(item.id)} className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-cyber-red hover:text-cyber-red">
-                        {label}: {item.value} x
+                        <span className="inline-flex items-center gap-1.5">
+                          {item.imageUrl && <img src={item.imageUrl} alt="" className="h-5 w-5 rounded-full object-cover" />}
+                          {label}: {item.value} x
+                        </span>
                       </button>
                     );
                   })}
@@ -526,7 +590,11 @@ export default function DeployCalendar() {
                       <td className="p-2">{item.deployDate?.slice(0, 10)}</td>
                       <td className="p-2"><p className="font-medium text-foreground">{item.storeName}</p><p className="text-xs text-muted-foreground">{item.area} {item.chain}</p></td>
                       <td className="p-2"><p>{item.workType}</p><p className="text-xs text-muted-foreground">{item.description}</p></td>
-                      <td className="p-2">{item.members.join(", ")}</td>
+                      <td className="p-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.members.length > 0 ? item.members.map(renderMemberChip) : <span className="text-xs text-muted-foreground">-</span>}
+                        </div>
+                      </td>
                       <td className={`p-2 ${statusClass(status)}`}>{status}</td>
                       <td className="p-2">
                         {(item.description || item.memo) ? (

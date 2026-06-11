@@ -561,7 +561,7 @@ export function registerMapStoreApiRoutes(app: any) {
       }
       await ensureDeployOptionsTable(db);
       const result = await db.execute(sql`SELECT * FROM deploy_options ORDER BY field ASC, value ASC`);
-      res.json(getDeployRows(result).map((row: any) => ({ id: row.id, field: row.field, value: row.value })));
+      res.json(getDeployRows(result).map((row: any) => ({ id: row.id, field: row.field, value: row.value, imageUrl: row.image_url ?? "" })));
     } catch (error: any) {
       res.status(500).json({ error: error.message ?? "Failed to get deploy options" });
     }
@@ -574,14 +574,15 @@ export function registerMapStoreApiRoutes(app: any) {
       await ensureDeployOptionsTable(db);
       const field = String(req.body?.field ?? "").trim();
       const value = String(req.body?.value ?? "").trim();
+      const imageUrl = String(req.body?.imageUrl ?? "").trim();
       if (!field || !value) {
         res.status(400).json({ error: "field and value are required" });
         return;
       }
       const result = await db.execute(sql`
-        INSERT INTO deploy_options (field, value)
-        VALUES (${field}, ${value})
-        ON CONFLICT (field, value) DO UPDATE SET updated_at = now()
+        INSERT INTO deploy_options (field, value, image_url)
+        VALUES (${field}, ${value}, ${imageUrl})
+        ON CONFLICT (field, value) DO UPDATE SET image_url = EXCLUDED.image_url, updated_at = now()
         RETURNING id
       `);
       res.json({ id: getDeployRows(result)[0]?.id });
@@ -629,11 +630,13 @@ async function ensureDeployOptionsTable(db: any) {
       id SERIAL PRIMARY KEY,
       field varchar(50) NOT NULL,
       value text NOT NULL,
+      image_url text DEFAULT '' NOT NULL,
       created_at timestamp DEFAULT now() NOT NULL,
       updated_at timestamp DEFAULT now() NOT NULL,
       UNIQUE(field, value)
     );
   `);
+  await db.execute(sql`ALTER TABLE deploy_options ADD COLUMN IF NOT EXISTS image_url text DEFAULT '' NOT NULL`);
 }
 
 function getDeployRows(result: any) {
