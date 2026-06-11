@@ -52,8 +52,15 @@ const emptyForm: DeployForm = {
 
 function statusOf(item: DeploySchedule) {
   if (item.completedAt) return "完了";
-  if (item.startTime) return "進行中";
-  return "予定";
+  const [year, month, day] = item.deployDate.slice(0, 10).split("-").map(Number);
+  const [startHour, startMinute] = String(item.startTime ?? "00:00").split(":").map(Number);
+  const deployStart = new Date(year, month - 1, day, startHour || 0, startMinute || 0, 0, 0);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const deployDayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (new Date() >= deployStart) return "進行中";
+  const daysLeft = Math.max(0, Math.ceil((deployDayStart.getTime() - todayStart.getTime()) / 86400000));
+  return `あと${daysLeft}日`;
 }
 
 function statusClass(status: string) {
@@ -131,7 +138,7 @@ export default function DeployCalendar() {
     return {
       total: schedules.length,
       today: schedules.filter((item) => item.deployDate === today).length,
-      planned: schedules.filter((item) => statusOf(item) === "予定").length,
+      planned: schedules.filter((item) => statusOf(item).startsWith("あと")).length,
       active: schedules.filter((item) => statusOf(item) === "進行中").length,
       done: schedules.filter((item) => statusOf(item) === "完了").length,
       memberCount: members.length,
