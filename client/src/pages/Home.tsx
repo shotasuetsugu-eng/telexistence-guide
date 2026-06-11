@@ -65,6 +65,59 @@ function linkifyText(value: string) {
   });
 }
 
+
+function getDashboardScheduleTask(item: any): string {
+  return String(
+    item.workContent ||
+      item.work_content ||
+      item.task ||
+      item.work ||
+      item.title ||
+      item.type ||
+      ""
+  ).trim();
+}
+
+function getDashboardCalendarStyle(task: string) {
+  const value = task.toLowerCase();
+
+  if (task.includes("Arm") || value.includes("arm")) {
+    return {
+      cell: "bg-cyan-500/15 text-cyan-300 border border-cyan-400/50",
+      dot: "bg-cyan-400",
+    };
+  }
+
+  if (
+    task.includes("V2") ||
+    task.includes("Ｖ２") ||
+    task.includes("集荷")
+  ) {
+    return {
+      cell: "bg-yellow-500/15 text-yellow-300 border border-yellow-400/50",
+      dot: "bg-yellow-400",
+    };
+  }
+
+  if (task.includes("移動")) {
+    return {
+      cell: "bg-purple-500/15 text-purple-300 border border-purple-400/50",
+      dot: "bg-purple-400",
+    };
+  }
+
+  if (task.includes("Deployment") || value.includes("deploy")) {
+    return {
+      cell: "bg-green-500/15 text-green-300 border border-green-400/50",
+      dot: "bg-green-400",
+    };
+  }
+
+  return {
+    cell: "bg-primary/15 text-primary border border-primary/40",
+    dot: "bg-primary",
+  };
+}
 export default function Home() {
   const [, setLocation] = useLocation();
 
@@ -257,12 +310,38 @@ export default function Home() {
             <div className="grid grid-cols-7 gap-1 text-center text-sm">
               {calendarDays.map((day, index) => {
                 const date = day ? `${currentMonth}-${String(day).padStart(2, "0")}` : "";
-                const hasDeploy = deploySchedules.some((item) => isDateInSchedule(item, date));
+                const daySchedules = date
+                    ? deploySchedules.filter((item) => isDateInSchedule(item, date))
+                    : [];
+                  const hasDeploy = daySchedules.length > 0;
+                  const primaryTask = daySchedules[0]
+                    ? getDashboardScheduleTask(daySchedules[0])
+                    : "";
+                  const colorStyle = getDashboardCalendarStyle(primaryTask);
+                  const extraDotStyles = Array.from(
+                    new Set(
+                      daySchedules
+                        .slice(1, 4)
+                        .map((item) =>
+                          getDashboardCalendarStyle(getDashboardScheduleTask(item)).dot
+                        )
+                    )
+                  );
                 const isToday = date === new Date().toISOString().slice(0, 10);
                 return (
-                  <div key={`${day}-${index}`} className={`relative h-8 rounded grid place-items-center ${hasDeploy ? "bg-primary/15 text-primary border border-primary/40" : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}>
+                  <div key={`${day}-${index}`} className={`relative h-8 rounded grid place-items-center ${hasDeploy ? colorStyle.cell : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}>
                     {day ?? ""}
-                    {hasDeploy && <span className="absolute bottom-0.5 h-1.5 w-1.5 rounded-full bg-primary" />}
+                    {hasDeploy && (
+                      <div className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-0.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${colorStyle.dot}`} />
+                        {extraDotStyles.map((dotClass, dotIndex) => (
+                          <span
+                            key={`${date}-dot-${dotIndex}`}
+                            className={`h-1.5 w-1.5 rounded-full ${dotClass}`}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -270,7 +349,25 @@ export default function Home() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
+                            <div className="dashboard-calendar-legend mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                    Arm交換
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-green-400" />
+                    Deployment
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-yellow-400" />
+                    V２集荷
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-purple-400" />
+                    移動日
+                  </span>
+                </div>
+                <table className="w-full min-w-[720px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="px-2 py-2">日付</th>
@@ -389,4 +486,5 @@ export default function Home() {
     </div>
   );
 }
+
 
