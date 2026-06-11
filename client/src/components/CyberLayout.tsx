@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import {BookOpen,
   CheckSquare,
@@ -18,7 +19,7 @@ import {BookOpen,
 	  ExternalLink,
   ClipboardList,
   Pencil} from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const publicNavItems = [
   { icon: Home, label: "ダッシュボード", path: "/" },
@@ -43,16 +44,113 @@ const adminNavItems = [
   { icon: Shield, label: "管理者パネル", path: "/admin" },
 ];
 
+const navNoticeStorageKey = "tx.navNotice.readSignatures";
+
+function compactSignature(items: any[]) {
+  return JSON.stringify(
+    items.map((item) => ({
+      id: item?.id,
+      title: item?.title ?? item?.name ?? item?.storeName ?? item?.deployDate ?? "",
+      updatedAt: item?.updatedAt ?? item?.updated_at ?? item?.createdAt ?? item?.created_at ?? "",
+    }))
+  );
+}
+
+function loadReadSignatures() {
+  try {
+    return JSON.parse(window.localStorage.getItem(navNoticeStorageKey) || "{}") as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function saveReadSignatures(value: Record<string, string>) {
+  window.localStorage.setItem(navNoticeStorageKey, JSON.stringify(value));
+}
+
 export default function CyberLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = user?.role === "admin";
+  const { data: procedures = [] } = trpc.procedures.list.useQuery();
+  const { data: checklists = [] } = trpc.checklists.list.useQuery();
+  const { data: documents = [] } = trpc.documents.list.useQuery();
+  const [deploySchedules, setDeploySchedules] = useState<any[]>([]);
+  const [mapStores, setMapStores] = useState<any[]>([]);
+  const [readSignatures, setReadSignatures] = useState<Record<string, string>>(() => loadReadSignatures());
   const [progressSheetUrl, setProgressSheetUrl] = useState<string>(
     () => window.localStorage.getItem("tx.progressSheetUrl") || ""
   );
   const [editingSheet, setEditingSheet] = useState(false);
   const [sheetInput, setSheetInput] = useState("");
+
+  useEffect(() => {
+    const month = new Date().toISOString().slice(0, 7);
+    fetch(`/api/deploy-schedules?month=${month}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : [])
+      .then((items) => setDeploySchedules(Array.isArray(items) ? items : []))
+      .catch(() => {});
+
+    fetch("/api/map-stores", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : [])
+      .then((items) => setMapStores(Array.isArray(items) ? items : []))
+      .catch(() => {});
+  }, []);
+
+  const navSignatures = useMemo(() => ({
+    "/procedures": compactSignature(procedures),
+    "/checklists": compactSignature(checklists),
+    "/documents": compactSignature(documents),
+    "/fs-team-calendar": compactSignature(deploySchedules),
+    "/deploy-calendar": compactSignature(deploySchedules),
+    "/map": compactSignature(mapStores),
+  }), [procedures, checklists, documents, deploySchedules, mapStores]);
+
+  useEffect(() => {
+    setReadSignatures((current) => {
+      let changed = false;
+      const next = { ...current };
+
+      Object.entries(navSignatures).forEach(([path, signature]) => {
+        if (!signature || signature === "[]") return;
+        if (next[path] === undefined) {
+          next[path] = signature;
+          changed = true;
+        }
+      });
+
+      if (changed) saveReadSignatures(next);
+      return changed ? next : current;
+    });
+  }, [navSignatures]);
+
+  useEffect(() => {
+    const signature = navSignatures[location as keyof typeof navSignatures];
+    if (!signature || signature === "[]") return;
+
+    setReadSignatures((current) => {
+      if (current[location] === signature) return current;
+      const next = { ...current, [location]: signature };
+      if (location === "/fs-team-calendar") next["/deploy-calendar"] = signature;
+      if (location === "/deploy-calendar") next["/fs-team-calendar"] = signature;
+      saveReadSignatures(next);
+      return next;
+    });
+  }, [location, navSignatures]);
+
+  const hasNewNotice = (path: string) => {
+    const signature = navSignatures[path as keyof typeof navSignatures];
+    return Boolean(signature && signature !== "[]" && readSignatures[path] !== undefined && readSignatures[path] !== signature);
+  };
+
+  const NewBadge = ({ path }: { path: string }) => (
+    hasNewNotice(path) ? (
+      <span className="ml-auto rounded border border-amber-300/70 bg-amber-300/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-200 shadow-[0_0_10px_rgba(252,211,77,0.35)]">
+        New
+      </span>
+    ) : null
+  );
 
   return (
     <div className="min-h-screen bg-background crt-scanlines">
@@ -91,6 +189,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 <span className="font-medium">{item.label}</span>
+                <NewBadge path={item.path} />
               </button>
             );
           })}
@@ -140,6 +239,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 <span className="font-medium">{item.label}</span>
+                <NewBadge path={item.path} />
               </button>
             );
           })}
@@ -231,6 +331,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  <NewBadge path={item.path} />
                 </button>
               );
             })}
@@ -248,6 +349,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  <NewBadge path={item.path} />
                 </button>
               );
             })}
