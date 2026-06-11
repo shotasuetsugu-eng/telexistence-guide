@@ -30,6 +30,96 @@ type DeployOption = {
   imageUrl?: string;
 };
 
+type HighlightColor = "cyan" | "green" | "amber" | "purple" | "sky" | "rose";
+
+type UserHighlightProfile = {
+  memberName: string;
+  highlightColor: HighlightColor;
+};
+
+const profileStorageKey = "tx.deployCalendar.userHighlight";
+
+const highlightColorOptions: Array<{
+  value: HighlightColor;
+  label: string;
+  row: string;
+  cell: string;
+  chip: string;
+  sample: string;
+}> = [
+  {
+    value: "cyan",
+    label: "水色",
+    row: "ring-2 ring-primary/80 bg-primary/5",
+    cell: "ring-2 ring-primary shadow-[0_0_16px_rgba(0,245,212,0.55)]",
+    chip: "border-primary/70 bg-primary/15 text-primary",
+    sample: "bg-primary",
+  },
+  {
+    value: "green",
+    label: "緑",
+    row: "ring-2 ring-cyber-green/80 bg-cyber-green/5",
+    cell: "ring-2 ring-cyber-green shadow-[0_0_16px_rgba(39,255,136,0.45)]",
+    chip: "border-cyber-green/70 bg-cyber-green/15 text-cyber-green",
+    sample: "bg-cyber-green",
+  },
+  {
+    value: "amber",
+    label: "黄色",
+    row: "ring-2 ring-amber-400/80 bg-amber-400/5",
+    cell: "ring-2 ring-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.45)]",
+    chip: "border-amber-400/70 bg-amber-400/15 text-amber-300",
+    sample: "bg-amber-400",
+  },
+  {
+    value: "purple",
+    label: "紫",
+    row: "ring-2 ring-purple-400/80 bg-purple-400/5",
+    cell: "ring-2 ring-purple-400 shadow-[0_0_16px_rgba(192,132,252,0.45)]",
+    chip: "border-purple-400/70 bg-purple-400/15 text-purple-300",
+    sample: "bg-purple-400",
+  },
+  {
+    value: "sky",
+    label: "青",
+    row: "ring-2 ring-sky-400/80 bg-sky-400/5",
+    cell: "ring-2 ring-sky-400 shadow-[0_0_16px_rgba(56,189,248,0.45)]",
+    chip: "border-sky-400/70 bg-sky-400/15 text-sky-300",
+    sample: "bg-sky-400",
+  },
+  {
+    value: "rose",
+    label: "赤",
+    row: "ring-2 ring-rose-400/80 bg-rose-400/5",
+    cell: "ring-2 ring-rose-400 shadow-[0_0_16px_rgba(251,113,133,0.45)]",
+    chip: "border-rose-400/70 bg-rose-400/15 text-rose-300",
+    sample: "bg-rose-400",
+  },
+];
+
+function loadUserHighlightProfile(): UserHighlightProfile {
+  if (typeof window === "undefined") {
+    return { memberName: "", highlightColor: "cyan" };
+  }
+
+  try {
+    const saved = window.localStorage.getItem(profileStorageKey);
+    if (!saved) return { memberName: "", highlightColor: "cyan" };
+
+    const parsed = JSON.parse(saved) as Partial<UserHighlightProfile>;
+    const highlightColor = highlightColorOptions.some((item) => item.value === parsed.highlightColor)
+      ? parsed.highlightColor as HighlightColor
+      : "cyan";
+
+    return {
+      memberName: String(parsed.memberName ?? ""),
+      highlightColor,
+    };
+  } catch {
+    return { memberName: "", highlightColor: "cyan" };
+  }
+}
+
 const optionFields = [
   { field: "member", label: "メンバー" },
   { field: "chain", label: "チェーン" },
@@ -64,13 +154,12 @@ const emptyForm: DeployForm = {
 
 function statusOf(item: DeploySchedule) {
   if (item.completedAt) return "完了";
+  if (item.startTime) return "進行中";
+
   const [year, month, day] = item.deployDate.slice(0, 10).split("-").map(Number);
-  const [startHour, startMinute] = String(item.startTime ?? "00:00").split(":").map(Number);
-  const deployStart = new Date(year, month - 1, day, startHour || 0, startMinute || 0, 0, 0);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const deployDayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
-  if (new Date() >= deployStart) return "進行中";
   const daysLeft = Math.max(0, Math.ceil((deployDayStart.getTime() - todayStart.getTime()) / 86400000));
   return `あと${daysLeft}日`;
 }
@@ -138,6 +227,8 @@ export default function DeployCalendar() {
   const [showOptionList, setShowOptionList] = useState(true);
   const [detailSchedule, setDetailSchedule] = useState<DeploySchedule | null>(null);
 
+  const [userHighlight, setUserHighlight] = useState<UserHighlightProfile>(() => loadUserHighlightProfile());
+
   const loadSchedules = async () => {
     const response = await fetch(`/api/deploy-schedules?month=${month}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Failed to load deploy schedules");
@@ -158,6 +249,10 @@ export default function DeployCalendar() {
     loadOptions().catch((error) => toast.error(error.message));
   }, []);
 
+  useEffect(() => {
+    window.localStorage.setItem(profileStorageKey, JSON.stringify(userHighlight));
+  }, [userHighlight]);
+
   const optionValues = (field: string) => options.filter((item) => item.field === field).map((item) => item.value);
   const members = useMemo(() => uniqueValues([...schedules.flatMap((item) => item.members), ...optionValues("member")]), [schedules, options]);
   const areas = useMemo(() => uniqueValues([...schedules.map((item) => item.area), ...optionValues("area")]), [schedules, options]);
@@ -172,6 +267,16 @@ export default function DeployCalendar() {
       .map((item) => [item.value, item.imageUrl || ""] as const);
     return new Map(pairs);
   }, [options]);
+
+  const selectedHighlight = useMemo(
+    () => highlightColorOptions.find((item) => item.value === userHighlight.highlightColor) ?? highlightColorOptions[0],
+    [userHighlight.highlightColor]
+  );
+
+  const isOwnSchedule = (item: DeploySchedule) => {
+    const memberName = userHighlight.memberName.trim();
+    return !!memberName && item.members.includes(memberName);
+  };
 
   const filteredSchedules = schedules.filter((item) => {
     if (memberFilter && !item.members.includes(memberFilter)) return false;
@@ -246,7 +351,12 @@ export default function DeployCalendar() {
   const renderMemberChip = (member: string) => {
     const imageUrl = memberImageMap.get(member);
     return (
-      <span key={member} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-input/50 px-2 py-1 text-xs font-semibold text-foreground">
+      <span
+        key={member}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-semibold ${
+          member === userHighlight.memberName ? selectedHighlight.chip : "border-border bg-input/50 text-foreground"
+        }`}
+      >
         {imageUrl && <img src={imageUrl} alt="" className="h-5 w-5 rounded-full object-cover ring-1 ring-primary/50" />}
         {member}
       </span>
@@ -414,6 +524,38 @@ export default function DeployCalendar() {
         <select value={chainFilter} onChange={(e) => setChainFilter(e.target.value)} className="rounded bg-input border border-border px-3 py-2 text-sm"><option value="">すべてのチェーン</option>{chains.map((chain) => <option key={chain}>{chain}</option>)}</select>
       </div>
 
+      <div className="cyber-border rounded-lg bg-card p-3 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+        <label className="grid gap-1 text-xs text-muted-foreground">
+          自分の名前
+          <select
+            value={userHighlight.memberName}
+            onChange={(e) => setUserHighlight((current) => ({ ...current, memberName: e.target.value }))}
+            className="rounded bg-input border border-border px-3 py-2 text-sm text-foreground"
+          >
+            <option value="">未設定</option>
+            {members.map((member) => <option key={member} value={member}>{member}</option>)}
+          </select>
+        </label>
+
+        <label className="grid gap-1 text-xs text-muted-foreground">
+          自分の予定の枠色
+          <select
+            value={userHighlight.highlightColor}
+            onChange={(e) => setUserHighlight((current) => ({ ...current, highlightColor: e.target.value as HighlightColor }))}
+            className="rounded bg-input border border-border px-3 py-2 text-sm text-foreground"
+          >
+            {highlightColorOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+
+        <div className="flex items-end">
+          <div className={`w-full rounded border px-3 py-2 text-sm ${selectedHighlight.chip}`}>
+            <span className={`mr-2 inline-block h-2.5 w-2.5 rounded-full ${selectedHighlight.sample}`} />
+            {userHighlight.memberName ? `${userHighlight.memberName} の予定を強調` : "名前を選ぶと自分の予定を強調"}
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
         <aside className="space-y-4">
           <div className="cyber-border rounded-lg bg-card p-4 space-y-4">
@@ -430,10 +572,11 @@ export default function DeployCalendar() {
                 const deployOnDate = schedules.find((item) => isDateInSchedule(item, date));
                 const workTypeClass = workTypeClassFor(deployOnDate?.workType || "未分類");
                 const isToday = date === new Date().toISOString().slice(0, 10);
+                const isMine = deployOnDate ? isOwnSchedule(deployOnDate) : false;
                 return (
                   <div
                     key={`${day}-${index}`}
-                    className={`relative h-10 rounded grid place-items-center ${deployOnDate ? `${workTypeClass.fill} ${workTypeClass.text} border ${workTypeClass.border}` : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}
+                    className={`relative h-10 rounded grid place-items-center ${deployOnDate ? `${workTypeClass.fill} ${workTypeClass.text} border ${workTypeClass.border}` : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""} ${isMine ? selectedHighlight.cell : ""}`}
                   >
                     {day ?? ""}
                     {deployOnDate && <span className={`absolute bottom-1 h-1.5 w-1.5 rounded-full ${workTypeClass.dot}`} />}
@@ -615,8 +758,9 @@ export default function DeployCalendar() {
               <tbody>
                 {filteredSchedules.map((item) => {
                   const status = statusOf(item);
+                  const isMine = isOwnSchedule(item);
                   return (
-                    <tr key={item.id} className="border-t border-border">
+                    <tr key={item.id} className={`border-t border-border ${isMine ? selectedHighlight.row : ""}`}>
                       <td className="p-2">{displayDateRange(item)}</td>
                       <td className="p-2"><p className="font-medium text-foreground">{item.storeName}</p><p className="text-xs text-muted-foreground">{item.area} {item.chain}</p></td>
                       <td className="p-2"><p>{item.workType}</p><p className="text-xs text-muted-foreground">{item.description}</p></td>
@@ -652,3 +796,4 @@ export default function DeployCalendar() {
     </div>
   );
 }
+
