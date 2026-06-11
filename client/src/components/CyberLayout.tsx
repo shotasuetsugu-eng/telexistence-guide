@@ -22,6 +22,7 @@ import { useState } from "react";
 
 const publicNavItems = [
   { icon: Home, label: "ダッシュボード", path: "/" },
+  { icon: CalendarDays, label: "Deploy Calendar", path: "/deploy-calendar" },
   { icon: BookOpen, label: "Smartboarding", path: "/procedures" },
   { icon: CheckSquare, label: "チェックリスト", path: "/checklists" },
   { icon: FileText, label: "資料管理", path: "/documents" },
@@ -34,7 +35,6 @@ const integrationNavItems = [
 { icon: LayoutDashboard, label: "Shift", path: "/shift" },
 	  { icon: HardDrive, label: "店舗一覧", path: "/stores" },
 	  { icon: Map, label: "マップ", path: "/map" },
-	  { icon: CalendarDays, label: "Deploy Calendar", path: "/deploy-calendar" },
 	  { icon: LayoutDashboard, label: "Dashboard", path: "/integrations" },
   { icon: Sparkles, label: "Autail", path: "/integrations" },
 ];
