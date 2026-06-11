@@ -1,5 +1,5 @@
 import { BookOpen, CalendarDays, CheckSquare, FileText, Layers } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
@@ -75,7 +75,17 @@ export default function Home() {
   const upcomingDeploys = deploySchedules
     .slice()
     .sort((a, b) => a.deployDate.localeCompare(b.deployDate))
-    .slice(0, 8);
+    .slice(0, 5);
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const calendarDays = useMemo(() => {
+    const [year, monthNumber] = currentMonth.split("-").map(Number);
+    const first = new Date(year, monthNumber - 1, 1);
+    const last = new Date(year, monthNumber, 0);
+    const blanks = Array.from({ length: first.getDay() }, () => null);
+    const days = Array.from({ length: last.getDate() }, (_, index) => index + 1);
+    return [...blanks, ...days];
+  }, [currentMonth]);
 
   const showDeployDetails = (item: DeploySchedule) => {
     setDetailSchedule(item);
@@ -192,59 +202,81 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-base">
-            <thead className="text-left text-sm text-muted-foreground">
-              <tr>
-                <th className="px-2 py-2">日付</th>
-                <th className="px-2 py-2">店舗</th>
-                <th className="px-2 py-2">作業内容</th>
-                <th className="px-2 py-2">担当</th>
-                <th className="px-2 py-2">進捗</th>
-                <th className="px-2 py-2">詳細</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcomingDeploys.map((item) => {
-                const status = deployStatus(item);
+        <div className="grid gap-4 xl:grid-cols-[260px_1fr]">
+          <div className="rounded border border-border bg-input/20 p-3 space-y-3">
+            <h3 className="text-sm font-semibold text-foreground">{currentMonth.replace("-", "年")}月</h3>
+            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+              {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-sm">
+              {calendarDays.map((day, index) => {
+                const date = day ? `${currentMonth}-${String(day).padStart(2, "0")}` : "";
+                const hasDeploy = deploySchedules.some((item) => item.deployDate.slice(0, 10) === date);
+                const isToday = date === new Date().toISOString().slice(0, 10);
                 return (
-                  <tr key={item.id} className="border-t border-border">
-                    <td className="px-2 py-4 font-medium text-muted-foreground">{item.deployDate.slice(0, 10)}</td>
-                    <td className="px-2 py-3">
-                      <p className="font-semibold text-foreground">{item.storeName}</p>
-                      <p className="text-xs text-muted-foreground">{[item.area, item.chain].filter(Boolean).join(" / ")}</p>
-                    </td>
-                    <td className="px-2 py-3">
-                      <p className="font-semibold text-foreground">{item.workType || "-"}</p>
-                      <p className="text-xs text-muted-foreground">{item.description}</p>
-                    </td>
-                    <td className="px-2 py-3 text-muted-foreground">{item.members.join(", ") || "-"}</td>
-                    <td className="px-2 py-3">
-                      <span className={`font-semibold ${status === "進行中" ? "text-amber-400" : status === "完了" ? "text-primary" : "text-sky-400"}`}>
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-2 py-3">
-                      {(item.description || item.memo) ? (
-                        <button onClick={() => showDeployDetails(item)} className="rounded border border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
-                          詳細/メモ
-                        </button>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </td>
-                  </tr>
+                  <div key={`${day}-${index}`} className={`relative h-8 rounded grid place-items-center ${hasDeploy ? "bg-primary/15 text-primary border border-primary/40" : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}>
+                    {day ?? ""}
+                    {hasDeploy && <span className="absolute bottom-0.5 h-1.5 w-1.5 rounded-full bg-primary" />}
+                  </div>
                 );
               })}
-              {upcomingDeploys.length === 0 && (
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
                 <tr>
-                  <td className="px-2 py-6 text-center text-muted-foreground" colSpan={6}>
-                    今月のDeploy予定はまだありません
-                  </td>
+                  <th className="px-2 py-2">日付</th>
+                  <th className="px-2 py-2">店舗</th>
+                  <th className="px-2 py-2">作業内容</th>
+                  <th className="px-2 py-2">担当</th>
+                  <th className="px-2 py-2">進捗</th>
+                  <th className="px-2 py-2">詳細</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {upcomingDeploys.map((item) => {
+                  const status = deployStatus(item);
+                  return (
+                    <tr key={item.id} className="border-t border-border">
+                      <td className="px-2 py-3 font-medium text-muted-foreground">{item.deployDate.slice(0, 10)}</td>
+                      <td className="px-2 py-2">
+                        <p className="font-semibold text-foreground">{item.storeName}</p>
+                        <p className="text-xs text-muted-foreground">{[item.area, item.chain].filter(Boolean).join(" / ")}</p>
+                      </td>
+                      <td className="px-2 py-2">
+                        <p className="font-semibold text-foreground">{item.workType || "-"}</p>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </td>
+                      <td className="px-2 py-2 font-semibold text-foreground">{item.members.join(", ") || "-"}</td>
+                      <td className="px-2 py-2">
+                        <span className={`font-semibold ${status === "進行中" ? "text-amber-400" : status === "完了" ? "text-primary" : "text-sky-400"}`}>
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        {(item.description || item.memo) ? (
+                          <button onClick={() => showDeployDetails(item)} className="rounded border border-primary/40 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
+                            詳細/メモ
+                          </button>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {upcomingDeploys.length === 0 && (
+                  <tr>
+                    <td className="px-2 py-6 text-center text-muted-foreground" colSpan={6}>
+                      今月のDeploy予定はまだありません
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
