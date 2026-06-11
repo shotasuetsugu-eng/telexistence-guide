@@ -154,13 +154,36 @@ const emptyForm: DeployForm = {
 
 function statusOf(item: DeploySchedule) {
   if (item.completedAt) return "完了";
-  if (item.startTime) return "進行中";
 
-  const [year, month, day] = item.deployDate.slice(0, 10).split("-").map(Number);
+  const deployDate = dateOnly(item.deployDate);
+  const startTime = String(item.startTime ?? "").trim();
+
+  if (!startTime) return "予定";
+
+  const [year, month, day] = deployDate.split("-").map(Number);
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+
+  const deployStart = new Date(
+    year,
+    month - 1,
+    day,
+    startHour || 0,
+    startMinute || 0,
+    0,
+    0
+  );
+
+  if (new Date() >= deployStart) return "進行中";
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+
   const deployDayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
-  const daysLeft = Math.max(0, Math.ceil((deployDayStart.getTime() - todayStart.getTime()) / 86400000));
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((deployDayStart.getTime() - todayStart.getTime()) / 86400000)
+  );
+
   return `あと${daysLeft}日`;
 }
 
@@ -796,5 +819,6 @@ export default function DeployCalendar() {
     </div>
   );
 }
+
 
 
