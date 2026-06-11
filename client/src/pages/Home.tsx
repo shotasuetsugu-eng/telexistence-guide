@@ -30,6 +30,17 @@ function deployStatus(item: DeploySchedule) {
   return `あと${daysLeft}日`;
 }
 
+function linkifyText(value: string) {
+  return value.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+    if (!part.match(/^https?:\/\//)) return part;
+    return (
+      <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">
+        {part}
+      </a>
+    );
+  });
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
 
@@ -39,6 +50,7 @@ export default function Home() {
   const { data: documents = [] } = trpc.documents.list.useQuery();
   const [deploySummary, setDeploySummary] = useState({ today: 0, month: 0, active: 0, done: 0, members: 0 });
   const [deploySchedules, setDeploySchedules] = useState<DeploySchedule[]>([]);
+  const [detailSchedule, setDetailSchedule] = useState<DeploySchedule | null>(null);
 
   useEffect(() => {
     const month = new Date().toISOString().slice(0, 7);
@@ -66,15 +78,42 @@ export default function Home() {
     .slice(0, 8);
 
   const showDeployDetails = (item: DeploySchedule) => {
-    const lines = [
-      item.description ? `詳細: ${item.description}` : "",
-      item.memo ? `メモ: ${item.memo}` : "",
-    ].filter(Boolean);
-    if (lines.length > 0) alert(lines.join("\n\n"));
+    setDetailSchedule(item);
   };
 
   return (
     <div className="space-y-8">
+      {detailSchedule && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4">
+          <div className="cyber-border w-full max-w-3xl rounded-lg bg-card p-5 shadow-xl space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">{detailSchedule.storeName}</h2>
+                <p className="text-sm text-muted-foreground">{detailSchedule.deployDate?.slice(0, 10)} / {detailSchedule.workType || "-"}</p>
+              </div>
+              <button onClick={() => setDetailSchedule(null)} className="rounded border border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
+                閉じる
+              </button>
+            </div>
+            {detailSchedule.description && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-primary">詳細</h3>
+                <p className="whitespace-pre-wrap break-words rounded border border-border bg-input/40 p-3 text-base leading-7 text-foreground">
+                  {linkifyText(detailSchedule.description)}
+                </p>
+              </div>
+            )}
+            {detailSchedule.memo && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-primary">メモ</h3>
+                <p className="whitespace-pre-wrap break-words rounded border border-border bg-input/40 p-3 text-base leading-7 text-foreground">
+                  {linkifyText(detailSchedule.memo)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <div>
         <h1 className="text-2xl font-black tracking-tight text-foreground">
           <span className="glitch-text" data-text="Telexistence">Telexistence</span>
