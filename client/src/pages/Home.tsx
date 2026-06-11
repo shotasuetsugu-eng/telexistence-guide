@@ -134,7 +134,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Deploy Calendar</h2>
+            <h2 className="text-lg font-bold text-foreground">Deploy Calendar</h2>
           </div>
           <button
             onClick={() => setLocation("/deploy-calendar")}
@@ -145,8 +145,8 @@ export default function Home() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
+          <table className="w-full min-w-[720px] text-base">
+            <thead className="text-left text-sm text-muted-foreground">
               <tr>
                 <th className="px-2 py-2">日付</th>
                 <th className="px-2 py-2">店舗</th>
@@ -160,18 +160,18 @@ export default function Home() {
                 const status = deployStatus(item);
                 return (
                   <tr key={item.id} className="border-t border-border">
-                    <td className="px-2 py-3 text-muted-foreground">{item.deployDate.slice(0, 10)}</td>
+                    <td className="px-2 py-4 font-medium text-muted-foreground">{item.deployDate.slice(0, 10)}</td>
                     <td className="px-2 py-3">
                       <p className="font-semibold text-foreground">{item.storeName}</p>
                       <p className="text-xs text-muted-foreground">{[item.area, item.chain].filter(Boolean).join(" / ")}</p>
                     </td>
                     <td className="px-2 py-3">
-                      <p className="text-foreground">{item.workType || "-"}</p>
+                      <p className="font-semibold text-foreground">{item.workType || "-"}</p>
                       <p className="text-xs text-muted-foreground">{item.description}</p>
                     </td>
                     <td className="px-2 py-3 text-muted-foreground">{item.members.join(", ") || "-"}</td>
                     <td className="px-2 py-3">
-                      <span className={status === "進行中" ? "text-amber-400" : status === "完了" ? "text-primary" : "text-sky-400"}>
+                      <span className={`font-semibold ${status === "進行中" ? "text-amber-400" : status === "完了" ? "text-primary" : "text-sky-400"}`}>
                         {status}
                       </span>
                     </td>

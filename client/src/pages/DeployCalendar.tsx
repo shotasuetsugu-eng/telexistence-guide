@@ -38,6 +38,15 @@ const optionFields = [
   { field: "description", label: "詳細" },
 ];
 
+const workTypeColorClasses = [
+  { dot: "bg-primary", border: "border-primary/40", text: "text-primary", fill: "bg-primary/15" },
+  { dot: "bg-cyber-green", border: "border-cyber-green/40", text: "text-cyber-green", fill: "bg-cyber-green/15" },
+  { dot: "bg-amber-400", border: "border-amber-400/40", text: "text-amber-400", fill: "bg-amber-400/15" },
+  { dot: "bg-purple-400", border: "border-purple-400/40", text: "text-purple-400", fill: "bg-purple-400/15" },
+  { dot: "bg-sky-400", border: "border-sky-400/40", text: "text-sky-400", fill: "bg-sky-400/15" },
+  { dot: "bg-rose-400", border: "border-rose-400/40", text: "text-rose-400", fill: "bg-rose-400/15" },
+];
+
 const emptyForm: DeployForm = {
   deployDate: new Date().toISOString().slice(0, 10),
   storeName: "",
@@ -153,6 +162,12 @@ export default function DeployCalendar() {
     const days = Array.from({ length: last.getDate() }, (_, index) => index + 1);
     return [...blanks, ...days];
   }, [month]);
+
+  const scheduledWorkTypes = useMemo(() => uniqueValues(schedules.map((item) => item.workType || "未分類")), [schedules]);
+  const workTypeClassFor = (workType: string) => {
+    const index = Math.max(0, scheduledWorkTypes.indexOf(workType || "未分類"));
+    return workTypeColorClasses[index % workTypeColorClasses.length];
+  };
 
   const resetForm = () => {
     setForm({ ...emptyForm, deployDate: `${month}-01` });
@@ -305,24 +320,32 @@ export default function DeployCalendar() {
             <div className="grid grid-cols-7 gap-2 text-center text-sm">
               {calendarDays.map((day, index) => {
                 const date = day ? `${month}-${String(day).padStart(2, "0")}` : "";
-                const hasDeploy = schedules.some((item) => item.deployDate.slice(0, 10) === date);
+                const deployOnDate = schedules.find((item) => item.deployDate.slice(0, 10) === date);
+                const workTypeClass = workTypeClassFor(deployOnDate?.workType || "未分類");
                 const isToday = date === new Date().toISOString().slice(0, 10);
                 return (
                   <div
                     key={`${day}-${index}`}
-                    className={`relative h-10 rounded grid place-items-center ${hasDeploy ? "bg-primary/15 text-primary border border-primary/40" : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}
+                    className={`relative h-10 rounded grid place-items-center ${deployOnDate ? `${workTypeClass.fill} ${workTypeClass.text} border ${workTypeClass.border}` : "text-muted-foreground"} ${isToday ? "ring-1 ring-primary" : ""}`}
                   >
                     {day ?? ""}
-                    {hasDeploy && <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-primary" />}
+                    {deployOnDate && <span className={`absolute bottom-1 h-1.5 w-1.5 rounded-full ${workTypeClass.dot}`} />}
                   </div>
                 );
               })}
             </div>
-            <div className="grid grid-cols-4 gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" />設置</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-cyber-green" />切替</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400" />点検</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-400" />その他</span>
+            <div className="grid grid-cols-2 gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+              {scheduledWorkTypes.length > 0 ? scheduledWorkTypes.map((workType) => {
+                const workTypeClass = workTypeClassFor(workType);
+                return (
+                  <span key={workType} className="flex items-center gap-1">
+                    <span className={`h-2 w-2 rounded-full ${workTypeClass.dot}`} />
+                    {workType}
+                  </span>
+                );
+              }) : (
+                <span className="col-span-2 text-muted-foreground">作業内容なし</span>
+              )}
             </div>
           </div>
 
