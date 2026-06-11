@@ -59,7 +59,7 @@ export default function Procedures() {
   const toggleGroup = (groupId: number) => {
     setOpenGroups((current) => ({
       ...current,
-      [groupId]: !(current[groupId] ?? true),
+      [groupId]: !(current[groupId] ?? false),
     }));
   };
 
@@ -115,7 +115,7 @@ export default function Procedures() {
 
           <div className="space-y-5">
             {procedureGroups.map((group) => {
-              const isOpen = openGroups[group.id] ?? true;
+              const isOpen = openGroups[group.id] ?? false;
 
               return (
                 <section
@@ -192,3 +192,4 @@ export default function Procedures() {
     </div>
   );
 }
+
