@@ -269,6 +269,14 @@ export default function DeployCalendar() {
     await loadSchedules();
   };
 
+  const showScheduleDetails = (item: DeploySchedule) => {
+    const lines = [
+      item.description ? `詳細: ${item.description}` : "",
+      item.memo ? `メモ: ${item.memo}` : "",
+    ].filter(Boolean);
+    if (lines.length > 0) alert(lines.join("\n\n"));
+  };
+
   const exportCsv = () => {
     const header = ["date", "store", "area", "chain", "work", "members", "status", "start", "memo"];
     const lines = filteredSchedules.map((item) => [
@@ -472,7 +480,7 @@ export default function DeployCalendar() {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-sm">
-              <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">日付</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">操作</th></tr></thead>
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">日付</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">詳細</th><th className="p-2">操作</th></tr></thead>
               <tbody>
                 {filteredSchedules.map((item) => {
                   const status = statusOf(item);
@@ -483,6 +491,13 @@ export default function DeployCalendar() {
                       <td className="p-2"><p>{item.workType}</p><p className="text-xs text-muted-foreground">{item.description}</p></td>
                       <td className="p-2">{item.members.join(", ")}</td>
                       <td className={`p-2 ${statusClass(status)}`}>{status}</td>
+                      <td className="p-2">
+                        {(item.description || item.memo) ? (
+                          <Button size="sm" variant="outline" onClick={() => showScheduleDetails(item)}>詳細/メモ</Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </td>
                       <td className="p-2">
                         {isAdmin ? <div className="flex flex-wrap gap-1">
                           {!item.startTime && <Button size="sm" variant="outline" onClick={() => patchAction(item.id, "start", { startTime: new Date().toTimeString().slice(0, 5) })}><Clock3 className="h-3 w-3" /></Button>}

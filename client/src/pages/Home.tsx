@@ -14,6 +14,7 @@ type DeploySchedule = {
   members: string[];
   startTime: string | null;
   completedAt: string | null;
+  memo: string;
 };
 
 function deployStatus(item: DeploySchedule) {
@@ -63,6 +64,14 @@ export default function Home() {
     .slice()
     .sort((a, b) => a.deployDate.localeCompare(b.deployDate))
     .slice(0, 8);
+
+  const showDeployDetails = (item: DeploySchedule) => {
+    const lines = [
+      item.description ? `詳細: ${item.description}` : "",
+      item.memo ? `メモ: ${item.memo}` : "",
+    ].filter(Boolean);
+    if (lines.length > 0) alert(lines.join("\n\n"));
+  };
 
   return (
     <div className="space-y-8">
@@ -153,6 +162,7 @@ export default function Home() {
                 <th className="px-2 py-2">作業内容</th>
                 <th className="px-2 py-2">担当</th>
                 <th className="px-2 py-2">進捗</th>
+                <th className="px-2 py-2">詳細</th>
               </tr>
             </thead>
             <tbody>
@@ -175,12 +185,21 @@ export default function Home() {
                         {status}
                       </span>
                     </td>
+                    <td className="px-2 py-3">
+                      {(item.description || item.memo) ? (
+                        <button onClick={() => showDeployDetails(item)} className="rounded border border-primary/40 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
+                          詳細/メモ
+                        </button>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
               {upcomingDeploys.length === 0 && (
                 <tr>
-                  <td className="px-2 py-6 text-center text-muted-foreground" colSpan={5}>
+                  <td className="px-2 py-6 text-center text-muted-foreground" colSpan={6}>
                     今月のDeploy予定はまだありません
                   </td>
                 </tr>
