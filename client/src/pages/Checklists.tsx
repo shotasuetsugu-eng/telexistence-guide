@@ -83,7 +83,7 @@ export default function Checklists() {
                         {item.title}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1">
-                        印刷は管理者パネルでアップロードしたPDFを開きます
+                        PDF印刷は管理者パネルでアップロードしたPDFを開きます
                       </p>
                     </div>
                   </button>
@@ -106,7 +106,7 @@ export default function Checklists() {
                       onClick={() => openPdfForPrint(item.id)}
                     >
                       <Printer className="h-3 w-3 mr-1" />
-                      PDF印刷
+                      PDFPDF印刷
                     </Button>
                   </div>
                 </div>
@@ -124,3 +124,4 @@ export default function Checklists() {
     </div>
   );
 }
+
