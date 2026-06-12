@@ -28,6 +28,34 @@ function isPdfUrl(url: string) {
   return /\.pdf($|[?#])/i.test(url);
 }
 
+function getChecklistOpenUrl(item: any) {
+  return (
+    normalizeUrl(item.url) ||
+    extractChecklistUrl(item.description) ||
+    normalizeUrl(item.fileUrl)
+  );
+}
+
+function getUploadedPdfUrl(item: any) {
+  const uploadedFileUrl = normalizeUrl(item.fileUrl);
+
+  if (uploadedFileUrl) {
+    return uploadedFileUrl;
+  }
+
+  const descriptionUrl = extractChecklistUrl(item.description);
+  if (descriptionUrl && isPdfUrl(descriptionUrl)) {
+    return descriptionUrl;
+  }
+
+  const directUrl = normalizeUrl(item.url);
+  if (directUrl && isPdfUrl(directUrl)) {
+    return directUrl;
+  }
+
+  return "";
+}
+
 export default function Checklists() {
   const { data: checklists = [], isLoading } = trpc.checklists.list.useQuery();
 
@@ -35,46 +63,42 @@ export default function Checklists() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const printLink = (url: string) => {
-    if (!isPdfUrl(url)) {
-      const printWindow = window.open(url, "_blank", "noopener,noreferrer");
-
-      if (!printWindow) {
-        alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
-      }
-
+  const printUploadedPdf = (pdfUrl: string) => {
+    if (!pdfUrl) {
+      alert("印刷できるアップロードPDFがありません。管理者画面からPDFをアップロードしてください。");
       return;
     }
 
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=980,height=900");
+    const iframe = document.createElement("iframe");
+    iframe.src = pdfUrl;
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.opacity = "0.01";
+    iframe.style.border = "0";
+    iframe.style.pointerEvents = "none";
 
-    if (!printWindow) {
-      alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
-      return;
-    }
+    iframe.onload = () => {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch {
+          const opened = window.open(pdfUrl, "_blank", "noopener,noreferrer");
+          if (!opened) {
+            alert("ブラウザ制限で印刷画面を開けませんでした。PDFを開いてから印刷してください。");
+          }
+        }
 
-    printWindow.document.write(`
-      <!doctype html>
-      <html>
-        <head>
-          <title>PDF印刷</title>
-          <style>
-            html, body, iframe { width: 100%; height: 100%; margin: 0; border: 0; }
-            body { background: #111; }
-          </style>
-        </head>
-        <body>
-          <iframe src="${url}"></iframe>
-          <script>
-            setTimeout(function () {
-              window.focus();
-              window.print();
-            }, 1200);
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+        setTimeout(() => {
+          iframe.remove();
+        }, 5000);
+      }, 800);
+    };
+
+    document.body.appendChild(iframe);
   };
 
   return (
@@ -95,20 +119,23 @@ export default function Checklists() {
       ) : checklists.length > 0 ? (
         <div className="grid gap-3">
           {checklists.map((item) => {
-            const url = extractChecklistUrl(item.description);
+            const openUrl = getChecklistOpenUrl(item);
+            const pdfUrl = getUploadedPdfUrl(item);
+            const hasAnyUrl = !!openUrl;
+            const hasPdf = !!pdfUrl;
 
             return (
               <div
                 key={item.id}
                 className={`cyber-border rounded-lg p-4 bg-card transition-all ${
-                  url ? "hover:bg-card/80" : "opacity-60"
+                  hasAnyUrl ? "hover:bg-card/80" : "opacity-60"
                 }`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     type="button"
-                    onClick={() => url && openLink(url)}
-                    disabled={!url}
+                    onClick={() => hasAnyUrl && openLink(openUrl)}
+                    disabled={!hasAnyUrl}
                     className="flex items-center gap-3 min-w-0 text-left group"
                   >
                     <LinkIcon className="h-5 w-5 text-cyber-green shrink-0" />
@@ -116,9 +143,16 @@ export default function Checklists() {
                       <h3 className="font-semibold text-foreground group-hover:text-cyber-green transition-colors truncate">
                         {item.title}
                       </h3>
-                      {!url && (
+
+                      {!hasAnyUrl && (
                         <p className="text-xs text-muted-foreground mt-1">
                           リンクURLが未設定です
+                        </p>
+                      )}
+
+                      {!hasPdf && (
+                        <p className="text-xs text-yellow-400 mt-1">
+                          印刷用PDFが未アップロードです
                         </p>
                       )}
                     </div>
@@ -129,8 +163,8 @@ export default function Checklists() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      disabled={!url}
-                      onClick={() => url && openLink(url)}
+                      disabled={!hasAnyUrl}
+                      onClick={() => hasAnyUrl && openLink(openUrl)}
                     >
                       <ExternalLink className="h-3 w-3 mr-1" />
                       開く
@@ -139,8 +173,8 @@ export default function Checklists() {
                     <Button
                       type="button"
                       size="sm"
-                      disabled={!url}
-                      onClick={() => url && printLink(url)}
+                      disabled={!hasPdf}
+                      onClick={() => printUploadedPdf(pdfUrl)}
                     >
                       <Printer className="h-3 w-3 mr-1" />
                       印刷
