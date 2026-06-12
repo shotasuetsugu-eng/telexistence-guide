@@ -7,11 +7,25 @@ function normalizeUrl(url?: string | null) {
 
   if (!value) return "";
 
+  if (value.startsWith("/")) {
+    return value;
+  }
+
   if (value.startsWith("http://") || value.startsWith("https://")) {
     return value;
   }
 
   return `https://${value}`;
+}
+
+function extractChecklistUrl(value?: string | null) {
+  const text = value?.trim() ?? "";
+  const match = text.match(/(https?:\/\/\S+|\/manus-storage\/\S+)/);
+  return normalizeUrl(match?.[1] ?? text);
+}
+
+function isPdfUrl(url: string) {
+  return /\.pdf($|[?#])/i.test(url);
 }
 
 export default function Checklists() {
@@ -22,11 +36,45 @@ export default function Checklists() {
   };
 
   const printLink = (url: string) => {
-    const printWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (!isPdfUrl(url)) {
+      const printWindow = window.open(url, "_blank", "noopener,noreferrer");
+
+      if (!printWindow) {
+        alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
+      }
+
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=980,height=900");
 
     if (!printWindow) {
       alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
+      return;
     }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>PDF印刷</title>
+          <style>
+            html, body, iframe { width: 100%; height: 100%; margin: 0; border: 0; }
+            body { background: #111; }
+          </style>
+        </head>
+        <body>
+          <iframe src="${url}"></iframe>
+          <script>
+            setTimeout(function () {
+              window.focus();
+              window.print();
+            }, 1200);
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   return (
@@ -47,7 +95,7 @@ export default function Checklists() {
       ) : checklists.length > 0 ? (
         <div className="grid gap-3">
           {checklists.map((item) => {
-            const url = normalizeUrl(item.description);
+            const url = extractChecklistUrl(item.description);
 
             return (
               <div
