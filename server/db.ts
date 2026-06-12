@@ -479,6 +479,47 @@ export async function addSimpleChecklist(data: {
   return item;
 }
 
+
+export async function updateSimpleChecklistPdf(id: string, fileName: string, fileUrl: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  const current = await listSimpleChecklists();
+  let updated: SimpleChecklistLink | null = null;
+
+  const next = current.map((item) => {
+    if (String(item.id) !== String(id)) return item;
+
+    updated = {
+      ...item,
+      fileName,
+      fileUrl,
+    };
+
+    return updated;
+  });
+
+  if (!updated) {
+    throw new Error("対象のチェックリストが見つかりません");
+  }
+
+  await db
+    .insert(linkSettings)
+    .values({
+      key: SIMPLE_CHECKLISTS_KEY,
+      label: "Simple Checklists",
+      url: JSON.stringify(next),
+    })
+    .onConflictDoUpdate({
+      target: linkSettings.key,
+      set: {
+        label: "Simple Checklists",
+        url: JSON.stringify(next),
+      },
+    });
+
+  return updated;
+}
 export async function removeSimpleChecklist(id: string) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");

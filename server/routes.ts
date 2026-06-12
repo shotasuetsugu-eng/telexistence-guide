@@ -11,6 +11,8 @@ import {
   documents, mapStores, InsertDocument,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { storagePut } from "./storage";
+import { updateSimpleChecklistPdf } from "./db";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -397,6 +399,48 @@ export async function updateMapStoreName(id: number, name: string) {
 
 /** ===== MAP STORE API ROUTES ===== */
 export function registerMapStoreApiRoutes(app: any) {
+  app.post("/api/checklists/:id/pdf", async (req: any, res: any) => {
+    try {
+      const id = String(req.params.id ?? "");
+      const fileName = String(req.body?.fileName ?? "checklist.pdf");
+      const dataUrl = String(req.body?.dataUrl ?? "");
+
+      if (!id) {
+        res.status(400).json({ error: "id is required" });
+        return;
+      }
+
+      if (!dataUrl) {
+        res.status(400).json({ error: "PDF data is required" });
+        return;
+      }
+
+      const base64 = dataUrl.includes(",") ? dataUrl.split(",").pop() || "" : dataUrl;
+      const buffer = Buffer.from(base64, "base64");
+
+      if (!buffer.length) {
+        res.status(400).json({ error: "PDF data is empty" });
+        return;
+      }
+
+      const safeName = fileName
+        .replace(/[\\/:*?"<>|]/g, "_")
+        .replace(/\s+/g, "_");
+
+      const stored = await storagePut(
+        `checklists/${Date.now()}-${safeName}`,
+        buffer,
+        "application/pdf"
+      );
+
+      const updated = await updateSimpleChecklistPdf(id, fileName, stored.url);
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Failed to upload checklist PDF", error);
+      res.status(500).json({ error: error.message ?? "Failed to upload checklist PDF" });
+    }
+  });
   app.get("/api/map-stores", async (_req: any, res: any) => {
     try {
       const stores = await getMapStores();
@@ -701,6 +745,7 @@ function parseDeployMembers(value: unknown) {
     return [];
   }
 }
+
 
 
 

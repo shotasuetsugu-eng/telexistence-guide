@@ -1,4 +1,6 @@
-import { ExternalLink, Link as LinkIcon, Printer } from "lucide-react";
+import { ChangeEvent, useState } from "react";
+import { ExternalLink, FileCheck2, Link as LinkIcon, Printer, Upload } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 
@@ -36,28 +38,42 @@ function getChecklistOpenUrl(item: any) {
   );
 }
 
-function getUploadedPdfUrl(item: any) {
-  const uploadedFileUrl = normalizeUrl(item.fileUrl);
+function getUploadedPdfUrl(item: any, uploadedPdfMap: Record<string, { fileName: string; fileUrl: string }>) {
+  const uploaded = uploadedPdfMap[String(item.id)];
+  if (uploaded?.fileUrl) return normalizeUrl(uploaded.fileUrl);
 
-  if (uploadedFileUrl) {
-    return uploadedFileUrl;
-  }
+  const uploadedFileUrl = normalizeUrl(item.fileUrl);
+  if (uploadedFileUrl) return uploadedFileUrl;
 
   const descriptionUrl = extractChecklistUrl(item.description);
-  if (descriptionUrl && isPdfUrl(descriptionUrl)) {
-    return descriptionUrl;
-  }
+  if (descriptionUrl && isPdfUrl(descriptionUrl)) return descriptionUrl;
 
   const directUrl = normalizeUrl(item.url);
-  if (directUrl && isPdfUrl(directUrl)) {
-    return directUrl;
-  }
+  if (directUrl && isPdfUrl(directUrl)) return directUrl;
 
   return "";
 }
 
+function getUploadedPdfName(item: any, uploadedPdfMap: Record<string, { fileName: string; fileUrl: string }>) {
+  return uploadedPdfMap[String(item.id)]?.fileName || item.fileName || "";
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("PDFの読み込みに失敗しました"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function Checklists() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: checklists = [], isLoading } = trpc.checklists.list.useQuery();
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [uploadedPdfMap, setUploadedPdfMap] = useState<Record<string, { fileName: string; fileUrl: string }>>({});
 
   const openLink = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
@@ -101,6 +117,54 @@ export default function Checklists() {
     document.body.appendChild(iframe);
   };
 
+  const uploadPdf = async (item: any, event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("PDFファイルを選択してください。");
+      return;
+    }
+
+    try {
+      setUploadingId(String(item.id));
+
+      const dataUrl = await fileToDataUrl(file);
+
+      const response = await fetch(`/api/checklists/${encodeURIComponent(String(item.id))}/pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          dataUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "PDFアップロードに失敗しました");
+      }
+
+      const updated = await response.json();
+
+      setUploadedPdfMap((current) => ({
+        ...current,
+        [String(item.id)]: {
+          fileName: updated.fileName || file.name,
+          fileUrl: updated.fileUrl,
+        },
+      }));
+
+      alert("PDFをアップロードしました。印刷ボタンが使えるようになりました。");
+    } catch (error: any) {
+      alert(error.message ?? "PDFアップロードに失敗しました");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -118,17 +182,19 @@ export default function Checklists() {
         </div>
       ) : checklists.length > 0 ? (
         <div className="grid gap-3">
-          {checklists.map((item) => {
+          {checklists.map((item: any) => {
             const openUrl = getChecklistOpenUrl(item);
-            const pdfUrl = getUploadedPdfUrl(item);
+            const pdfUrl = getUploadedPdfUrl(item, uploadedPdfMap);
+            const pdfName = getUploadedPdfName(item, uploadedPdfMap);
             const hasAnyUrl = !!openUrl;
             const hasPdf = !!pdfUrl;
+            const isUploading = uploadingId === String(item.id);
 
             return (
               <div
                 key={item.id}
                 className={`cyber-border rounded-lg p-4 bg-card transition-all ${
-                  hasAnyUrl ? "hover:bg-card/80" : "opacity-60"
+                  hasAnyUrl ? "hover:bg-card/80" : "opacity-80"
                 }`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -144,13 +210,12 @@ export default function Checklists() {
                         {item.title}
                       </h3>
 
-                      {!hasAnyUrl && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          リンクURLが未設定です
+                      {hasPdf ? (
+                        <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                          <FileCheck2 className="h-3 w-3" />
+                          印刷用PDF: {pdfName || "アップロード済み"}
                         </p>
-                      )}
-
-                      {!hasPdf && (
+                      ) : (
                         <p className="text-xs text-yellow-400 mt-1">
                           印刷用PDFが未アップロードです
                         </p>
@@ -158,7 +223,21 @@ export default function Checklists() {
                     </div>
                   </button>
 
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    {isAdmin && (
+                      <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground hover:border-primary/50 hover:text-primary">
+                        <Upload className="h-3 w-3 mr-1" />
+                        {isUploading ? "アップロード中" : "PDFアップロード"}
+                        <input
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          className="hidden"
+                          disabled={isUploading}
+                          onChange={(event) => uploadPdf(item, event)}
+                        />
+                      </label>
+                    )}
+
                     <Button
                       type="button"
                       size="sm"
