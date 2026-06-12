@@ -397,7 +397,71 @@ export async function updateMapStoreName(id: number, name: string) {
 }
 
 /** ===== MAP STORE API ROUTES ===== */
-export function registerMapStoreApiRoutes(app: any) {
+export function registerMapStoreApiRoutes(app: any) {  app.get("/api/checklists/:id/pdf-file", async (req: any, res: any) => {
+    try {
+      const id = String(req.params.id ?? "");
+      const checklistId = Number(id);
+
+      if (!Number.isFinite(checklistId)) {
+        res.status(400).send("invalid checklist id");
+        return;
+      }
+
+      const { getChecklistById, listLinkSettings } = await import("./db");
+
+      const checklist = await getChecklistById(checklistId);
+      if (!checklist) {
+        res.status(404).send("対象のチェックリストが見つかりません");
+        return;
+      }
+
+      const key = `checklist_pdf_${id}`;
+      const settings = await listLinkSettings();
+      const saved = settings.find((item: any) => item.key === key);
+
+      if (!saved?.url) {
+        res.status(404).type("html").send(`
+          <html>
+            <body style="font-family:sans-serif;padding:24px;">
+              <h2>印刷用PDFが未アップロードです</h2>
+              <p>管理者パネルでPDFをアップロードしてください。</p>
+            </body>
+          </html>
+        `);
+        return;
+      }
+
+      const fileUrl = String(saved.url);
+
+      if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://") || fileUrl.startsWith("/")) {
+        res.redirect(fileUrl);
+        return;
+      }
+
+      if (!fileUrl.startsWith("data:application/pdf")) {
+        res.status(400).send("PDFデータではありません");
+        return;
+      }
+
+      const base64 = fileUrl.includes(",") ? fileUrl.split(",").pop() || "" : fileUrl;
+      const buffer = Buffer.from(base64, "base64");
+
+      const fileName = saved.label || "checklist.pdf";
+      const encodedName = encodeURIComponent(fileName);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Length", String(buffer.length));
+      res.setHeader("Content-Disposition", `inline; filename="checklist.pdf"; filename*=UTF-8''${encodedName}`);
+      res.setHeader("Cache-Control", "no-store");
+
+      res.send(buffer);
+    } catch (error: any) {
+      console.error("Failed to open checklist PDF", error);
+      res.status(500).send(error.message ?? "Failed to open checklist PDF");
+    }
+  });
+
+
   app.get("/api/checklists/:id/pdf", async (req: any, res: any) => {
     try {
       const id = String(req.params.id ?? "");
@@ -802,6 +866,7 @@ function parseDeployMembers(value: unknown) {
     return [];
   }
 }
+
 
 
 
