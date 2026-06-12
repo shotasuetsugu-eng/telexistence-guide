@@ -11,7 +11,6 @@ import {
   documents, mapStores, InsertDocument,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { storagePut } from "./storage";
 import { updateSimpleChecklistPdf } from "./db";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -399,25 +398,101 @@ export async function updateMapStoreName(id: number, name: string) {
 
 /** ===== MAP STORE API ROUTES ===== */
 export function registerMapStoreApiRoutes(app: any) {
-  app.post("/api/checklists/:id/pdf", async (req: any, res: any) => {
+  app.get("/api/checklists/:id/pdf", async (req: any, res: any) => {
     try {
       const id = String(req.params.id ?? "");
-      const fileName = String(req.body?.fileName ?? "checklist.pdf");
-      const dataUrl = String(req.body?.dataUrl ?? "");
+      const checklistId = Number(id);
 
-      if (!id) {
-        res.status(400).json({ error: "id is required" });
+      if (!Number.isFinite(checklistId)) {
+        res.status(400).json({ error: "invalid checklist id" });
         return;
       }
 
-      if (!dataUrl || !dataUrl.startsWith("data:application/pdf")) {
+      const { getChecklistById, listLinkSettings } = await import("./db");
+
+      const checklist = await getChecklistById(checklistId);
+      if (!checklist) {
+        res.status(404).json({ error: "対象のチェックリストが見つかりません" });
+        return;
+      }
+
+      const key = `checklist_pdf_${id}`;
+      const settings = await listLinkSettings();
+      const saved = settings.find((item: any) => item.key === key);
+
+      if (!saved?.url) {
+        res.status(404).json({ error: "印刷用PDFが未アップロードです" });
+        return;
+      }
+
+      res.json({
+        fileName: saved.label || "checklist.pdf",
+        fileUrl: saved.url,
+      });
+    } catch (error: any) {
+      console.error("Failed to get checklist PDF", error);
+      res.status(500).json({ error: error.message ?? "Failed to get checklist PDF" });
+    }
+  });
+
+  app.post("/api/checklists/:id/pdf", async (req: any, res: any) => {
+    try {
+      const id = String(req.params.id ?? "");
+      const checklistId = Number(id);
+      const fileName = String(req.body?.fileName ?? "checklist.pdf");
+      const dataUrlRaw = String(req.body?.dataUrl ?? "");
+      const fileDataRaw = String(req.body?.fileData ?? "");
+
+      if (!Number.isFinite(checklistId)) {
+        res.status(400).json({ error: "invalid checklist id" });
+        return;
+      }
+
+      let pdfDataUrl = dataUrlRaw.trim();
+
+      if (!pdfDataUrl && fileDataRaw.trim()) {
+        pdfDataUrl = `data:application/pdf;base64,${fileDataRaw.trim()}`;
+      }
+
+      if (pdfDataUrl && !pdfDataUrl.startsWith("data:")) {
+        pdfDataUrl = `data:application/pdf;base64,${pdfDataUrl}`;
+      }
+
+      if (!pdfDataUrl) {
         res.status(400).json({ error: "PDF data is required" });
         return;
       }
 
-      const updated = await updateSimpleChecklistPdf(id, fileName, dataUrl);
+      const looksLikePdf =
+        pdfDataUrl.startsWith("data:application/pdf") ||
+        fileName.toLowerCase().endsWith(".pdf");
 
-      res.json(updated);
+      if (!looksLikePdf) {
+        res.status(400).json({ error: "PDFファイルを選択してください" });
+        return;
+      }
+
+      const { getChecklistById, saveLinkSettings } = await import("./db");
+
+      const checklist = await getChecklistById(checklistId);
+      if (!checklist) {
+        res.status(404).json({ error: "対象のチェックリストが見つかりません" });
+        return;
+      }
+
+      await saveLinkSettings([
+        {
+          key: `checklist_pdf_${id}`,
+          label: fileName,
+          url: pdfDataUrl,
+        } as any,
+      ]);
+
+      res.json({
+        id,
+        fileName,
+        fileUrl: pdfDataUrl,
+      });
     } catch (error: any) {
       console.error("Failed to upload checklist PDF", error);
       res.status(500).json({ error: error.message ?? "Failed to upload checklist PDF" });
@@ -727,6 +802,8 @@ function parseDeployMembers(value: unknown) {
     return [];
   }
 }
+
+
 
 
 
