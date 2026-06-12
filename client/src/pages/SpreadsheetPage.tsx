@@ -9,6 +9,12 @@ type IntegrationLink = {
   url: string;
 };
 
+type StorePreviewLink = {
+  id: string;
+  label: string;
+  url: string;
+};
+
 type ViewerSettings = {
   height: number;
   zoom: number;
@@ -16,6 +22,7 @@ type ViewerSettings = {
 
 const storageKey = "tx-integrations-links";
 const viewerStorageKey = "tx-spreadsheet-viewer-settings";
+const storePreviewLinksStorageKey = "tx-store-preview-links";
 
 const defaultLinks: Record<IntegrationKey, IntegrationLink> = {
   dashboard: { label: "Dashboard", url: "" },
@@ -67,6 +74,48 @@ function saveViewerSettings(nextSettings: ViewerSettings) {
   window.localStorage.setItem(viewerStorageKey, JSON.stringify(nextSettings));
 }
 
+function normalizeExternalUrl(url: string) {
+  const value = url.trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+function loadStorePreviewLinks(): StorePreviewLink[] {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(storePreviewLinksStorageKey) ?? "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStorePreviewLinks(nextLinks: StorePreviewLink[]) {
+  window.localStorage.setItem(storePreviewLinksStorageKey, JSON.stringify(nextLinks));
+}
+
+function toInlinePreviewUrl(url: string) {
+  const normalized = normalizeExternalUrl(url);
+  if (!normalized) return "";
+
+  const spreadsheetMatch = normalized.match(/\/spreadsheets\/d\/([^/]+)/);
+  if (spreadsheetMatch?.[1]) {
+    return `https://docs.google.com/spreadsheets/d/${spreadsheetMatch[1]}/preview`;
+  }
+
+  const documentMatch = normalized.match(/\/document\/d\/([^/]+)/);
+  if (documentMatch?.[1]) {
+    return `https://docs.google.com/document/d/${documentMatch[1]}/preview`;
+  }
+
+  const presentationMatch = normalized.match(/\/presentation\/d\/([^/]+)/);
+  if (presentationMatch?.[1]) {
+    return `https://docs.google.com/presentation/d/${presentationMatch[1]}/preview`;
+  }
+
+  return normalized;
+}
+
 function toSpreadsheetEmbedUrl(url: string) {
   const trimmed = url.trim();
 
@@ -86,22 +135,32 @@ export default function SpreadsheetPage() {
   const isAdmin = user?.role === "admin";
 
   const isShiftPage = window.location.pathname.includes("/shift");
+  const isStorePage = !isShiftPage;
   const [activeShift, setActiveShift] = useState<"shiftFs" | "shiftTs">("shiftFs");
   const [links, setLinks] = useState<Record<IntegrationKey, IntegrationLink>>(defaultLinks);
   const [viewerSettings, setViewerSettings] = useState<ViewerSettings>(defaultViewerSettings);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [status, setStatus] = useState("");
   const [viewerKey, setViewerKey] = useState(0);
+  const [storePreviewLinks, setStorePreviewLinks] = useState<StorePreviewLink[]>([]);
+  const [storePreviewDraft, setStorePreviewDraft] = useState({ label: "", url: "" });
+  const [selectedStorePreviewId, setSelectedStorePreviewId] = useState("");
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
     setLinks(loadLinks());
     setViewerSettings(loadViewerSettings());
+
+    const savedStorePreviewLinks = loadStorePreviewLinks();
+    setStorePreviewLinks(savedStorePreviewLinks);
+    setSelectedStorePreviewId(savedStorePreviewLinks[0]?.id ?? "");
   }, []);
 
   const currentKey: SheetKey = isShiftPage ? activeShift : "storeList";
   const current = links[currentKey];
   const embedUrl = toSpreadsheetEmbedUrl(current.url);
+  const selectedStorePreview = storePreviewLinks.find((item) => item.id === selectedStorePreviewId) ?? null;
+  const selectedStorePreviewUrl = selectedStorePreview ? toInlinePreviewUrl(selectedStorePreview.url) : "";
 
   const zoomScale = viewerSettings.zoom / 100;
   const iframeWidth = `${100 / zoomScale}%`;
@@ -143,6 +202,41 @@ export default function SpreadsheetPage() {
 
   const reloadViewer = () => {
     setViewerKey((current) => current + 1);
+  };
+
+  const addStorePreviewLink = () => {
+    const label = storePreviewDraft.label.trim();
+    const url = normalizeExternalUrl(storePreviewDraft.url);
+
+    if (!label || !url) {
+      setStatus("リンク名とURLを入力してください");
+      setTimeout(() => setStatus(""), 2000);
+      return;
+    }
+
+    const item: StorePreviewLink = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      label,
+      url,
+    };
+
+    const nextLinks = [...storePreviewLinks, item];
+    setStorePreviewLinks(nextLinks);
+    saveStorePreviewLinks(nextLinks);
+    setSelectedStorePreviewId(item.id);
+    setStorePreviewDraft({ label: "", url: "" });
+    setStatus("店舗関連リンクを追加しました");
+    setTimeout(() => setStatus(""), 2000);
+  };
+
+  const deleteStorePreviewLink = (id: string) => {
+    const nextLinks = storePreviewLinks.filter((item) => item.id !== id);
+    setStorePreviewLinks(nextLinks);
+    saveStorePreviewLinks(nextLinks);
+
+    if (selectedStorePreviewId === id) {
+      setSelectedStorePreviewId(nextLinks[0]?.id ?? "");
+    }
   };
 
   const sheetViewer = (
@@ -267,6 +361,108 @@ export default function SpreadsheetPage() {
     </div>
   );
 
+
+  const storePreviewViewer = isStorePage ? (
+    <section className="cyber-border rounded-lg bg-card p-4 space-y-4">
+      <div className="space-y-1">
+        <h2 className="font-semibold text-foreground">店舗関連リンク</h2>
+        <p className="text-xs text-muted-foreground">
+          シート内リンクで別タブが勝手に増えないように制限しています。必要なリンクはここから選択すると、下の画面に表示されます。
+        </p>
+      </div>
+
+      {isAdmin && (
+        <div className="grid gap-2 md:grid-cols-[180px_1fr_auto]">
+          <input
+            value={storePreviewDraft.label}
+            onChange={(event) => setStorePreviewDraft((current) => ({ ...current, label: event.target.value }))}
+            placeholder="表示名 例 店舗マップ"
+            className="rounded bg-background border border-border px-3 py-2 text-sm"
+          />
+          <input
+            value={storePreviewDraft.url}
+            onChange={(event) => setStorePreviewDraft((current) => ({ ...current, url: event.target.value }))}
+            placeholder="https://..."
+            className="rounded bg-background border border-border px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={addStorePreviewLink}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            追加
+          </button>
+        </div>
+      )}
+
+      {storePreviewLinks.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {storePreviewLinks.map((item) => {
+            const isActive = item.id === selectedStorePreviewId;
+            return (
+              <div key={item.id} className="inline-flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStorePreviewId(item.id)}
+                  className={`rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${
+                    isActive
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </button>
+
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => deleteStorePreviewLink(item.id)}
+                    className="rounded-md border border-border px-2 py-2 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"
+                    title="削除"
+                  >
+                    削除
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="rounded-md border border-border bg-background p-4 text-sm text-muted-foreground">
+          店舗一覧用の関連リンクはまだ登録されていません。管理者でログインすると追加できます。
+        </div>
+      )}
+
+      {selectedStorePreview && selectedStorePreviewUrl && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-foreground">{selectedStorePreview.label}</h3>
+              <p className="text-xs text-muted-foreground break-all">{selectedStorePreview.url}</p>
+            </div>
+            <a
+              href={selectedStorePreview.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold text-primary hover:border-primary/50"
+            >
+              表示できない場合だけ別タブで開く
+            </a>
+          </div>
+
+          <div className="h-[760px] overflow-hidden rounded-md border border-border bg-white">
+            <iframe
+              src={selectedStorePreviewUrl}
+              title={selectedStorePreview.label}
+              sandbox="allow-same-origin allow-scripts allow-forms allow-downloads"
+              className="h-full w-full border-0 bg-white"
+            />
+          </div>
+        </div>
+      )}
+    </section>
+  ) : null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -353,9 +549,12 @@ export default function SpreadsheetPage() {
       )}
 
       {sheetViewer}
+
+      {storePreviewViewer}
     </div>
   );
 }
+
 
 
 
