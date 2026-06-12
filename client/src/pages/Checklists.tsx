@@ -40,36 +40,97 @@ export default function Checklists() {
   };
 
   const printPdfUrl = (pdfUrl: string) => {
-    const iframe = document.createElement("iframe");
-    iframe.src = pdfUrl;
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "1px";
-    iframe.style.height = "1px";
-    iframe.style.opacity = "0.01";
-    iframe.style.border = "0";
-    iframe.style.pointerEvents = "none";
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1100,height=900");
 
-    iframe.onload = () => {
-      setTimeout(() => {
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch {
-          const opened = window.open(pdfUrl, "_blank", "noopener,noreferrer");
-          if (!opened) {
-            alert("ブラウザ制限で印刷画面を開けませんでした。PDFを開いてから印刷してください。");
-          }
-        }
+    if (!printWindow) {
+      alert("ポップアップがブロックされました。PDFを開いてから印刷してください。");
+      return;
+    }
 
-        setTimeout(() => iframe.remove(), 5000);
-      }, 800);
-    };
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>PDF印刷</title>
+          <style>
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+              background: #1f2f2f;
+              color: #fff;
+              font-family: sans-serif;
+            }
+            .bar {
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 2;
+              padding: 10px 14px;
+              background: #0f1f1f;
+              border-bottom: 1px solid rgba(0,255,220,.35);
+              display: flex;
+              gap: 10px;
+              align-items: center;
+              justify-content: space-between;
+              font-size: 13px;
+            }
+            button {
+              background: #00f5d4;
+              border: 0;
+              border-radius: 8px;
+              padding: 8px 12px;
+              font-weight: 700;
+              cursor: pointer;
+            }
+            iframe {
+              position: fixed;
+              top: 46px;
+              left: 0;
+              width: 100%;
+              height: calc(100% - 46px);
+              border: 0;
+              background: #fff;
+            }
+            @media print {
+              .bar { display: none; }
+              iframe {
+                top: 0;
+                height: 100%;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="bar">
+            <span id="status">PDFを読み込み中です。少し待ってから印刷画面を開きます...</span>
+            <button onclick="window.print()">印刷</button>
+          </div>
+          <iframe id="pdfFrame" src="${pdfUrl}"></iframe>
+          <script>
+            const frame = document.getElementById("pdfFrame");
+            const status = document.getElementById("status");
 
-    document.body.appendChild(iframe);
+            frame.addEventListener("load", function () {
+              status.textContent = "PDF読み込み完了。印刷画面を開いています...";
+              setTimeout(function () {
+                window.focus();
+                window.print();
+              }, 2500);
+            });
+
+            setTimeout(function () {
+              status.textContent = "印刷画面が出ない場合は、右の「印刷」ボタンを押してください。";
+            }, 6000);
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
-
   const printChecklistPdf = async (item: any) => {
     const id = String(item.id);
 
@@ -200,3 +261,4 @@ export default function Checklists() {
     </div>
   );
 }
+
