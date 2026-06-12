@@ -13,7 +13,12 @@ function normalizeUrl(url?: string | null) {
     return value;
   }
 
-  if (value.startsWith("http://") || value.startsWith("https://")) {
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("data:") ||
+    value.startsWith("blob:")
+  ) {
     return value;
   }
 
@@ -274,3 +279,4 @@ export default function Checklists() {
     </div>
   );
 }
+

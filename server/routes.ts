@@ -410,30 +410,12 @@ export function registerMapStoreApiRoutes(app: any) {
         return;
       }
 
-      if (!dataUrl) {
+      if (!dataUrl || !dataUrl.startsWith("data:application/pdf")) {
         res.status(400).json({ error: "PDF data is required" });
         return;
       }
 
-      const base64 = dataUrl.includes(",") ? dataUrl.split(",").pop() || "" : dataUrl;
-      const buffer = Buffer.from(base64, "base64");
-
-      if (!buffer.length) {
-        res.status(400).json({ error: "PDF data is empty" });
-        return;
-      }
-
-      const safeName = fileName
-        .replace(/[\\/:*?"<>|]/g, "_")
-        .replace(/\s+/g, "_");
-
-      const stored = await storagePut(
-        `checklists/${Date.now()}-${safeName}`,
-        buffer,
-        "application/pdf"
-      );
-
-      const updated = await updateSimpleChecklistPdf(id, fileName, stored.url);
+      const updated = await updateSimpleChecklistPdf(id, fileName, dataUrl);
 
       res.json(updated);
     } catch (error: any) {
@@ -745,6 +727,7 @@ function parseDeployMembers(value: unknown) {
     return [];
   }
 }
+
 
 
 
