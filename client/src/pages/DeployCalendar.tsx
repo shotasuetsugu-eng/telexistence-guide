@@ -885,7 +885,7 @@ const isScheduleCompleted = (item: any) => {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-sm">
-              <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">日付</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">詳細</th><th className="p-2">完了</th></tr></thead>
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2">日付</th><th className="p-2">開始時刻</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">詳細</th><th className="p-2">完了</th></tr></thead>
               <tbody>
                 {filteredSchedules.map((item) => {
                   const status = statusOf(item);
@@ -893,6 +893,7 @@ const isScheduleCompleted = (item: any) => {
                   return (
                     <tr key={item.id} className={`border-t border-border ${isMine ? selectedHighlight.row : ""}`}>
                       <td className="p-2">{displayDateRange(item)}</td>
+                      <td className="p-2 font-semibold text-foreground">{item.startTime || "-"}</td>
                       <td className="p-2"><p className="font-medium text-foreground">{item.storeName}</p><p className="text-xs text-muted-foreground">{item.area} {item.chain}</p></td>
                       <td className="p-2"><p>{item.workType}</p><p className="text-xs text-muted-foreground">{item.description}</p></td>
                       <td className="p-2">

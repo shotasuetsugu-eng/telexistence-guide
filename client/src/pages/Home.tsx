@@ -367,6 +367,7 @@ export default function Home() {
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="px-2 py-2">日付</th>
+                  <th className="px-2 py-2">開始時刻</th>
                   <th className="px-2 py-2">店舗</th>
                   <th className="px-2 py-2">作業内容</th>
                   <th className="px-2 py-2">担当</th>
@@ -380,6 +381,7 @@ export default function Home() {
                   return (
                     <tr key={item.id} className="border-t border-border">
                       <td className="px-2 py-3 font-medium text-muted-foreground">{displayDateRange(item)}</td>
+                      <td className="px-2 py-2 font-semibold text-foreground">{item.startTime || "-"}</td>
                       <td className="px-2 py-2">
                         <p className="font-semibold text-foreground">{item.storeName}</p>
                         <p className="text-xs text-muted-foreground">{[item.area, item.chain].filter(Boolean).join(" / ")}</p>
@@ -412,7 +414,7 @@ export default function Home() {
                 })}
                 {upcomingDeploys.length === 0 && (
                   <tr>
-                    <td className="px-2 py-6 text-center text-muted-foreground" colSpan={6}>
+                    <td className="px-2 py-6 text-center text-muted-foreground" colSpan={7}>
                       今月のDeploy予定はまだありません
                     </td>
                   </tr>
