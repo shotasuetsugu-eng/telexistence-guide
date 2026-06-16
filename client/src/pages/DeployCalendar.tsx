@@ -871,8 +871,8 @@ export default function DeployCalendar() {
                         )}
                       </td>
                       <td className="p-2">
-                        {isAdmin ? <div className="flex flex-wrap gap-1">
-                          {!item.startTime && <Button size="sm" variant="outline" onClick={() => patchAction(item.id, "start", { startTime: new Date().toTimeString().slice(0, 5) })}><Clock3 className="h-3 w-3" /></Button>}
+                        <div className="flex flex-wrap gap-1">
+                          {isAdmin && !item.startTime && <Button size="sm" variant="outline" onClick={() => patchAction(item.id, "start", { startTime: new Date().toTimeString().slice(0, 5) })}><Clock3 className="h-3 w-3" /></Button>}
                           {!item.completedAt ? (
                             <Button
                               size="sm"
@@ -889,9 +889,9 @@ export default function DeployCalendar() {
                               完了済
                             </span>
                           )}
-                          <Button size="sm" variant="outline" onClick={() => editSchedule(item)}>編集</Button>
-                          <Button size="sm" variant="outline" onClick={() => deleteSchedule(item.id)}><Trash2 className="h-3 w-3" /></Button>
-                        </div> : <span className="text-xs text-muted-foreground">閲覧のみ</span>}
+                          {isAdmin && <Button size="sm" variant="outline" onClick={() => editSchedule(item)}>編集</Button>}
+                          {isAdmin && <Button size="sm" variant="outline" onClick={() => deleteSchedule(item.id)}><Trash2 className="h-3 w-3" /></Button>}
+                        </div>
                       </td>
                     </tr>
                   );
