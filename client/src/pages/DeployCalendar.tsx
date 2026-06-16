@@ -331,6 +331,7 @@ export default function DeployCalendar() {
     if (chainFilter && item.chain !== chainFilter) return false;
     return true;
   });
+  const visibleSchedules = filteredSchedules.filter((item) => !item.completedAt);
 
   const summary = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -505,7 +506,7 @@ export default function DeployCalendar() {
 
   const exportCsv = () => {
     const header = ["start_date", "end_date", "store", "area", "chain", "work", "members", "status", "start", "memo"];
-    const lines = filteredSchedules.map((item) => [
+    const lines = visibleSchedules.map((item) => [
       dateOnly(item.deployDate),
       dateOnly(item.endDate || item.deployDate),
       item.storeName,
@@ -848,7 +849,7 @@ export default function DeployCalendar() {
             <table className="w-full min-w-[1040px] text-sm">
               <thead className="text-left text-xs text-muted-foreground"><tr><th className="p-2 whitespace-nowrap">日付</th><th className="p-2 whitespace-nowrap">開始時刻</th><th className="p-2">店舗</th><th className="p-2">作業内容</th><th className="p-2">担当</th><th className="p-2">進捗</th><th className="p-2">詳細</th><th className="p-2">完了</th></tr></thead>
               <tbody>
-                {filteredSchedules.map((item) => {
+                {visibleSchedules.map((item) => {
                   const status = statusOf(item);
                   const isMine = isOwnSchedule(item);
                   return (
@@ -896,6 +897,13 @@ export default function DeployCalendar() {
                     </tr>
                   );
                 })}
+                {visibleSchedules.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-6 text-center text-sm text-muted-foreground">
+                      表示中の予定はありません
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
