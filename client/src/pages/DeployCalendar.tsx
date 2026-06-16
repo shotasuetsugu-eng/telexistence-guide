@@ -331,7 +331,7 @@ export default function DeployCalendar() {
     if (chainFilter && item.chain !== chainFilter) return false;
     return true;
   });
-  const visibleSchedules = filteredSchedules.filter((item) => !item.completedAt);
+  const visibleSchedules = filteredSchedules.filter((item) => statusOf(item) !== "完了");
 
   const summary = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
