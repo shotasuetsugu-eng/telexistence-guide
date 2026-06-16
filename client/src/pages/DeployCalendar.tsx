@@ -244,44 +244,9 @@ export default function DeployCalendar() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [month, setMonth] = useState(toMonth(new Date()));
-  const [completeTarget, setCompleteTarget] = useState<any | null>(null);
-  const [completedScheduleKeys, setCompletedScheduleKeys] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("fsTeamCalendarCompletedKeys") || "[]");
-    } catch {
-      return [];
-    }
-  });  const getScheduleCompleteKey = (item: any) => {
-    const date = item.date || "";
-    const storeName = item.storeName || item.store || item.shopName || item.name || "";
-    const taskName = item.task || item.workContent || item.work || item.title || "";
+  const [completeTarget, setCompleteTarget] = useState<DeploySchedule | null>(null);
 
-    return String(item.id || (date + "-" + storeName + "-" + taskName));
-  };
-const isScheduleCompleted = (item: any) => {
-    return completedScheduleKeys.includes(getScheduleCompleteKey(item));
-  };
-  const completeScheduleByUser = (item: any) => {
-    const storeName =
-      item.storeName ||
-      item.store ||
-      item.shopName ||
-      item.name ||
-      "この予定";
-
-    const ok = window.confirm("ステータスを本当に完了しますか？");
-
-    if (!ok) return;
-
-    const key = getScheduleCompleteKey(item);
-    const nextKeys = Array.from(new Set([...completedScheduleKeys, key]));
-
-    localStorage.setItem("fsTeamCalendarCompletedKeys", JSON.stringify(nextKeys));
-    setCompletedScheduleKeys(nextKeys);
-  };
-
-
-  const openCompleteConfirm = (item: any) => {
+  const openCompleteConfirm = (item: DeploySchedule) => {
     setCompleteTarget(item);
   };
 
@@ -289,14 +254,10 @@ const isScheduleCompleted = (item: any) => {
     setCompleteTarget(null);
   };
 
-  const confirmComplete = () => {
+  const confirmComplete = async () => {
     if (!completeTarget) return;
 
-    const key = getScheduleCompleteKey(completeTarget);
-    const nextKeys = Array.from(new Set([...completedScheduleKeys, key]));
-
-    localStorage.setItem("fsTeamCalendarCompletedKeys", JSON.stringify(nextKeys));
-    setCompletedScheduleKeys(nextKeys);
+    await patchAction(completeTarget.id, "complete");
     setCompleteTarget(null);
   };
 
@@ -916,7 +877,7 @@ const isScheduleCompleted = (item: any) => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => patchAction(item.id, "complete")}
+                              onClick={() => openCompleteConfirm(item)}
                               className="h-8 px-3 border-primary/50 text-primary hover:bg-primary/10 font-semibold"
                             >
                               <CheckCircle2 className="h-5 w-5 mr-1" />
@@ -930,14 +891,7 @@ const isScheduleCompleted = (item: any) => {
                           )}
                           <Button size="sm" variant="outline" onClick={() => editSchedule(item)}>編集</Button>
                           <Button size="sm" variant="outline" onClick={() => deleteSchedule(item.id)}><Trash2 className="h-3 w-3" /></Button>
-                        </div> : <span className="text-xs text-muted-foreground"><button
-  type="button"
-  className="complete-check-button"
-  onClick={() => completeScheduleByUser(renderMemberChip)}
-  title="完了にする"
->
-  ✓
-</button></span>}
+                        </div> : <span className="text-xs text-muted-foreground">閲覧のみ</span>}
                       </td>
                     </tr>
                   );
@@ -955,13 +909,9 @@ const isScheduleCompleted = (item: any) => {
 
             <p>
               <strong>
-                {completeTarget.storeName ||
-                  completeTarget.store ||
-                  completeTarget.shopName ||
-                  completeTarget.name ||
-                  "この予定"}
+                {completeTarget.storeName || "この予定"}
               </strong>
-              を完了にしますか？
+              のステータスを本当に完了しますか？
             </p>
 
             <div className="confirm-actions">
@@ -975,10 +925,10 @@ const isScheduleCompleted = (item: any) => {
 
               <button
                 type="button"
-                className="confirm-ok-button"
-                onClick={confirmComplete}
-              >
-                確認
+              className="confirm-ok-button"
+              onClick={confirmComplete}
+            >
+                OK
               </button>
             </div>
           </div>
