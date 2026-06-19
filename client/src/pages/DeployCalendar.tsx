@@ -289,7 +289,21 @@ export default function DeployCalendar() {
   };
 
   useEffect(() => {
-    loadSchedules().catch((error) => toast.error(error.message));
+    const refreshSchedules = () => loadSchedules().catch((error) => toast.error(error.message));
+    const refreshWhenVisible = () => {
+      if (!document.hidden) refreshSchedules();
+    };
+
+    refreshSchedules();
+    const refreshTimer = window.setInterval(refreshSchedules, 30000);
+    window.addEventListener("focus", refreshSchedules);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshSchedules);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [month]);
 
   useEffect(() => {
@@ -354,7 +368,7 @@ export default function DeployCalendar() {
     return [...blanks, ...days];
   }, [month]);
 
-  const scheduledWorkTypes = useMemo(() => uniqueValues(schedules.map((item) => item.workType || "未分類")), [schedules]);
+  const scheduledWorkTypes = useMemo(() => uniqueValues(visibleSchedules.map((item) => item.workType || "未分類")), [visibleSchedules]);
   const workTypeClassFor = (workType: string) => {
     const index = Math.max(0, scheduledWorkTypes.indexOf(workType || "未分類"));
     return workTypeColorClasses[index % workTypeColorClasses.length];
@@ -607,8 +621,16 @@ export default function DeployCalendar() {
       <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
         <aside className="space-y-4">
           <div className="cyber-border rounded-lg bg-card p-4 space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-semibold text-foreground">{formatMonthLabel(month)}</h2>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <label className="grid min-w-[170px] gap-1 text-xs text-muted-foreground">
+                表示する月
+                <input
+                  type="month"
+                  value={month}
+                  onChange={(event) => setMonth(event.target.value)}
+                  className="rounded border border-border bg-input px-3 py-2 text-sm font-semibold text-foreground"
+                />
+              </label>
               <button onClick={() => setMonth(toMonth(new Date()))} className="rounded border border-primary/40 px-2 py-1 text-xs text-primary hover:bg-primary/10">
                 今日
               </button>
@@ -618,7 +640,7 @@ export default function DeployCalendar() {
               {calendarDays.map((day, index) => {
                 const date = day ? `${month}-${String(day).padStart(2, "0")}` : "";
                 const schedulesOnDate = date
-                  ? schedules.filter((item) => isDateInSchedule(item, date))
+                  ? visibleSchedules.filter((item) => isDateInSchedule(item, date))
                   : [];
 
                 const deployOnDate = schedulesOnDate[0];
