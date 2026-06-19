@@ -146,6 +146,7 @@ export default function SpreadsheetPage() {
   const [storePreviewDraft, setStorePreviewDraft] = useState({ label: "", url: "" });
   const [selectedStorePreviewId, setSelectedStorePreviewId] = useState("");
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const storePreviewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setLinks(loadLinks());
@@ -202,6 +203,13 @@ export default function SpreadsheetPage() {
 
   const reloadViewer = () => {
     setViewerKey((current) => current + 1);
+  };
+
+  const selectStorePreview = (id: string) => {
+    setSelectedStorePreviewId(id);
+    window.requestAnimationFrame(() => {
+      storePreviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const addStorePreviewLink = () => {
@@ -403,7 +411,7 @@ export default function SpreadsheetPage() {
               <div key={item.id} className="inline-flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setSelectedStorePreviewId(item.id)}
+                  onClick={() => selectStorePreview(item.id)}
                   className={`rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${
                     isActive
                       ? "border-primary/60 bg-primary/15 text-primary"
@@ -434,7 +442,7 @@ export default function SpreadsheetPage() {
       )}
 
       {selectedStorePreview && selectedStorePreviewUrl && (
-        <div className="space-y-3">
+        <div ref={storePreviewRef} className="scroll-mt-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="font-semibold text-foreground">{selectedStorePreview.label}</h3>
@@ -454,7 +462,8 @@ export default function SpreadsheetPage() {
             <iframe
               src={selectedStorePreviewUrl}
               title={selectedStorePreview.label}
-              sandbox="allow-same-origin allow-scripts allow-forms allow-downloads"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-downloads allow-modals allow-popups allow-popups-to-escape-sandbox allow-presentation"
+              allow="clipboard-read; clipboard-write; fullscreen"
               className="h-full w-full border-0 bg-white"
             />
           </div>
@@ -554,8 +563,6 @@ export default function SpreadsheetPage() {
     </div>
   );
 }
-
-
 
 
 
