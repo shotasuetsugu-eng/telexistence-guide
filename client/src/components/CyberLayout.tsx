@@ -22,10 +22,11 @@ import {BookOpen,
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-type ManagedLinkKey = "updateSchedule" | "progressSheet";
+type ManagedLinkKey = "updateSchedule" | "portal" | "progressSheet";
 
 const managedLinkDefaults: Record<ManagedLinkKey, { label: string; url: string; icon: typeof CalendarDays }> = {
   updateSchedule: { label: "update schedule", url: "", icon: CalendarDays },
+  portal: { label: "portal", url: "", icon: ExternalLink },
   progressSheet: { label: "進捗状況引継ぎシート", url: "", icon: ClipboardList },
 };
 
@@ -35,6 +36,8 @@ const publicNavItems = [
   { icon: BookOpen, label: "Smartboarding", path: "/procedures" },
   { icon: CheckSquare, label: "チェックリスト", path: "/checklists" },
   { icon: CalendarDays, label: "update schedule", linkKey: "updateSchedule" as ManagedLinkKey },
+  { icon: ExternalLink, label: "portal", linkKey: "portal" as ManagedLinkKey },
+  { icon: ClipboardList, label: "進捗状況引継ぎシート", linkKey: "progressSheet" as ManagedLinkKey },
   { icon: Search, label: "検索", path: "/search" },
 ];
 
@@ -359,31 +362,6 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          {renderManagedLink("progressSheet")}
-          {isAdmin && editingLinkKey === "progressSheet" && (
-            <div className="px-3 py-2 space-y-2">
-              <input
-                type="text"
-                value={editingLinkLabel}
-                onChange={(e) => setEditingLinkLabel(e.target.value)}
-                placeholder="表示名"
-                className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
-                autoFocus
-              />
-              <input
-                type="url"
-                value={editingLinkUrl}
-                onChange={(e) => setEditingLinkUrl(e.target.value)}
-                placeholder="https://docs.google.com/spreadsheets/..."
-                className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
-              />
-              <div className="flex gap-2">
-                <button onClick={saveEditingLink} className="flex-1 px-2 py-1 text-xs rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors" disabled={saveLinkSettingsMutation.isPending}>保存</button>
-                <button onClick={() => setEditingLinkKey(null)} className="flex-1 px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">キャンセル</button>
-              </div>
-            </div>
-          )}
-
           <div className="my-3 border-t border-sidebar-border" />
           <p className="mono-sub px-3 py-2">INTEGRATIONS</p>
           {integrationNavItems.map((item) => {
@@ -521,7 +499,6 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
                 </button>
               );
             })}
-            {renderManagedLink("progressSheet", true)}
             {isAdmin && adminNavItems.map((item) => {
               const isActive = location === item.path;
               return (
