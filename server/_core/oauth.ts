@@ -26,6 +26,7 @@ export function registerOAuthRoutes(app: Express) {
     url.searchParams.set("redirect_uri", redirectUri);
     url.searchParams.set("response_type", "code");
     url.searchParams.set("scope", "openid email profile");
+    url.searchParams.set("hd", "tx-inc.com");
     url.searchParams.set("state", "drive");
 
     res.redirect(url.toString());
@@ -86,7 +87,7 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      if (!userInfo.email.endsWith("@tx-inc.com")) {
+      if (!userInfo.email.trim().toLowerCase().endsWith("@tx-inc.com")) {
         res.status(403).send("@tx-inc.com のアカウントのみ利用できます");
         return;
       }
@@ -131,7 +132,7 @@ export function registerOAuthRoutes(app: Express) {
         maxAge: ONE_YEAR_MS,
       });
 
-      res.redirect(302, "/drive");
+      res.redirect(302, "/");
     } catch (error) {
       console.error("[OAuth] Google callback failed", error);
       res.status(500).json({ error: "Google OAuth callback failed" });

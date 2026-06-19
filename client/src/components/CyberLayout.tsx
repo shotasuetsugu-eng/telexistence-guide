@@ -82,13 +82,15 @@ function saveReadSignatures(value: Record<string, string>) {
 }
 
 export default function CyberLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const utils = trpc.useUtils();
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = user?.role === "admin";
   const { data: procedures = [] } = trpc.procedures.list.useQuery();
   const { data: checklists = [] } = trpc.checklists.list.useQuery();
+  const { data: categories = [] } = trpc.categories.list.useQuery();
+  const { data: documents = [] } = trpc.documents.list.useQuery();
   const { data: linkSettings = [] } = trpc.linkSettings.list.useQuery();
   const [deploySchedules, setDeploySchedules] = useState<any[]>([]);
   const [mapStores, setMapStores] = useState<any[]>([]);
@@ -158,13 +160,36 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
       .catch(() => {});
   }, []);
 
-  const navSignatures = useMemo(() => ({
-    "/procedures": compactSignature(procedures),
-    "/checklists": compactSignature(checklists),
-    "/fs-team-calendar": compactSignature(deploySchedules),
-    "/deploy-calendar": compactSignature(deploySchedules),
-    "/map": compactSignature(mapStores),
-  }), [procedures, checklists, deploySchedules, mapStores]);
+  const navSignatures = useMemo(() => {
+    const linkSignature = (keys: string[]) => JSON.stringify(
+      linkSettings.filter((item) => keys.includes(item.key))
+    );
+    const dashboardSignature = JSON.stringify({
+      categories: compactSignature(categories),
+      procedures: compactSignature(procedures),
+      checklists: compactSignature(checklists),
+      documents: compactSignature(documents),
+      deploySchedules: compactSignature(deploySchedules),
+    });
+
+    return {
+      "/": dashboardSignature,
+      "/procedures": compactSignature(procedures),
+      "/checklists": compactSignature(checklists),
+      "/documents": compactSignature(documents),
+      "/search": JSON.stringify({ procedures: compactSignature(procedures), documents: compactSignature(documents) }),
+      "/fs-team-calendar": compactSignature(deploySchedules),
+      "/deploy-calendar": compactSignature(deploySchedules),
+      "/map": compactSignature(mapStores),
+      "/shift": linkSignature(["shiftFs", "shiftTs"]),
+      "/stores": linkSignature(["storeList"]),
+      "/integrations": linkSignature(["dashboardProd", "dashboardStg", "autailProd", "autailStg"]),
+      "managed:updateSchedule": linkSignature(["updateSchedule"]),
+      "managed:portal": linkSignature(["portal"]),
+      "managed:progressSheet": linkSignature(["progressSheet"]),
+      "managed:manualDiscrepancyReport": linkSignature(["manualDiscrepancyReport"]),
+    };
+  }, [categories, procedures, checklists, documents, deploySchedules, mapStores, linkSettings]);
 
   useEffect(() => {
     setReadSignatures((current) => {
@@ -203,6 +228,17 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     return Boolean(signature && signature !== "[]" && readSignatures[path] !== undefined && readSignatures[path] !== signature);
   };
 
+  const markNoticeRead = (path: string) => {
+    const signature = navSignatures[path as keyof typeof navSignatures];
+    if (!signature || signature === "[]") return;
+    setReadSignatures((current) => {
+      if (current[path] === signature) return current;
+      const next = { ...current, [path]: signature };
+      saveReadSignatures(next);
+      return next;
+    });
+  };
+
   const normalizeUrl = (value: string) => {
     const url = value.trim();
     if (!url) return "";
@@ -239,6 +275,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
       ? (mobile ? "text-foreground hover:bg-muted" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")
       : (mobile ? "text-muted-foreground" : "text-muted-foreground");
     const href = url || undefined;
+    const noticePath = `managed:${key}`;
 
     return (
       <div className="group relative">
@@ -247,17 +284,22 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => mobile && setMobileMenuOpen(false)}
+            onClick={() => {
+              markNoticeRead(noticePath);
+              if (mobile) setMobileMenuOpen(false);
+            }}
             className={`${baseClass} ${textClass}`}
           >
             <Icon className="h-4 w-4 shrink-0" />
             <span className="font-medium flex-1 text-left">{label}</span>
+            <NewBadge path={noticePath} />
             <ExternalLink className="h-3 w-3 opacity-60" />
           </a>
         ) : (
           <div className={`${baseClass} ${textClass}`}>
             <Icon className="h-4 w-4 shrink-0" />
             <span className="font-medium flex-1 text-left">{label}</span>
+            <NewBadge path={noticePath} />
           </div>
         )}
         {isAdmin && !editingLinkKey && !mobile && (
@@ -280,6 +322,39 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
       </span>
     ) : null
   );
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center p-6">
+        <div className="mono-sub">// AUTHENTICATING...</div>
+      </div>
+    );
+  }
+
+  if (!user && location !== "/admin") {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center p-6 crt-scanlines">
+        <div className="cyber-border w-full max-w-md rounded-lg bg-card p-8 text-center space-y-5">
+          <h1 className="text-2xl font-black text-foreground">Telexistence Guide</h1>
+          <p className="text-sm text-muted-foreground">@tx-inc.com のGoogleアカウントでログインしてください。</p>
+          <button
+            type="button"
+            onClick={() => { window.location.href = "/app-auth"; }}
+            className="w-full rounded-md bg-primary px-4 py-3 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+          >
+            Googleでログイン
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocation("/admin")}
+            className="text-xs text-muted-foreground hover:text-primary"
+          >
+            管理者ログイン
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background crt-scanlines">

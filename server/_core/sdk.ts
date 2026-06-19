@@ -305,6 +305,12 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
+    const isPasswordAdmin = user.openId === "admin" && user.loginMethod === "password";
+    const isCompanyAccount = user.email?.trim().toLowerCase().endsWith("@tx-inc.com") ?? false;
+    if (!isPasswordAdmin && !isCompanyAccount) {
+      throw ForbiddenError("Only @tx-inc.com accounts are allowed");
+    }
+
     await db.upsertUser({
       openId: user.openId,
       lastSignedIn: signedInAt,

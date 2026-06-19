@@ -1,4 +1,4 @@
-import { eq, like, or, desc, asc, sql } from "drizzle-orm";
+import { eq, like, or, desc, asc, sql, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
@@ -348,6 +348,24 @@ export async function listAdminEmails() {
       email: user.email!,
       protected: user.email === ENV.ownerEmail,
     }));
+}
+
+export async function listOnlineUsers() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const onlineSince = new Date(Date.now() - 2 * 60 * 1000);
+  return db
+    .select({
+      openId: users.openId,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      lastActiveAt: users.lastSignedIn,
+    })
+    .from(users)
+    .where(gte(users.lastSignedIn, onlineSince))
+    .orderBy(desc(users.lastSignedIn));
 }
 
 export async function addAdminEmail(email: string) {

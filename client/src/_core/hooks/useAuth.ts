@@ -17,6 +17,12 @@ export function useAuth(options?: UseAuthOptions) {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  trpc.auth.heartbeat.useQuery(undefined, {
+    enabled: Boolean(meQuery.data),
+    retry: false,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
 
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {

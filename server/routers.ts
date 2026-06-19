@@ -65,9 +65,13 @@ export const appRouter = router({
         return db.removeAdminEmail(input.email);
       }),
   }),
+  onlineUsers: router({
+    list: adminProcedure.query(async () => db.listOnlineUsers()),
+  }),
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    heartbeat: protectedProcedure.query(() => ({ success: true } as const)),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });

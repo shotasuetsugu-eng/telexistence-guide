@@ -3,9 +3,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree } from "lucide-react";
+import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree, Users, RefreshCw } from "lucide-react";
 
-type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins";
+type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "online";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -84,6 +84,7 @@ export default function AdminPanel() {
     { id: "checklists" as Tab, label: "チェックリスト", icon: CheckSquare },
     { id: "documents" as Tab, label: "資料", icon: FileText },
     { id: "admins" as Tab, label: "管理者", icon: FileText },
+    { id: "online" as Tab, label: "オンライン", icon: Users },
   ];
 
   return (
@@ -117,7 +118,55 @@ export default function AdminPanel() {
       {activeTab === "checklists" && <ChecklistsAdmin />}
       {activeTab === "documents" && <DocumentsAdmin />}
       {activeTab === "admins" && <AdminUsersAdmin />}
+      {activeTab === "online" && <OnlineUsersAdmin />}
     </div>
+  );
+}
+
+function OnlineUsersAdmin() {
+  const { data: users = [], isLoading, refetch, isFetching } = trpc.onlineUsers.list.useQuery(undefined, {
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
+
+  return (
+    <section className="cyber-border rounded-lg bg-card p-4 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-foreground">現在ログイン中</h2>
+          <p className="text-xs text-muted-foreground">直近2分以内に通信したユーザーを表示します。</p>
+        </div>
+        <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          更新
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-24 rounded bg-muted animate-pulse" />
+      ) : users.length === 0 ? (
+        <div className="rounded border border-border bg-background p-5 text-sm text-muted-foreground">オンラインユーザーはいません。</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px] text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr><th className="p-2">状態</th><th className="p-2">名前</th><th className="p-2">メール</th><th className="p-2">権限</th><th className="p-2">最終通信</th></tr>
+            </thead>
+            <tbody>
+              {users.map((item) => (
+                <tr key={item.openId} className="border-t border-border">
+                  <td className="p-2"><span className="inline-flex items-center gap-2 font-semibold text-cyber-green"><span className="h-2 w-2 rounded-full bg-cyber-green" />オンライン</span></td>
+                  <td className="p-2 font-medium text-foreground">{item.name || "-"}</td>
+                  <td className="p-2 text-muted-foreground">{item.email || "管理者パスワード"}</td>
+                  <td className="p-2">{item.role === "admin" ? "管理者" : "ユーザー"}</td>
+                  <td className="p-2 whitespace-nowrap text-muted-foreground">{new Date(item.lastActiveAt).toLocaleString("ja-JP")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
