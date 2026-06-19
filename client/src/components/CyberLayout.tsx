@@ -22,12 +22,13 @@ import {BookOpen,
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-type ManagedLinkKey = "updateSchedule" | "portal" | "progressSheet";
+type ManagedLinkKey = "updateSchedule" | "portal" | "progressSheet" | "manualDiscrepancyReport";
 
 const managedLinkDefaults: Record<ManagedLinkKey, { label: string; url: string; icon: typeof CalendarDays }> = {
   updateSchedule: { label: "update schedule", url: "", icon: CalendarDays },
   portal: { label: "portal", url: "", icon: ExternalLink },
   progressSheet: { label: "進捗状況引継ぎシート", url: "", icon: ClipboardList },
+  manualDiscrepancyReport: { label: "マニュアル相違報告", url: "", icon: FileText },
 };
 
 const publicNavItems = [
@@ -38,6 +39,7 @@ const publicNavItems = [
   { icon: CalendarDays, label: "update schedule", linkKey: "updateSchedule" as ManagedLinkKey },
   { icon: ExternalLink, label: "portal", linkKey: "portal" as ManagedLinkKey },
   { icon: ClipboardList, label: "進捗状況引継ぎシート", linkKey: "progressSheet" as ManagedLinkKey },
+  { icon: FileText, label: "マニュアル相違報告", linkKey: "manualDiscrepancyReport" as ManagedLinkKey },
   { icon: Search, label: "検索", path: "/search" },
 ];
 
