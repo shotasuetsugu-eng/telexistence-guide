@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, CheckSquare, FileText, Layers } from "lucide-react";
+import { BookOpen, CalendarDays, CheckSquare, ExternalLink, FileText, Layers } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -121,16 +121,21 @@ export default function Home() {
   const { data: procedures = [] } = trpc.procedures.list.useQuery();
   const { data: checklists = [] } = trpc.checklists.list.useQuery();
   const { data: documents = [] } = trpc.documents.list.useQuery();
+  const { data: linkSettings = [] } = trpc.linkSettings.list.useQuery();
   const [deploySummary, setDeploySummary] = useState({ today: 0, month: 0, active: 0, done: 0, members: 0 });
   const [deploySchedules, setDeploySchedules] = useState<DeploySchedule[]>([]);
   const [deployOptions, setDeployOptions] = useState<DeployOption[]>([]);
   const [detailSchedule, setDetailSchedule] = useState<DeploySchedule | null>(null);
 
   useEffect(() => {
-    const month = new Date().toISOString().slice(0, 7);
-    fetch(`/api/deploy-schedules?month=${month}`)
-      .then((response) => response.ok ? response.json() : [])
-      .then((items) => {
+    let mounted = true;
+
+    const loadDeploySchedules = () => {
+      const month = new Date().toISOString().slice(0, 7);
+      fetch(`/api/deploy-schedules?month=${month}`, { cache: "no-store" })
+        .then((response) => response.ok ? response.json() : [])
+        .then((items) => {
+          if (!mounted) return;
         const today = new Date().toISOString().slice(0, 10);
         const schedules = Array.isArray(items) ? items : [];
         setDeploySchedules(schedules);
@@ -142,14 +147,45 @@ export default function Home() {
           done: schedules.filter((item: any) => item.completedAt).length,
           members: members.size,
         });
-      })
-      .catch(() => {});
+        })
+        .catch(() => {});
+    };
 
+    const refreshWhenVisible = () => {
+      if (!document.hidden) loadDeploySchedules();
+    };
+
+    loadDeploySchedules();
+    const refreshTimer = window.setInterval(loadDeploySchedules, 30000);
+    window.addEventListener("focus", loadDeploySchedules);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", loadDeploySchedules);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
+
+  useEffect(() => {
     fetch("/api/deploy-options")
       .then((response) => response.ok ? response.json() : [])
       .then((items) => setDeployOptions(Array.isArray(items) ? items : []))
       .catch(() => {});
   }, []);
+
+  const managedLinkMap = useMemo(
+    () => new Map(linkSettings.map((item) => [item.key, item.url] as const)),
+    [linkSettings]
+  );
+
+  const openManagedLink = (key: "portal" | "updateSchedule") => {
+    const value = String(managedLinkMap.get(key) || "").trim();
+    if (!value) return;
+    const url = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   const upcomingDeploys = deploySchedules
     .slice()
@@ -428,14 +464,15 @@ export default function Home() {
       {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
-          onClick={() => setLocation("/procedures")}
+          onClick={() => openManagedLink("portal")}
+          disabled={!managedLinkMap.get("portal")}
           className="cyber-border rounded-lg p-5 bg-card hover:bg-card/80 transition-all text-left group"
         >
-          <BookOpen className="h-6 w-6 text-primary mb-2" />
+          <ExternalLink className="h-6 w-6 text-primary mb-2" />
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-            手順書を見る
+            Portal
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">設置作業の手順を確認</p>
+          <p className="text-xs text-muted-foreground mt-1">Portalを開く</p>
         </button>
 
         <button
@@ -450,14 +487,15 @@ export default function Home() {
         </button>
 
         <button
-          onClick={() => setLocation("/documents")}
+          onClick={() => openManagedLink("updateSchedule")}
+          disabled={!managedLinkMap.get("updateSchedule")}
           className="cyber-border rounded-lg p-5 bg-card hover:bg-card/80 transition-all text-left group"
         >
-          <FileText className="h-6 w-6 text-cyber-red mb-2" />
+          <CalendarDays className="h-6 w-6 text-cyber-red mb-2" />
           <h3 className="font-semibold text-foreground group-hover:text-cyber-red transition-colors">
-            資料一覧
+            Update Schedule
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">PDF・画像をダウンロード</p>
+          <p className="text-xs text-muted-foreground mt-1">更新スケジュールを開く</p>
         </button>
       </div>
 
