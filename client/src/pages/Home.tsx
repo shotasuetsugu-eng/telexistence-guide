@@ -187,7 +187,8 @@ export default function Home() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const upcomingDeploys = deploySchedules
+  const activeDeploySchedules = deploySchedules.filter((item) => deployStatus(item) !== "完了");
+  const upcomingDeploys = activeDeploySchedules
     .slice()
     .sort((a, b) => a.deployDate.localeCompare(b.deployDate))
     .slice(0, 5);
@@ -343,7 +344,7 @@ export default function Home() {
               {calendarDays.map((day, index) => {
                 const date = day ? `${currentMonth}-${String(day).padStart(2, "0")}` : "";
                 const daySchedules = date
-                    ? deploySchedules.filter((item) => isDateInSchedule(item, date))
+                    ? activeDeploySchedules.filter((item) => isDateInSchedule(item, date))
                     : [];
                   const hasDeploy = daySchedules.length > 0;
                   const primaryTask = daySchedules[0]
