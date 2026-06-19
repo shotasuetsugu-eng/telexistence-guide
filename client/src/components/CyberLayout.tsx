@@ -19,14 +19,22 @@ import {BookOpen,
 	  ExternalLink,
   ClipboardList,
   Pencil} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+
+type ManagedLinkKey = "updateSchedule" | "progressSheet";
+
+const managedLinkDefaults: Record<ManagedLinkKey, { label: string; url: string; icon: typeof CalendarDays }> = {
+  updateSchedule: { label: "update schedule", url: "", icon: CalendarDays },
+  progressSheet: { label: "進捗状況引継ぎシート", url: "", icon: ClipboardList },
+};
 
 const publicNavItems = [
   { icon: Home, label: "ダッシュボード", path: "/" },
   { icon: CalendarDays, label: "FS Team Calendar", path: "/fs-team-calendar" },
   { icon: BookOpen, label: "Smartboarding", path: "/procedures" },
   { icon: CheckSquare, label: "チェックリスト", path: "/checklists" },
-  { icon: FileText, label: "資料管理", path: "/documents" },
+  { icon: CalendarDays, label: "update schedule", linkKey: "updateSchedule" as ManagedLinkKey },
   { icon: Search, label: "検索", path: "/search" },
 ];
 
@@ -70,20 +78,67 @@ function saveReadSignatures(value: Record<string, string>) {
 
 export default function CyberLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
+  const utils = trpc.useUtils();
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = user?.role === "admin";
   const { data: procedures = [] } = trpc.procedures.list.useQuery();
   const { data: checklists = [] } = trpc.checklists.list.useQuery();
-  const { data: documents = [] } = trpc.documents.list.useQuery();
+  const { data: linkSettings = [] } = trpc.linkSettings.list.useQuery();
   const [deploySchedules, setDeploySchedules] = useState<any[]>([]);
   const [mapStores, setMapStores] = useState<any[]>([]);
   const [readSignatures, setReadSignatures] = useState<Record<string, string>>(() => loadReadSignatures());
-  const [progressSheetUrl, setProgressSheetUrl] = useState<string>(
-    () => window.localStorage.getItem("tx.progressSheetUrl") || ""
-  );
-  const [editingSheet, setEditingSheet] = useState(false);
-  const [sheetInput, setSheetInput] = useState("");
+  const [editingLinkKey, setEditingLinkKey] = useState<ManagedLinkKey | null>(null);
+  const [editingLinkLabel, setEditingLinkLabel] = useState("");
+  const [editingLinkUrl, setEditingLinkUrl] = useState("");
+  const progressSheetMigratedRef = useRef(false);
+
+  const saveLinkSettingsMutation = trpc.linkSettings.save.useMutation({
+    onSuccess: async () => {
+      await utils.linkSettings.list.invalidate();
+      setEditingLinkKey(null);
+      toast.success("リンクを保存しました");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const managedLinks = useMemo(() => {
+    const saved = new globalThis.Map(linkSettings.map((item) => [item.key, item] as const));
+    return (Object.keys(managedLinkDefaults) as ManagedLinkKey[]).reduce((acc, key) => {
+      const item = saved.get(key);
+      acc[key] = {
+        label: item?.label || managedLinkDefaults[key].label,
+        url: item?.url || managedLinkDefaults[key].url,
+      };
+      return acc;
+    }, {} as Record<ManagedLinkKey, { label: string; url: string }>);
+  }, [linkSettings]);
+
+  useEffect(() => {
+    if (progressSheetMigratedRef.current) return;
+    const legacyProgressSheetUrl = window.localStorage.getItem("tx.progressSheetUrl") || "";
+    const currentProgressSheetUrl = normalizeUrl(managedLinks.progressSheet.url);
+
+    if (!legacyProgressSheetUrl) {
+      progressSheetMigratedRef.current = true;
+      return;
+    }
+
+    if (!currentProgressSheetUrl) {
+      progressSheetMigratedRef.current = true;
+      saveLinkSettingsMutation.mutate([
+        {
+          key: "progressSheet",
+          label: managedLinkDefaults.progressSheet.label,
+          url: normalizeUrl(legacyProgressSheetUrl),
+        },
+      ]);
+      return;
+    }
+
+    window.localStorage.removeItem("tx.progressSheetUrl");
+    progressSheetMigratedRef.current = true;
+  }, [managedLinks.progressSheet.url]);
 
   useEffect(() => {
     const month = new Date().toISOString().slice(0, 7);
@@ -101,11 +156,10 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
   const navSignatures = useMemo(() => ({
     "/procedures": compactSignature(procedures),
     "/checklists": compactSignature(checklists),
-    "/documents": compactSignature(documents),
     "/fs-team-calendar": compactSignature(deploySchedules),
     "/deploy-calendar": compactSignature(deploySchedules),
     "/map": compactSignature(mapStores),
-  }), [procedures, checklists, documents, deploySchedules, mapStores]);
+  }), [procedures, checklists, deploySchedules, mapStores]);
 
   useEffect(() => {
     setReadSignatures((current) => {
@@ -144,6 +198,76 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     return Boolean(signature && signature !== "[]" && readSignatures[path] !== undefined && readSignatures[path] !== signature);
   };
 
+  const normalizeUrl = (value: string) => {
+    const url = value.trim();
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `https://${url}`;
+  };
+
+  const startEditingLink = (key: ManagedLinkKey) => {
+    setEditingLinkKey(key);
+    setEditingLinkLabel(managedLinks[key].label);
+    setEditingLinkUrl(managedLinks[key].url);
+  };
+
+  const saveEditingLink = () => {
+    if (!editingLinkKey) return;
+    saveLinkSettingsMutation.mutate([
+      {
+        key: editingLinkKey,
+        label: editingLinkLabel.trim() || managedLinkDefaults[editingLinkKey].label,
+        url: normalizeUrl(editingLinkUrl),
+      },
+    ]);
+  };
+
+  const renderManagedLink = (key: ManagedLinkKey, mobile = false) => {
+    const item = managedLinks[key];
+    const label = item.label || managedLinkDefaults[key].label;
+    const url = normalizeUrl(item.url);
+    const Icon = managedLinkDefaults[key].icon;
+    const baseClass = mobile
+      ? "w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm"
+      : "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm";
+    const textClass = url
+      ? (mobile ? "text-foreground hover:bg-muted" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")
+      : (mobile ? "text-muted-foreground" : "text-muted-foreground");
+    const href = url || undefined;
+
+    return (
+      <div className="group relative">
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => mobile && setMobileMenuOpen(false)}
+            className={`${baseClass} ${textClass}`}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="font-medium flex-1 text-left">{label}</span>
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+        ) : (
+          <div className={`${baseClass} ${textClass}`}>
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="font-medium flex-1 text-left">{label}</span>
+          </div>
+        )}
+        {isAdmin && !editingLinkKey && !mobile && (
+          <button
+            onClick={() => startEditingLink(key)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-primary transition-all"
+            title="リンクを設定"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const NewBadge = ({ path }: { path: string }) => (
     hasNewNotice(path) ? (
       <span className="ml-auto rounded border border-amber-300/70 bg-amber-300/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-200 shadow-[0_0_10px_rgba(252,211,77,0.35)]">
@@ -175,8 +299,49 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           <p className="mono-sub px-3 py-2">NAVIGATION</p>
-          {publicNavItems.map((item) => {
+          {publicNavItems.map((item: any) => {
             const isActive = location === item.path;
+            if (item.linkKey) {
+              return (
+                <div key={item.linkKey} className="relative">
+                  {renderManagedLink(item.linkKey)}
+                  {isAdmin && editingLinkKey === item.linkKey && (
+                    <div className="px-3 py-2 space-y-2">
+                      <input
+                        type="text"
+                        value={editingLinkLabel}
+                        onChange={(e) => setEditingLinkLabel(e.target.value)}
+                        placeholder="表示名"
+                        className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
+                        autoFocus
+                      />
+                      <input
+                        type="url"
+                        value={editingLinkUrl}
+                        onChange={(e) => setEditingLinkUrl(e.target.value)}
+                        placeholder="https://docs.google.com/..."
+                        className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={saveEditingLink}
+                          className="flex-1 px-2 py-1 text-xs rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+                          disabled={saveLinkSettingsMutation.isPending}
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setEditingLinkKey(null)}
+                          className="flex-1 px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            }
             return (
               <button
                 key={item.path}
@@ -194,31 +359,27 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
             );
           })}
 
-          <div className="group relative">
-            {progressSheetUrl ? (
-              <a href={progressSheetUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                <ClipboardList className="h-4 w-4 shrink-0" />
-                <span className="font-medium flex-1">進捗状況引継ぎシート</span>
-                <ExternalLink className="h-3 w-3 opacity-50" />
-              </a>
-            ) : (
-              <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-muted-foreground">
-                <ClipboardList className="h-4 w-4 shrink-0" />
-                <span className="font-medium flex-1">進捗状況引継ぎシート</span>
-              </div>
-            )}
-            {isAdmin && !editingSheet && (
-              <button onClick={() => { setSheetInput(progressSheetUrl); setEditingSheet(true); }} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-primary transition-all" title="リンクを設定">
-                <Pencil className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-          {isAdmin && editingSheet && (
+          {renderManagedLink("progressSheet")}
+          {isAdmin && editingLinkKey === "progressSheet" && (
             <div className="px-3 py-2 space-y-2">
-              <input type="url" value={sheetInput} onChange={(e) => setSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/..." className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground" autoFocus />
+              <input
+                type="text"
+                value={editingLinkLabel}
+                onChange={(e) => setEditingLinkLabel(e.target.value)}
+                placeholder="表示名"
+                className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
+                autoFocus
+              />
+              <input
+                type="url"
+                value={editingLinkUrl}
+                onChange={(e) => setEditingLinkUrl(e.target.value)}
+                placeholder="https://docs.google.com/spreadsheets/..."
+                className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground"
+              />
               <div className="flex gap-2">
-                <button onClick={() => { window.localStorage.setItem("tx.progressSheetUrl", sheetInput); setProgressSheetUrl(sheetInput); setEditingSheet(false); }} className="flex-1 px-2 py-1 text-xs rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors">保存</button>
-                <button onClick={() => setEditingSheet(false)} className="flex-1 px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">キャンセル</button>
+                <button onClick={saveEditingLink} className="flex-1 px-2 py-1 text-xs rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors" disabled={saveLinkSettingsMutation.isPending}>保存</button>
+                <button onClick={() => setEditingLinkKey(null)} className="flex-1 px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">キャンセル</button>
               </div>
             </div>
           )}
@@ -319,7 +480,14 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur pt-14">
           <nav className="p-4 space-y-1">
-            {publicNavItems.map((item) => {
+            {publicNavItems.map((item: any) => {
+              if (item.linkKey) {
+                return (
+                  <div key={item.linkKey} className="space-y-1">
+                    {renderManagedLink(item.linkKey, true)}
+                  </div>
+                );
+              }
               const isActive = location === item.path;
               return (
                 <button
@@ -353,6 +521,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
                 </button>
               );
             })}
+            {renderManagedLink("progressSheet", true)}
             {isAdmin && adminNavItems.map((item) => {
               const isActive = location === item.path;
               return (

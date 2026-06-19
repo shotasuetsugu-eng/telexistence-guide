@@ -12,7 +12,9 @@ type LinkKey =
   | "dashboardProd"
   | "dashboardStg"
   | "autailProd"
-  | "autailStg";
+  | "autailStg"
+  | "updateSchedule"
+  | "progressSheet";
 
 type LinkItem = {
   key: LinkKey;
@@ -28,6 +30,8 @@ const defaultLinks: Record<LinkKey, { title: string; label: string; url: string 
   dashboardStg: { title: "Dashboard STG", label: "STG", url: "https://stg.portal.telexistence.org/stores" },
   autailProd: { title: "Autail PROD", label: "PROD", url: "https://retail.telexistence.org/deployment" },
   autailStg: { title: "Autail STG", label: "STG", url: "https://retail.stg.telexistence.org/deployment" },
+  updateSchedule: { title: "Update Schedule", label: "update schedule", url: "" },
+  progressSheet: { title: "進捗状況引継ぎシート", label: "進捗状況引継ぎシート", url: "" },
 };
 
 const keys = Object.keys(defaultLinks) as LinkKey[];
@@ -102,7 +106,7 @@ export default function Integrations() {
   };
 
   const handleSave = () => {
-    const saveKeys: LinkKey[] = ["dashboardProd", "dashboardStg", "autailProd", "autailStg"];
+    const saveKeys: LinkKey[] = ["dashboardProd", "dashboardStg", "autailProd", "autailStg", "updateSchedule", "progressSheet"];
 
     const items = saveKeys.map((key) => ({
       key,
@@ -114,6 +118,7 @@ export default function Integrations() {
   };
 
   const groups: Array<{ title: string; items: LinkKey[] }> = [
+    { title: "Schedule", items: ["updateSchedule", "progressSheet"] },
     { title: "Dashboard", items: ["dashboardProd", "dashboardStg"] },
     { title: "Autail", items: ["autailProd", "autailStg"] },
   ];
