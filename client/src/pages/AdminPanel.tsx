@@ -3,9 +3,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree, Users, RefreshCw, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree, Users, RefreshCw, SlidersHorizontal, RotateCcw, PanelsTopLeft } from "lucide-react";
 
-type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "online" | "appearance";
+type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "online" | "appearance" | "builder";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -108,6 +108,7 @@ export default function AdminPanel() {
     { id: "admins" as Tab, label: "管理者", icon: FileText },
     { id: "online" as Tab, label: "オンライン", icon: Users },
     { id: "appearance" as Tab, label: "表示設定", icon: SlidersHorizontal },
+    { id: "builder" as Tab, label: "サイト編集", icon: PanelsTopLeft },
   ];
 
   return (
@@ -143,6 +144,18 @@ export default function AdminPanel() {
       {activeTab === "admins" && <AdminUsersAdmin />}
       {activeTab === "online" && <OnlineUsersAdmin />}
       {activeTab === "appearance" && <AppearanceAdmin />}
+      {activeTab === "builder" && (
+        <section className="cyber-border rounded-lg bg-card p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-foreground">ビジュアルサイト編集</h2>
+            <p className="mt-1 text-sm text-muted-foreground">実際の画面を見ながら、部品をドラッグ・移動・リサイズして編集します。</p>
+          </div>
+          <Button type="button" onClick={() => { window.location.href = "/site-editor"; }}>
+            <PanelsTopLeft className="mr-2 h-4 w-4" />
+            Dashboardを編集
+          </Button>
+        </section>
+      )}
     </div>
   );
 }

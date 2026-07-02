@@ -4,7 +4,8 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import DashboardRenderer from "./pages/DashboardRenderer";
+import SiteEditor from "./pages/SiteEditor";
 import Procedures from "./pages/Procedures";
 import ProcedureDetail from "./pages/ProcedureDetail";
 import Checklists from "./pages/Checklists";
@@ -24,7 +25,8 @@ function Router() {
   return (
     <CyberLayout>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/site-editor" component={SiteEditor} />
+        <Route path="/" component={DashboardRenderer} />
         <Route path="/procedures" component={Procedures} />
         <Route path="/procedures/:id" component={ProcedureDetail} />
         <Route path="/checklists" component={Checklists} />
