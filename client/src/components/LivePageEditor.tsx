@@ -1,15 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { Check, MousePointer2, Save, X } from "lucide-react";
+import { Check, ImagePlus, MousePointer2, Save, Type, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type Override = {
   selector: string;
   text?: string;
-  color?: string;
-  backgroundColor?: string;
-  fontSize?: string;
+  html?: string;
+  styles?: Record<string, string>;
 };
 
 function selectorFor(element: HTMLElement, root: HTMLElement) {
@@ -26,11 +25,22 @@ function selectorFor(element: HTMLElement, root: HTMLElement) {
   return parts.join(" > ");
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function LivePageEditor({ pagePath, settings }: { pagePath: string; settings: Array<{ key: string; url: string }> }) {
   const rootRef = useRef<HTMLElement | null>(null);
   const selectedRef = useRef<HTMLElement | null>(null);
   const [selected, setSelected] = useState<HTMLElement | null>(null);
   const [overrides, setOverrides] = useState<Override[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadActionRef = useRef<"image" | "video" | "backgroundImage" | "backgroundVideo">("image");
   const utils = trpc.useUtils();
   const settingKey = `liveEditor.${pagePath}`;
 
@@ -72,13 +82,36 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
     if (!element || !root) return;
     const selector = selectorFor(element, root);
     if (changes.text !== undefined) element.textContent = changes.text;
-    if (changes.color !== undefined) element.style.color = changes.color;
-    if (changes.backgroundColor !== undefined) element.style.backgroundColor = changes.backgroundColor;
-    if (changes.fontSize !== undefined) element.style.fontSize = changes.fontSize;
+    if (changes.html !== undefined) element.innerHTML = changes.html;
+    if (changes.styles) Object.assign(element.style, changes.styles);
     setOverrides((current) => {
       const previous = current.find((item) => item.selector === selector) || { selector };
-      return [...current.filter((item) => item.selector !== selector), { ...previous, ...changes }];
+      const next = {
+        ...previous,
+        ...changes,
+        styles: changes.styles ? { ...(previous.styles || {}), ...changes.styles } : previous.styles,
+      };
+      return [...current.filter((item) => item.selector !== selector), next];
     });
+  };
+
+  const setBackgroundVideo = (url: string) => {
+    const element = selectedRef.current;
+    if (!element || !url) return;
+    element.querySelector("[data-live-bg-video]")?.remove();
+    element.style.position = "relative";
+    element.style.overflow = "hidden";
+    element.insertAdjacentHTML(
+      "afterbegin",
+      `<video data-live-bg-video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none"><source src="${url.replace(/"/g, "&quot;")}"></video>`
+    );
+    Array.from(element.children).forEach((child) => {
+      if (!(child as HTMLElement).hasAttribute("data-live-bg-video")) {
+        (child as HTMLElement).style.position ||= "relative";
+        (child as HTMLElement).style.zIndex ||= "1";
+      }
+    });
+    update({ html: element.innerHTML, styles: { position: "relative", overflow: "hidden" } });
   };
 
   const saveMutation = trpc.linkSettings.save.useMutation({
@@ -88,6 +121,49 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
     },
     onError: (error) => toast.error(error.message),
   });
+
+  const uploadMutation = trpc.assets.upload.useMutation({
+    onSuccess: ({ url }) => {
+      const element = selectedRef.current;
+      if (!element) return;
+      const action = uploadActionRef.current;
+      if (action === "backgroundImage") {
+        update({ styles: { backgroundImage: `url("${url}")`, backgroundSize: "cover", backgroundPosition: "center" } });
+      } else if (action === "backgroundVideo") {
+        setBackgroundVideo(url);
+      } else if (action === "video") {
+        element.insertAdjacentHTML("beforeend", `<video controls playsinline style="display:block;width:100%;max-width:720px"><source src="${url}"></video>`);
+        update({ html: element.innerHTML });
+      } else {
+        element.insertAdjacentHTML("beforeend", `<img src="${url}" alt="" style="display:block;max-width:100%;height:auto">`);
+        update({ html: element.innerHTML });
+      }
+      toast.success("ファイルを追加しました");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const chooseFile = (action: typeof uploadActionRef.current) => {
+    if (!selectedRef.current) {
+      toast.error("先に追加先をクリックしてください");
+      return;
+    }
+    uploadActionRef.current = action;
+    if (fileRef.current) {
+      fileRef.current.accept = action.toLowerCase().includes("video") ? "video/mp4,video/webm" : "image/*";
+      fileRef.current.click();
+    }
+  };
+
+  const uploadFile = async (file?: File) => {
+    if (!file) return;
+    uploadMutation.mutate({
+      folder: "procedures",
+      fileName: file.name,
+      mimeType: file.type,
+      fileData: await fileToBase64(file),
+    });
+  };
 
   return (
     <div data-live-editor-toolbar className="fixed bottom-4 left-1/2 z-[200] w-[min(920px,calc(100vw-24px))] -translate-x-1/2 rounded-md border border-primary bg-[#06110f] p-3 shadow-2xl">
@@ -104,22 +180,79 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
               onChange={(event) => update({ text: event.target.value })}
               aria-label="文字"
             />
-            <label className="text-xs">文字色 <input type="color" onChange={(event) => update({ color: event.target.value })} /></label>
-            <label className="text-xs">背景 <input type="color" onChange={(event) => update({ backgroundColor: event.target.value })} /></label>
+            <label className="text-xs">文字色 <input type="color" onChange={(event) => update({ styles: { color: event.target.value } })} /></label>
+            <label className="text-xs">背景 <input type="color" onChange={(event) => update({ styles: { backgroundColor: event.target.value } })} /></label>
             <select
               className="rounded border border-border bg-background px-2 py-2 text-sm"
-              onChange={(event) => update({ fontSize: event.target.value })}
+              onChange={(event) => update({ styles: { fontSize: event.target.value } })}
               defaultValue=""
               aria-label="文字サイズ"
             >
               <option value="" disabled>文字サイズ</option>
               {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 64].map((size) => <option key={size} value={`${size}px`}>{size}px</option>)}
             </select>
+            <details className="relative">
+              <summary className="cursor-pointer rounded border border-border px-3 py-2 text-sm">レイアウト・背景</summary>
+              <div className="absolute bottom-12 right-0 z-10 grid w-[420px] grid-cols-2 gap-2 rounded border border-primary/40 bg-[#06110f] p-3 shadow-2xl">
+                <input placeholder="幅 例: 500px / 100%" onChange={(e) => update({ styles: { width: e.target.value } })} />
+                <input placeholder="高さ 例: 300px" onChange={(e) => update({ styles: { height: e.target.value } })} />
+                <input placeholder="内側余白 例: 24px" onChange={(e) => update({ styles: { padding: e.target.value } })} />
+                <input placeholder="外側余白 例: 16px" onChange={(e) => update({ styles: { margin: e.target.value } })} />
+                <input placeholder="角丸 例: 8px" onChange={(e) => update({ styles: { borderRadius: e.target.value } })} />
+                <input placeholder="背景画像URL" onChange={(e) => update({ styles: { backgroundImage: e.target.value ? `url("${e.target.value}")` : "", backgroundSize: "cover", backgroundPosition: "center" } })} />
+                <input placeholder="背景動画URL（MP4/WebM）" onBlur={(e) => setBackgroundVideo(e.target.value)} />
+                <select onChange={(e) => update({ styles: { display: e.target.value } })} defaultValue="">
+                  <option value="" disabled>レイアウト方式</option>
+                  <option value="block">通常</option>
+                  <option value="flex">横並び</option>
+                  <option value="grid">グリッド</option>
+                </select>
+                <select onChange={(e) => update({ styles: { gridTemplateColumns: e.target.value, display: "grid" } })} defaultValue="">
+                  <option value="" disabled>列数</option>
+                  <option value="1fr">1列</option>
+                  <option value="repeat(2, 1fr)">2列</option>
+                  <option value="repeat(3, 1fr)">3列</option>
+                  <option value="repeat(4, 1fr)">4列</option>
+                </select>
+                <input placeholder="横位置 例: 20px" onChange={(e) => update({ styles: { position: "relative", left: e.target.value } })} />
+                <input placeholder="縦位置 例: 20px" onChange={(e) => update({ styles: { position: "relative", top: e.target.value } })} />
+                <select onChange={(e) => update({ styles: { textAlign: e.target.value } })} defaultValue="">
+                  <option value="" disabled>文字配置</option>
+                  <option value="left">左</option>
+                  <option value="center">中央</option>
+                  <option value="right">右</option>
+                </select>
+                <select onChange={(e) => update({ styles: { justifyContent: e.target.value, alignItems: e.target.value } })} defaultValue="">
+                  <option value="" disabled>要素の配置</option>
+                  <option value="flex-start">先頭</option>
+                  <option value="center">中央</option>
+                  <option value="flex-end">末尾</option>
+                  <option value="space-between">均等</option>
+                </select>
+              </div>
+            </details>
+            <Button size="sm" variant="outline" onClick={() => chooseFile("image")}><ImagePlus className="mr-1 h-4 w-4" />画像</Button>
+            <Button size="sm" variant="outline" onClick={() => chooseFile("video")}><Video className="mr-1 h-4 w-4" />動画</Button>
+            <Button size="sm" variant="outline" onClick={() => chooseFile("backgroundImage")}>背景画像</Button>
+            <Button size="sm" variant="outline" onClick={() => chooseFile("backgroundVideo")}>背景動画</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const element = selectedRef.current;
+                if (!element) return;
+                element.insertAdjacentHTML("beforeend", '<div style="position:relative;z-index:2;padding:16px;color:#fff;font-size:32px;font-weight:700">文字を入力</div>');
+                update({ html: element.innerHTML });
+              }}
+            >
+              <Type className="mr-1 h-4 w-4" />文字追加
+            </Button>
           </>
         )}
         <Button onClick={() => saveMutation.mutate([{ key: settingKey, label: `${pagePath} visual overrides`, url: JSON.stringify(overrides) }])}>
           <Save className="mr-2 h-4 w-4" />保存
         </Button>
+        <input ref={fileRef} hidden type="file" onChange={(event) => uploadFile(event.target.files?.[0])} />
         <Button variant="outline" onClick={() => { window.location.href = pagePath; }}>
           <Check className="mr-2 h-4 w-4" />編集終了
         </Button>
@@ -137,9 +270,8 @@ export function applyLiveOverrides(pagePath: string, settings: Array<{ key: stri
       const element = root.querySelector<HTMLElement>(item.selector);
       if (!element) return;
       if (item.text !== undefined) element.textContent = item.text;
-      if (item.color) element.style.color = item.color;
-      if (item.backgroundColor) element.style.backgroundColor = item.backgroundColor;
-      if (item.fontSize) element.style.fontSize = item.fontSize;
+      if (item.html !== undefined) element.innerHTML = item.html;
+      if (item.styles) Object.assign(element.style, item.styles);
     });
   } catch {
     // Ignore invalid legacy editor data.

@@ -630,6 +630,16 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
           {children}
         </div>
       </main>
+      {isAdmin && !visualEditMode && location !== "/admin" && (
+        <button
+          type="button"
+          onClick={() => { window.location.href = `${location}?visual-edit=1`; }}
+          className="fixed bottom-5 right-5 z-[90] inline-flex items-center gap-2 rounded-md border border-primary bg-[#06110f] px-4 py-3 text-sm font-bold text-primary shadow-xl"
+        >
+          <Pencil className="h-4 w-4" />
+          このページを編集
+        </button>
+      )}
       {visualEditMode && <LivePageEditor pagePath={location} settings={linkSettings} />}
     </div>
   );
