@@ -9,7 +9,7 @@ import { getLoginUrl } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
-const OFFLINE_CACHE_NAME = "tx-guide-offline-v3";
+const OFFLINE_CACHE_NAME = "tx-guide-offline-v4";
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;

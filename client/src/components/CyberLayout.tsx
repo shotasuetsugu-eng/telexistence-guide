@@ -323,7 +323,10 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     ) : null
   );
 
-  if (authLoading) {
+  const isOfflineRouterSetup =
+    !navigator.onLine && (location === "/Wifi-setup" || location === "/router-setup");
+
+  if (authLoading && !isOfflineRouterSetup) {
     return (
       <div className="min-h-screen bg-background grid place-items-center p-6">
         <div className="mono-sub">// AUTHENTICATING...</div>
@@ -331,7 +334,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user && location !== "/admin") {
+  if (!user && location !== "/admin" && !isOfflineRouterSetup) {
     return (
       <div className="min-h-screen bg-background grid place-items-center p-6 crt-scanlines">
         <div className="cyber-border w-full max-w-md rounded-lg bg-card p-8 text-center space-y-5">
