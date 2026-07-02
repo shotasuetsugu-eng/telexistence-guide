@@ -379,3 +379,9 @@ button:active {
   }
 }
 
+.live-editor-selected {
+  outline: 2px solid #00f5d4 !important;
+  outline-offset: 3px;
+  cursor: pointer !important;
+}
+

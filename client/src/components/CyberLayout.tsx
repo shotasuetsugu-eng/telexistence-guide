@@ -21,6 +21,7 @@ import {BookOpen,
   Pencil} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import LivePageEditor, { applyLiveOverrides } from "./LivePageEditor";
 
 type ManagedLinkKey = "updateSchedule" | "portal" | "progressSheet" | "manualDiscrepancyReport";
 
@@ -87,6 +88,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isAdmin = user?.role === "admin";
+  const visualEditMode = isAdmin && new URLSearchParams(window.location.search).get("visual-edit") === "1";
   const { data: procedures = [] } = trpc.procedures.list.useQuery();
   const { data: checklists = [] } = trpc.checklists.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
@@ -209,6 +211,11 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
       "managed:manualDiscrepancyReport": linkSignature(["manualDiscrepancyReport"]),
     };
   }, [categories, procedures, checklists, documents, deploySchedules, mapStores, linkSettings]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => applyLiveOverrides(location, linkSettings), 0);
+    return () => window.clearTimeout(timer);
+  }, [location, linkSettings]);
 
   useEffect(() => {
     setReadSignatures((current) => {
@@ -623,6 +630,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
           {children}
         </div>
       </main>
+      {visualEditMode && <LivePageEditor pagePath={location} settings={linkSettings} />}
     </div>
   );
 }

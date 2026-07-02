@@ -150,9 +150,9 @@ export default function AdminPanel() {
             <h2 className="font-semibold text-foreground">ビジュアルサイト編集</h2>
             <p className="mt-1 text-sm text-muted-foreground">実際の画面を見ながら、部品をドラッグ・移動・リサイズして編集します。</p>
           </div>
-          <Button type="button" onClick={() => { window.location.href = "/site-editor"; }}>
+          <Button type="button" onClick={() => { window.location.href = "/?visual-edit=1"; }}>
             <PanelsTopLeft className="mr-2 h-4 w-4" />
-            Dashboardを編集
+            現在のDashboardを直接編集
           </Button>
         </section>
       )}
