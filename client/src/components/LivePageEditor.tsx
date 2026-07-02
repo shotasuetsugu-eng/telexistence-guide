@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { Check, ImagePlus, MousePointer2, Move, Save, Type, Video } from "lucide-react";
+import { Check, ImagePlus, MousePointer2, Move, Save, Type, Undo2, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -40,6 +40,8 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
   const [selected, setSelected] = useState<HTMLElement | null>(null);
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [moveMode, setMoveMode] = useState(false);
+  const historyRef = useRef<Array<{ element: HTMLElement; html: string; style: string; overrides: Override[] }>>([]);
+  const [historySize, setHistorySize] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadActionRef = useRef<"image" | "video" | "backgroundImage" | "backgroundVideo">("image");
   const utils = trpc.useUtils();
@@ -77,10 +79,20 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
     };
   }, []);
 
-  const update = (changes: Partial<Override>) => {
+  const update = (changes: Partial<Override>, recordHistory = true) => {
     const element = selectedRef.current;
     const root = rootRef.current;
     if (!element || !root) return;
+    if (recordHistory) {
+      historyRef.current.push({
+        element,
+        html: element.innerHTML,
+        style: element.style.cssText,
+        overrides,
+      });
+      if (historyRef.current.length > 100) historyRef.current.shift();
+      setHistorySize(historyRef.current.length);
+    }
     const selector = selectorFor(element, root);
     if (changes.text !== undefined) element.textContent = changes.text;
     if (changes.html !== undefined) element.innerHTML = changes.html;
@@ -94,6 +106,16 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
       };
       return [...current.filter((item) => item.selector !== selector), next];
     });
+  };
+
+  const undo = () => {
+    const previous = historyRef.current.pop();
+    if (!previous) return;
+    previous.element.innerHTML = previous.html;
+    previous.element.style.cssText = previous.style;
+    setOverrides(previous.overrides);
+    setHistorySize(historyRef.current.length);
+    toast.success("1つ前の編集に戻しました");
   };
 
   useEffect(() => {
@@ -111,6 +133,9 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
       const computed = window.getComputedStyle(element);
       const startLeft = Number.parseFloat(computed.left) || 0;
       const startTop = Number.parseFloat(computed.top) || 0;
+      const startHtml = element.innerHTML;
+      const startStyle = element.style.cssText;
+      const startOverrides = overrides;
       if (computed.position === "static") element.style.position = "relative";
 
       const pointerMove = (moveEvent: PointerEvent) => {
@@ -120,13 +145,15 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
       const pointerUp = () => {
         window.removeEventListener("pointermove", pointerMove);
         window.removeEventListener("pointerup", pointerUp);
+        historyRef.current.push({ element, html: startHtml, style: startStyle, overrides: startOverrides });
+        setHistorySize(historyRef.current.length);
         update({
           styles: {
             position: element.style.position || "relative",
             left: element.style.left || "0px",
             top: element.style.top || "0px",
           },
-        });
+        }, false);
       };
       window.addEventListener("pointermove", pointerMove);
       window.addEventListener("pointerup", pointerUp, { once: true });
@@ -303,6 +330,9 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
         )}
         <Button onClick={() => saveMutation.mutate([{ key: settingKey, label: `${pagePath} visual overrides`, url: JSON.stringify(overrides) }])}>
           <Save className="mr-2 h-4 w-4" />保存
+        </Button>
+        <Button variant="outline" onClick={undo} disabled={historySize === 0}>
+          <Undo2 className="mr-2 h-4 w-4" />1つ戻る
         </Button>
         <input ref={fileRef} hidden type="file" onChange={(event) => uploadFile(event.target.files?.[0])} />
         <Button variant="outline" onClick={() => { window.location.href = pagePath; }}>
