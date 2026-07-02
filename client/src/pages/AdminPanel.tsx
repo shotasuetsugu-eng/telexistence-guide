@@ -47,6 +47,20 @@ function PasswordLoginForm() {
       >
         {loginMutation.isPending ? "ログイン中..." : "ログイン"}
       </Button>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        または
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={() => { window.location.href = "/app-auth"; }}
+      >
+        社員Googleアカウントでログイン
+      </Button>
+      <p className="text-xs text-muted-foreground">@tx-inc.com のアカウントのみ利用できます。</p>
     </div>
   );
 }
