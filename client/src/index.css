@@ -326,3 +326,56 @@ button:active {
   color: #001b18;
 }
 
+/* Admin-controlled typography. Values are constrained in the admin UI. */
+.tx-sidebar-nav button,
+.tx-sidebar-nav a {
+  font-size: var(--tx-nav-font-desktop, 14px) !important;
+}
+
+.tx-main-content p,
+.tx-main-content td,
+.tx-main-content th,
+.tx-main-content label,
+.tx-main-content input,
+.tx-main-content textarea,
+.tx-main-content select,
+.tx-main-content button {
+  font-size: var(--tx-body-font-desktop, 14px);
+}
+
+.tx-main-content h1 {
+  font-size: var(--tx-page-title-desktop, 24px) !important;
+}
+
+.tx-main-content h2,
+.tx-main-content h3 {
+  font-size: var(--tx-section-title-desktop, 18px);
+}
+
+@media (max-width: 1023px) {
+  .tx-mobile-nav button,
+  .tx-mobile-nav a {
+    font-size: var(--tx-nav-font-mobile, 15px) !important;
+  }
+
+  .tx-main-content p,
+  .tx-main-content td,
+  .tx-main-content th,
+  .tx-main-content label,
+  .tx-main-content input,
+  .tx-main-content textarea,
+  .tx-main-content select,
+  .tx-main-content button {
+    font-size: var(--tx-body-font-mobile, 14px);
+  }
+
+  .tx-main-content h1 {
+    font-size: var(--tx-page-title-mobile, 22px) !important;
+  }
+
+  .tx-main-content h2,
+  .tx-main-content h3 {
+    font-size: var(--tx-section-title-mobile, 17px);
+  }
+}
+

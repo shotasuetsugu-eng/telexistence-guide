@@ -1,11 +1,11 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree, Users, RefreshCw } from "lucide-react";
+import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree, Users, RefreshCw, SlidersHorizontal, RotateCcw } from "lucide-react";
 
-type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "online";
+type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "online" | "appearance";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -107,6 +107,7 @@ export default function AdminPanel() {
     { id: "documents" as Tab, label: "資料", icon: FileText },
     { id: "admins" as Tab, label: "管理者", icon: FileText },
     { id: "online" as Tab, label: "オンライン", icon: Users },
+    { id: "appearance" as Tab, label: "表示設定", icon: SlidersHorizontal },
   ];
 
   return (
@@ -141,7 +142,129 @@ export default function AdminPanel() {
       {activeTab === "documents" && <DocumentsAdmin />}
       {activeTab === "admins" && <AdminUsersAdmin />}
       {activeTab === "online" && <OnlineUsersAdmin />}
+      {activeTab === "appearance" && <AppearanceAdmin />}
     </div>
+  );
+}
+
+const fontSettingDefaults = {
+  fontBodyDesktop: 14,
+  fontBodyMobile: 14,
+  fontPageTitleDesktop: 24,
+  fontPageTitleMobile: 22,
+  fontSectionTitleDesktop: 18,
+  fontSectionTitleMobile: 17,
+  fontNavDesktop: 14,
+  fontNavMobile: 15,
+} as const;
+
+type FontSettingKey = keyof typeof fontSettingDefaults;
+
+const fontSettingLabels: Record<FontSettingKey, string> = {
+  fontBodyDesktop: "本文（PC）",
+  fontBodyMobile: "本文（モバイル）",
+  fontPageTitleDesktop: "ページタイトル（PC）",
+  fontPageTitleMobile: "ページタイトル（モバイル）",
+  fontSectionTitleDesktop: "セクション見出し（PC）",
+  fontSectionTitleMobile: "セクション見出し（モバイル）",
+  fontNavDesktop: "左メニュー（PC）",
+  fontNavMobile: "メニュー（モバイル）",
+};
+
+function AppearanceAdmin() {
+  const utils = trpc.useUtils();
+  const { data: settings = [], isLoading } = trpc.linkSettings.list.useQuery();
+  const [values, setValues] = useState<Record<FontSettingKey, number>>({ ...fontSettingDefaults });
+
+  useEffect(() => {
+    const saved = new Map(settings.map((item) => [item.key, item.url]));
+    setValues(
+      Object.fromEntries(
+        (Object.keys(fontSettingDefaults) as FontSettingKey[]).map((key) => {
+          const parsed = Number(saved.get(`appearance.${key}`));
+          return [key, Number.isFinite(parsed) ? parsed : fontSettingDefaults[key]];
+        })
+      ) as Record<FontSettingKey, number>
+    );
+  }, [settings]);
+
+  const saveMutation = trpc.linkSettings.save.useMutation({
+    onSuccess: async () => {
+      await utils.linkSettings.list.invalidate();
+      toast.success("表示設定を保存しました");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const save = (next: Record<FontSettingKey, number>) => {
+    saveMutation.mutate(
+      (Object.keys(next) as FontSettingKey[]).map((key) => ({
+        key: `appearance.${key}`,
+        label: fontSettingLabels[key],
+        url: String(next[key]),
+      }))
+    );
+  };
+
+  const reset = () => {
+    const defaults = { ...fontSettingDefaults };
+    setValues(defaults);
+    save(defaults);
+  };
+
+  return (
+    <section className="cyber-border rounded-lg bg-card p-4 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-foreground">文字サイズ</h2>
+          <p className="text-xs text-muted-foreground">全端末に反映されます。PCとモバイルは別々に設定できます。</p>
+        </div>
+        <Button type="button" variant="outline" onClick={reset} disabled={saveMutation.isPending}>
+          <RotateCcw className="mr-2 h-4 w-4" />
+          初期値に戻す
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-40 rounded bg-muted animate-pulse" />
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {(Object.keys(fontSettingDefaults) as FontSettingKey[]).map((key) => {
+            const isTitle = key.includes("Title");
+            const min = isTitle ? 16 : 11;
+            const max = key.includes("PageTitle") ? 36 : isTitle ? 28 : 20;
+            return (
+              <label key={key} className="rounded border border-border bg-background p-3 space-y-2">
+                <span className="flex items-center justify-between gap-3 text-sm font-medium">
+                  {fontSettingLabels[key]}
+                  <strong className="text-primary">{values[key]}px</strong>
+                </span>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  step={1}
+                  value={values[key]}
+                  onChange={(event) => setValues((current) => ({ ...current, [key]: Number(event.target.value) }))}
+                  className="w-full accent-primary"
+                />
+              </label>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="rounded border border-border bg-background p-4">
+        <h1 style={{ fontSize: values.fontPageTitleDesktop }}>ページタイトルのプレビュー</h1>
+        <h2 className="mt-3" style={{ fontSize: values.fontSectionTitleDesktop }}>セクション見出しのプレビュー</h2>
+        <p className="mt-2 text-muted-foreground" style={{ fontSize: values.fontBodyDesktop }}>本文テキストの表示例です。</p>
+      </div>
+
+      <Button type="button" onClick={() => save(values)} disabled={saveMutation.isPending}>
+        <Save className="mr-2 h-4 w-4" />
+        {saveMutation.isPending ? "保存中..." : "表示設定を保存"}
+      </Button>
+    </section>
   );
 }
 

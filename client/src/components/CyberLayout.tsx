@@ -121,6 +121,25 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
     }, {} as Record<ManagedLinkKey, { label: string; url: string }>);
   }, [linkSettings]);
 
+  const appearanceStyle = useMemo(() => {
+    const saved = new globalThis.Map(linkSettings.map((item) => [item.key, Number(item.url)] as const));
+    const size = (key: string, fallback: number) => {
+      const value = saved.get(`appearance.${key}`);
+      return Number.isFinite(value) ? `${value}px` : `${fallback}px`;
+    };
+
+    return {
+      "--tx-body-font-desktop": size("fontBodyDesktop", 14),
+      "--tx-body-font-mobile": size("fontBodyMobile", 14),
+      "--tx-page-title-desktop": size("fontPageTitleDesktop", 24),
+      "--tx-page-title-mobile": size("fontPageTitleMobile", 22),
+      "--tx-section-title-desktop": size("fontSectionTitleDesktop", 18),
+      "--tx-section-title-mobile": size("fontSectionTitleMobile", 17),
+      "--tx-nav-font-desktop": size("fontNavDesktop", 14),
+      "--tx-nav-font-mobile": size("fontNavMobile", 15),
+    } as React.CSSProperties;
+  }, [linkSettings]);
+
   useEffect(() => {
     if (progressSheetMigratedRef.current) return;
     const legacyProgressSheetUrl = window.localStorage.getItem("tx.progressSheetUrl") || "";
@@ -360,7 +379,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-background crt-scanlines">
+    <div className="tx-app min-h-screen bg-background crt-scanlines" style={appearanceStyle}>
       {/* Sidebar - Desktop */}
       <aside className="fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border hidden lg:flex flex-col z-40">
         {/* Logo / Title */}
@@ -380,7 +399,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="tx-sidebar-nav flex-1 p-3 space-y-1 overflow-y-auto">
           <p className="mono-sub px-3 py-2">NAVIGATION</p>
           {publicNavItems.map((item: any) => {
             const isActive = location === item.path;
@@ -537,7 +556,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur pt-14">
-          <nav className="p-4 space-y-1">
+          <nav className="tx-mobile-nav p-4 space-y-1">
             {publicNavItems.map((item: any) => {
               if (item.linkKey) {
                 return (
@@ -600,7 +619,7 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <main className="lg:ml-64 pt-14 lg:pt-0 min-h-screen">
-        <div className="p-4 lg:p-6">
+        <div className="tx-main-content p-4 lg:p-6">
           {children}
         </div>
       </main>
