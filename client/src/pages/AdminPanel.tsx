@@ -56,9 +56,17 @@ function PasswordLoginForm() {
         type="button"
         variant="outline"
         className="w-full"
-        onClick={() => { window.location.href = "/app-auth"; }}
+        onClick={() => { window.location.href = "/app-auth?role=user"; }}
       >
-        社員Googleアカウントでログイン
+        一般ユーザーとしてGoogleログイン
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={() => { window.location.href = "/app-auth?role=admin"; }}
+      >
+        管理者としてGoogleログイン
       </Button>
       <p className="text-xs text-muted-foreground">@tx-inc.com のアカウントのみ利用できます。</p>
     </div>

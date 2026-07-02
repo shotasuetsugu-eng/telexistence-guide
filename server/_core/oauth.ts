@@ -11,7 +11,7 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  app.get("/app-auth", (_req: Request, res: Response) => {
+  app.get("/app-auth", (req: Request, res: Response) => {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const baseUrl = process.env.OAUTH_SERVER_URL || "http://localhost:3000";
 
@@ -27,13 +27,15 @@ export function registerOAuthRoutes(app: Express) {
     url.searchParams.set("response_type", "code");
     url.searchParams.set("scope", "openid email profile");
     url.searchParams.set("hd", "tx-inc.com");
-    url.searchParams.set("state", "drive");
+    const requestedRole = getQueryParam(req, "role") === "admin" ? "admin" : "user";
+    url.searchParams.set("state", requestedRole);
 
     res.redirect(url.toString());
   });
 
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
+    const requestedRole = getQueryParam(req, "state") === "admin" ? "admin" : "user";
 
     if (!code) {
       res.status(400).json({ error: "code is required" });
@@ -128,6 +130,10 @@ export function registerOAuthRoutes(app: Express) {
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, {
+        ...cookieOptions,
+        maxAge: ONE_YEAR_MS,
+      });
+      res.cookie("tx_auth_mode", requestedRole, {
         ...cookieOptions,
         maxAge: ONE_YEAR_MS,
       });

@@ -316,6 +316,10 @@ class SDKServer {
       lastSignedIn: signedInAt,
     });
 
+    if (cookies.get("tx_auth_mode") === "user" && user.role === "admin") {
+      return { ...user, role: "user" };
+    }
+
     return user;
   }
 }
