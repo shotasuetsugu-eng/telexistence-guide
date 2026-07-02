@@ -356,18 +356,13 @@ export const appRouter = router({
       fileData: z.string(),
       mimeType: z.string().optional(),
     })).mutation(async ({ input }) => {
-      const buffer = Buffer.from(input.fileData, "base64");
       const safeName = input.fileName.replace(/[^\w.\-()[\]\s]/g, "_");
       const fileKey = `${input.folder}/${Date.now()}-${safeName}`;
-      if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-        const mimeType = input.mimeType || "application/octet-stream";
-        return {
-          fileKey: `inline:${fileKey}`,
-          url: `data:${mimeType};base64,${input.fileData}`,
-        };
-      }
-      const { url } = await storagePut(fileKey, buffer, input.mimeType || "application/octet-stream");
-      return { fileKey, url };
+      const mimeType = input.mimeType || "application/octet-stream";
+      return {
+        fileKey: `inline:${fileKey}`,
+        url: `data:${mimeType};base64,${input.fileData}`,
+      };
     }),
   }),
 

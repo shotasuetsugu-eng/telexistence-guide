@@ -6,12 +6,14 @@ import { toast } from "sonner";
 
 type Override = {
   selector: string;
+  global?: boolean;
   text?: string;
   html?: string;
   styles?: Record<string, string>;
 };
 
 function selectorFor(element: HTMLElement, root: HTMLElement) {
+  if (element === root) return ":root-editor";
   const parts: string[] = [];
   let current: HTMLElement | null = element;
   while (current && current !== root) {
@@ -49,21 +51,23 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
 
   useEffect(() => {
     const saved = settings.find((item) => item.key === settingKey)?.url;
-    if (!saved) return;
     try {
-      setOverrides(JSON.parse(saved));
+      const pageItems = saved ? JSON.parse(saved) : [];
+      const globalSaved = settings.find((item) => item.key === "liveEditor.global")?.url;
+      const globalItems = globalSaved ? JSON.parse(globalSaved) : [];
+      setOverrides([...pageItems, ...globalItems]);
     } catch {
       setOverrides([]);
     }
   }, [settings, settingKey]);
 
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>(".tx-main-content");
+    const root = document.querySelector<HTMLElement>(".tx-app");
     if (!root) return;
     rootRef.current = root;
 
     const click = (event: MouseEvent) => {
-      const target = (event.target as HTMLElement).closest<HTMLElement>("h1,h2,h3,p,span,a,button,img,section,article,div");
+      const target = (event.target as HTMLElement).closest<HTMLElement>("h1,h2,h3,p,span,a,button,img,section,article,nav,aside,header,main,div");
       if (!target || !root.contains(target) || target.closest("[data-live-editor-toolbar]")) return;
       event.preventDefault();
       event.stopPropagation();
@@ -94,17 +98,18 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
       setHistorySize(historyRef.current.length);
     }
     const selector = selectorFor(element, root);
+    const global = Boolean(element.closest("aside,header"));
     if (changes.text !== undefined) element.textContent = changes.text;
     if (changes.html !== undefined) element.innerHTML = changes.html;
     if (changes.styles) Object.assign(element.style, changes.styles);
     setOverrides((current) => {
-      const previous = current.find((item) => item.selector === selector) || { selector };
+      const previous = current.find((item) => item.selector === selector && Boolean(item.global) === global) || { selector, global };
       const next = {
         ...previous,
         ...changes,
         styles: changes.styles ? { ...(previous.styles || {}), ...changes.styles } : previous.styles,
       };
-      return [...current.filter((item) => item.selector !== selector), next];
+      return [...current.filter((item) => !(item.selector === selector && Boolean(item.global) === global)), next];
     });
   };
 
@@ -227,6 +232,26 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
     }
   };
 
+  const chooseGlobalFile = (action: "backgroundImage" | "backgroundVideo") => {
+    const root = rootRef.current;
+    if (!root) return;
+    selectedRef.current?.classList.remove("live-editor-selected");
+    selectedRef.current = root;
+    root.classList.add("live-editor-selected");
+    setSelected(root);
+    chooseFile(action);
+  };
+
+  const addTextToPage = () => {
+    const root = rootRef.current;
+    if (!root) return;
+    const main = root.querySelector<HTMLElement>(".tx-main-content") || root;
+    const html = `${main.innerHTML}<div style="position:relative;z-index:2;margin:16px;padding:16px;color:#fff;font-size:32px;font-weight:700">新しい文字を入力</div>`;
+    selectedRef.current = main;
+    setSelected(main);
+    update({ html });
+  };
+
   const uploadFile = async (file?: File) => {
     if (!file) return;
     uploadMutation.mutate({
@@ -328,12 +353,18 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
             </Button>
           </>
         )}
-        <Button onClick={() => saveMutation.mutate([{ key: settingKey, label: `${pagePath} visual overrides`, url: JSON.stringify(overrides) }])}>
+        <Button onClick={() => saveMutation.mutate([
+          { key: settingKey, label: `${pagePath} visual overrides`, url: JSON.stringify(overrides.filter((item) => !item.global)) },
+          { key: "liveEditor.global", label: "Global visual overrides", url: JSON.stringify(overrides.filter((item) => item.global)) },
+        ])}>
           <Save className="mr-2 h-4 w-4" />保存
         </Button>
         <Button variant="outline" onClick={undo} disabled={historySize === 0}>
           <Undo2 className="mr-2 h-4 w-4" />1つ戻る
         </Button>
+        <Button variant="outline" onClick={addTextToPage}><Type className="mr-1 h-4 w-4" />ページに文字追加</Button>
+        <Button variant="outline" onClick={() => chooseGlobalFile("backgroundImage")}>全体背景画像</Button>
+        <Button variant="outline" onClick={() => chooseGlobalFile("backgroundVideo")}>全体背景動画</Button>
         <input ref={fileRef} hidden type="file" onChange={(event) => uploadFile(event.target.files?.[0])} />
         <Button variant="outline" onClick={() => { window.location.href = pagePath; }}>
           <Check className="mr-2 h-4 w-4" />編集終了
@@ -344,12 +375,17 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
 }
 
 export function applyLiveOverrides(pagePath: string, settings: Array<{ key: string; url: string }>) {
-  const root = document.querySelector<HTMLElement>(".tx-main-content");
+  const root = document.querySelector<HTMLElement>(".tx-app");
   const saved = settings.find((item) => item.key === `liveEditor.${pagePath}`)?.url;
-  if (!root || !saved) return;
+  const globalSaved = settings.find((item) => item.key === "liveEditor.global")?.url;
+  if (!root || (!saved && !globalSaved)) return;
   try {
-    (JSON.parse(saved) as Override[]).forEach((item) => {
-      const element = root.querySelector<HTMLElement>(item.selector);
+    const items: Override[] = [
+      ...(globalSaved ? JSON.parse(globalSaved) : []),
+      ...(saved ? JSON.parse(saved) : []),
+    ];
+    items.forEach((item) => {
+      const element = item.selector === ":root-editor" ? root : root.querySelector<HTMLElement>(item.selector);
       if (!element) return;
       if (item.text !== undefined) element.textContent = item.text;
       if (item.html !== undefined) element.innerHTML = item.html;
