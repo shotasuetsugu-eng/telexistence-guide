@@ -51,7 +51,7 @@ export default function SiteEditor() {
     onSuccess: ({ url }) => {
       editorRef.current?.AssetManager.add({ src: url });
       editorRef.current?.AssetManager.open();
-      toast.success("画像を追加しました");
+      toast.success("画像・動画を追加しました");
     },
     onError: (error) => toast.error(error.message),
   });
@@ -124,6 +124,56 @@ export default function SiteEditor() {
       category: "基本",
       content: '<div style="position:absolute;top:30px;left:30px;width:300px;height:1px;background:#00bfa6;"></div>',
     });
+    editor.BlockManager.add("two-columns", {
+      label: "2列レイアウト",
+      category: "レイアウト",
+      content: `
+        <section style="display:grid;grid-template-columns:1fr 1fr;gap:20px;min-height:260px;padding:24px;background:#07110f;">
+          <div style="position:relative;min-height:210px;padding:20px;border:1px dashed #0b655b;">左のエリア</div>
+          <div style="position:relative;min-height:210px;padding:20px;border:1px dashed #0b655b;">右のエリア</div>
+        </section>`,
+    });
+    editor.BlockManager.add("three-columns", {
+      label: "3列レイアウト",
+      category: "レイアウト",
+      content: `
+        <section style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;min-height:240px;padding:24px;background:#07110f;">
+          <div style="min-height:190px;padding:18px;border:1px dashed #0b655b;">エリア1</div>
+          <div style="min-height:190px;padding:18px;border:1px dashed #0b655b;">エリア2</div>
+          <div style="min-height:190px;padding:18px;border:1px dashed #0b655b;">エリア3</div>
+        </section>`,
+    });
+    editor.BlockManager.add("card", {
+      label: "カード",
+      category: "レイアウト",
+      content: '<article style="position:absolute;top:30px;left:30px;width:320px;padding:24px;background:#061b18;border:1px solid #00bfa6;border-radius:6px;color:#fff;"><h3 style="font-size:22px;margin:0 0 10px;">カード見出し</h3><p style="color:#a8b8b4;">説明文を入力してください。</p></article>',
+    });
+    editor.BlockManager.add("video", {
+      label: "動画",
+      category: "メディア",
+      content: '<video controls style="position:absolute;top:30px;left:30px;width:480px;height:270px;background:#000;"><source src="" type="video/mp4"></video>',
+    });
+    editor.BlockManager.add("video-hero", {
+      label: "背景動画＋文字",
+      category: "メディア",
+      content: `
+        <section style="position:relative;min-height:520px;overflow:hidden;background:#000;">
+          <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+            <source src="" type="video/mp4">
+          </video>
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+          <div style="position:relative;z-index:2;display:flex;min-height:520px;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:#fff;">
+            <h1 style="font-size:48px;margin:0 0 16px;">タイトルを入力</h1>
+            <p style="font-size:18px;max-width:720px;">背景動画の上に表示する文章です。</p>
+            <a href="#" style="margin-top:20px;padding:12px 24px;background:#00e5c8;color:#001b18;text-decoration:none;font-weight:700;">詳しく見る</a>
+          </div>
+        </section>`,
+    });
+    editor.BlockManager.add("link", {
+      label: "リンク",
+      category: "基本",
+      content: '<a href="https://" style="position:absolute;top:30px;left:30px;color:#00e5c8;text-decoration:underline;">リンク文字</a>',
+    });
 
     const draft = saved.get(DRAFT_KEY);
     if (draft) {
@@ -183,8 +233,8 @@ export default function SiteEditor() {
           <Button size="icon" variant="ghost" title="やり直す" onClick={() => editorRef.current?.runCommand("core:redo")}><Redo2 /></Button>
           <Button size="icon" variant="ghost" title="PC表示" onClick={() => editorRef.current?.setDevice("desktop")}><Monitor /></Button>
           <Button size="icon" variant="ghost" title="モバイル表示" onClick={() => editorRef.current?.setDevice("mobile")}><Smartphone /></Button>
-          <Button size="icon" variant="ghost" title="画像追加" onClick={() => fileRef.current?.click()}><ImagePlus /></Button>
-          <input ref={fileRef} hidden type="file" accept="image/*" onChange={(event) => uploadImage(event.target.files?.[0])} />
+          <Button size="icon" variant="ghost" title="画像・動画追加" onClick={() => fileRef.current?.click()}><ImagePlus /></Button>
+          <input ref={fileRef} hidden type="file" accept="image/*,video/mp4,video/webm" onChange={(event) => uploadImage(event.target.files?.[0])} />
           <Button variant="outline" onClick={saveDraft} disabled={!ready || saveMutation.isPending}><Save className="mr-2 h-4 w-4" />下書き</Button>
           <Button onClick={publish} disabled={!ready || saveMutation.isPending}><Upload className="mr-2 h-4 w-4" />公開</Button>
           <Button variant="outline" onClick={() => window.open("/", "_blank")}><Eye className="mr-2 h-4 w-4" />確認</Button>

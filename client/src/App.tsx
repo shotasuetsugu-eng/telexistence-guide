@@ -2,10 +2,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { lazy, Suspense } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardRenderer from "./pages/DashboardRenderer";
-import SiteEditor from "./pages/SiteEditor";
 import Procedures from "./pages/Procedures";
 import ProcedureDetail from "./pages/ProcedureDetail";
 import Checklists from "./pages/Checklists";
@@ -21,11 +21,21 @@ import RouterSetup from "./pages/RouterSetup";
 import DeployCalendar from "./pages/DeployCalendar";
 import CyberLayout from "./components/CyberLayout";
 
+const SiteEditor = lazy(() => import("./pages/SiteEditor"));
+
+function SiteEditorRoute() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center text-primary">EDITOR LOADING...</div>}>
+      <SiteEditor />
+    </Suspense>
+  );
+}
+
 function Router() {
   return (
     <CyberLayout>
       <Switch>
-        <Route path="/site-editor" component={SiteEditor} />
+        <Route path="/site-editor" component={SiteEditorRoute} />
         <Route path="/" component={DashboardRenderer} />
         <Route path="/procedures" component={Procedures} />
         <Route path="/procedures/:id" component={ProcedureDetail} />
