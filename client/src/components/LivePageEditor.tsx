@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { Check, ImagePlus, MousePointer2, Save, Type, Video } from "lucide-react";
+import { Check, ImagePlus, MousePointer2, Move, Save, Type, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -39,6 +39,7 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
   const selectedRef = useRef<HTMLElement | null>(null);
   const [selected, setSelected] = useState<HTMLElement | null>(null);
   const [overrides, setOverrides] = useState<Override[]>([]);
+  const [moveMode, setMoveMode] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadActionRef = useRef<"image" | "video" | "backgroundImage" | "backgroundVideo">("image");
   const utils = trpc.useUtils();
@@ -94,6 +95,50 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
       return [...current.filter((item) => item.selector !== selector), next];
     });
   };
+
+  useEffect(() => {
+    const element = selected;
+    if (!element || !moveMode) return;
+    element.style.cursor = "move";
+    element.style.touchAction = "none";
+
+    const pointerDown = (event: PointerEvent) => {
+      if ((event.target as HTMLElement).closest("input,select,button,a")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const computed = window.getComputedStyle(element);
+      const startLeft = Number.parseFloat(computed.left) || 0;
+      const startTop = Number.parseFloat(computed.top) || 0;
+      if (computed.position === "static") element.style.position = "relative";
+
+      const pointerMove = (moveEvent: PointerEvent) => {
+        element.style.left = `${Math.round(startLeft + moveEvent.clientX - startX)}px`;
+        element.style.top = `${Math.round(startTop + moveEvent.clientY - startY)}px`;
+      };
+      const pointerUp = () => {
+        window.removeEventListener("pointermove", pointerMove);
+        window.removeEventListener("pointerup", pointerUp);
+        update({
+          styles: {
+            position: element.style.position || "relative",
+            left: element.style.left || "0px",
+            top: element.style.top || "0px",
+          },
+        });
+      };
+      window.addEventListener("pointermove", pointerMove);
+      window.addEventListener("pointerup", pointerUp, { once: true });
+    };
+
+    element.addEventListener("pointerdown", pointerDown, true);
+    return () => {
+      element.removeEventListener("pointerdown", pointerDown, true);
+      element.style.cursor = "";
+      element.style.touchAction = "";
+    };
+  }, [selected, moveMode]);
 
   const setBackgroundVideo = (url: string) => {
     const element = selectedRef.current;
@@ -235,6 +280,13 @@ export default function LivePageEditor({ pagePath, settings }: { pagePath: strin
             <Button size="sm" variant="outline" onClick={() => chooseFile("video")}><Video className="mr-1 h-4 w-4" />動画</Button>
             <Button size="sm" variant="outline" onClick={() => chooseFile("backgroundImage")}>背景画像</Button>
             <Button size="sm" variant="outline" onClick={() => chooseFile("backgroundVideo")}>背景動画</Button>
+            <Button
+              size="sm"
+              variant={moveMode ? "default" : "outline"}
+              onClick={() => setMoveMode((current) => !current)}
+            >
+              <Move className="mr-1 h-4 w-4" />{moveMode ? "移動中" : "ドラッグ移動"}
+            </Button>
             <Button
               size="sm"
               variant="outline"
