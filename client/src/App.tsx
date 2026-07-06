@@ -34,8 +34,7 @@ function SiteEditorRoute() {
 function PublicRouter() {
   return (
     <Switch>
-      <Route path="/" component={DashboardRenderer} />
-      <Route path="/p/:slug" component={DashboardRenderer} />
+            <Route path="/p/:slug" component={DashboardRenderer} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -46,6 +45,7 @@ function PrivateRouter() {
     <CyberLayout>
       <Switch>
         <Route path="/site-editor" component={SiteEditorRoute} />
+        <Route path="/" component={DashboardRenderer} />
         <Route path="/procedures" component={Procedures} />
         <Route path="/procedures/:id" component={ProcedureDetail} />
         <Route path="/checklists" component={Checklists} />
@@ -90,3 +90,4 @@ function App() {
 }
 
 export default App;
+
