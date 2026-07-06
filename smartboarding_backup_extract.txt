@@ -1,0 +1,250 @@
+
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:21:import { useState } from "react";
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:22:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:23:const publicNavItems = [
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:24:  { icon: Home, label: "ダッシュボード", path: "/" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:25:  { icon: CalendarDays, label: "FS Team Calendar", path: "/fs-team-calendar" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:26:  { icon: BookOpen, label: "Smartboarding", path: "/procedures" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:27:  { icon: CheckSquare, label: "チェックリスト", path: "/checklists" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:28:  { icon: FileText, label: "資料管理", path: "/documents" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:29:  { icon: Search, label: "検索", path: "/search" },
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:30:];
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:31:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:32:const integrationNavItems = [
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:33:    { path: "/Wifi-setup", label: "ルーター設定", icon: Wifi },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:34:  { icon: FileText, label: "メジャメント数値", path: "/measurement-values" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:35:{ icon: LayoutDashboard, label: "Shift", path: "/shift" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:36:	  { icon: HardDrive, label: "店舗一覧", path: "/stores" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:37:	  { icon: Map, label: "マップ", path: "/map" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:38:	  { icon: LayoutDashboard, label: "Dashboard", path: "/integrations" },
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:39:  { icon: Sparkles, label: "Autail", path: "/integrations" },
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:40:];
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:41:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:42:const adminNavItems = [
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:43:  { icon: Shield, label: "管理者パネル", path: "/admin" },
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:44:];
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:45:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:46:export default function CyberLayout({ children }: { children: React.ReactNode }) {
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:48:  const [location, setLocation] = useLocation();
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:49:  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:50:  const isAdmin = user?.role === "admin";
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:51:  const [progressSheetUrl, setProgressSheetUrl] = useState<string>(
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:52:    () => window.localStorage.getItem("tx.progressSheetUrl") || ""
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:53:  );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:54:  const [editingSheet, setEditingSheet] = useState(false);
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:55:  const [sheetInput, setSheetInput] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:56:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:57:  return (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:58:    <div className="min-h-screen bg-background crt-scanlines">
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:59:      {/* Sidebar - Desktop */}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:60:      <aside className="fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border hidden lg:flex flex-col z-40">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:61:        {/* Logo / Title */}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:62:        <div className="p-4 border-b border-sidebar-border">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:63:          <div className="flex items-center gap-2 mb-1">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:64:            <span className="text-primary neon-cyan text-xs font-bold tracking-widest">TX</span>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:65:            <h1 className="text-base font-black text-foreground tracking-wider glitch-text" data-text="Telexistence">
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:66:              Telexistence
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:67:            </h1>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:68:          </div>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:69:          <div className="flex items-center gap-1">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:70:            <span className="text-primary neon-cyan text-xs">&#91;</span>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:71:            <span className="text-xs font-mono text-muted-foreground tracking-widest">INSTALL</span>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:72:            <span className="text-primary neon-cyan text-xs">&#93;</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:73:          </div>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:74:          <p className="mono-sub mt-1">// installation_guide_sys</p>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:75:        </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:76:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:77:        {/* Navigation */}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:78:        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:79:          <p className="mono-sub px-3 py-2">NAVIGATION</p>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:80:          {publicNavItems.map((item) => {
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:81:            const isActive = location === item.path;
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:82:            return (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:83:              <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:84:                key={item.path}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:85:                onClick={() => setLocation(item.path)}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:86:                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:87:                  isActive
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:88:                    ? "bg-primary/10 text-primary border border-primary/30 neon-cyan"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:89:                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:90:                }`}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:91:              >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:92:                <item.icon className="h-4 w-4 shrink-0" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:93:                <span className="font-medium">{item.label}</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:94:              </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:95:            );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:96:          })}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:97:
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:98:          <div className="group relative">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:99:            {progressSheetUrl ? (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:100:              <a href={progressSheetUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:101:                <ClipboardList className="h-4 w-4 shrink-0" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:102:                <span className="font-medium flex-1">進捗状況引継ぎシート</span>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:103:                <ExternalLink className="h-3 w-3 opacity-50" />
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:104:              </a>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:105:            ) : (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:106:              <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-muted-foreground">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:107:                <ClipboardList className="h-4 w-4 shrink-0" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:108:                <span className="font-medium flex-1">進捗状況引継ぎシート</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:109:              </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:110:            )}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:111:            {isAdmin && !editingSheet && (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:112:              <button onClick={() => { setSheetInput(progressSheetUrl); setEditingSheet(true); }} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-primary transition-all" title="リンクを設定">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:113:                <Pencil className="h-3 w-3" />
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:114:              </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:115:            )}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:116:          </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:117:          {isAdmin && editingSheet && (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:118:            <div className="px-3 py-2 space-y-2">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:119:              <input type="url" value={sheetInput} onChange={(e) => setSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/..." className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground" autoFocus />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:120:              <div className="flex gap-2">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:121:                <button onClick={() => { window.localStorage.setItem("tx.progressSheetUrl", sheetInput); setProgressSheetUrl(sheetInput); setEditingSheet(false); }} className="flex-1 px-2 py-1 text-xs rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors">保存</button>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:122:                <button onClick={() => setEditingSheet(false)} className="flex-1 px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">キャンセル</button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:123:              </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:124:            </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:125:          )}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:126:
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:127:          <div className="my-3 border-t border-sidebar-border" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:128:          <p className="mono-sub px-3 py-2">INTEGRATIONS</p>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:129:          {integrationNavItems.map((item) => {
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:130:            const isActive = location === item.path;
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:131:            return (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:132:              <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:133:                key={item.path}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:134:                onClick={() => setLocation(item.path)}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:135:                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:136:                  isActive
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:137:                    ? "bg-primary/10 text-primary border border-primary/30 neon-cyan"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:138:                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:139:                }`}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:140:              >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:141:                <item.icon className="h-4 w-4 shrink-0" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:142:                <span className="font-medium">{item.label}</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:143:              </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:144:            );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:145:          })}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:146:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:147:          {isAdmin && (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:148:            <>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:149:              <div className="my-3 border-t border-sidebar-border" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:150:              <p className="mono-sub px-3 py-2">ADMIN</p>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:151:              {adminNavItems.map((item) => {
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:152:                const isActive = location === item.path;
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:153:                return (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:154:                  <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:155:                    key={item.path}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:156:                    onClick={() => setLocation(item.path)}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:157:                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:158:                      isActive
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:159:                        ? "bg-accent/20 text-accent border border-accent/30 neon-red"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:160:                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:161:                    }`}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:162:                  >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:163:                    <item.icon className="h-4 w-4 shrink-0" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:164:                    <span className="font-medium">{item.label}</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:165:                  </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:166:                );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:167:              })}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:170:        </nav>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:171:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:172:        {/* Footer - Auth */}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:173:        <div className="p-3 border-t border-sidebar-border">
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:174:          {user ? (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:175:            <div className="flex items-center gap-2">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:176:              <div className="flex-1 min-w-0">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:177:                <p className="text-xs font-medium text-sidebar-foreground truncate">{user.name}</p>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:178:                <p className="mono-sub truncate">{user.role === "admin" ? "ADMIN" : "USER"}</p>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:179:              </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:180:              <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:181:                onClick={logout}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:182:                className="p-2 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-destructive transition-colors"
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:183:                title="ログアウト"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:184:              >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:185:                <LogOut className="h-4 w-4" />
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:186:              </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:187:            </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:188:          ) : (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:189:            <button
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:190:              onClick={() => { window.location.href = "/admin"; }}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:191:              className="w-full px-3 py-2 text-sm rounded-md border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:192:            >
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:193:              管理者ログイン
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:194:            </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:197:      </aside>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:198:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:199:      {/* Mobile Header */}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:200:      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar/95 backdrop-blur border-b border-sidebar-border z-50 flex items-center justify-between px-4">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:201:        <div className="flex items-center gap-2">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:202:          <span className="text-primary neon-cyan text-xs font-bold">TX</span>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:203:          <h1 className="text-sm font-black text-foreground tracking-wider">
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:204:            Telexistence
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:205:          </h1>
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:206:          <span className="text-xs font-mono text-muted-foreground hidden sm:block">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:207:            <span className="text-primary">&#91;</span>INSTALL<span className="text-primary">&#93;</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:208:          </span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:209:        </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:210:        <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:211:          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:212:          className="p-2 rounded hover:bg-sidebar-accent text-foreground"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:213:        >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:214:          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:215:        </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:216:      </header>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:217:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:218:      {/* Mobile Menu Overlay */}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:219:      {mobileMenuOpen && (
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:220:        <div className="lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur pt-14">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:221:          <nav className="p-4 space-y-1">
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:222:            {publicNavItems.map((item) => {
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:223:              const isActive = location === item.path;
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:224:              return (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:225:                <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:226:                  key={item.path}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:227:                  onClick={() => { setLocation(item.path); setMobileMenuOpen(false); }}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:228:                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm ${
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:229:                    isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:230:                  }`}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:231:                >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:232:                  <item.icon className="h-5 w-5" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:233:                  <span className="font-medium">{item.label}</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:234:                </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:235:              );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:236:            })}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:237:            <div className="my-2 border-t border-border" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:238:            <p className="mono-sub px-4 py-1">INTEGRATIONS</p>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:239:            {integrationNavItems.map((item) => {
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:240:              const isActive = location === item.path;
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:241:              return (
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:242:                <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:243:                  key={item.path}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:244:                  onClick={() => { setLocation(item.path); setMobileMenuOpen(false); }}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:245:                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm ${
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:246:                    isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:247:                  }`}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:248:                >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:249:                  <item.icon className="h-5 w-5" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:250:                  <span className="font-medium">{item.label}</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:251:                </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:252:              );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:253:            })}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:257:                <button
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:258:                  key={item.path}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:259:                  onClick={() => { setLocation(item.path); setMobileMenuOpen(false); }}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:260:                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm ${
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:261:                    isActive ? "bg-accent/20 text-accent" : "text-foreground hover:bg-muted"
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:262:                  }`}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:263:                >
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:264:                  <item.icon className="h-5 w-5" />
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:265:                  <span className="font-medium">{item.label}</span>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:266:                </button>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:267:              );
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:268:            })}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:271:      )}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:272:
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:273:      {/* Main Content */}
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:274:      <main className="lg:ml-64 pt-14 lg:pt-0 min-h-screen">
+> C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:275:        <div className="p-4 lg:p-6">
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:276:          {children}
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:277:        </div>
+  C:\Users\Deploymet_No_01\Downloads\TzJewJIKzITrFxOH\_smartboarding_backups\Smartboarding_before_closed_default_20260612_002449.tsx:278:      </main>
+

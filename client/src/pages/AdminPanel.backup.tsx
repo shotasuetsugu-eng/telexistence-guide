@@ -1,11 +1,11 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree } from "lucide-react";
+import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree, Users, RefreshCw, SlidersHorizontal, RotateCcw, PanelsTopLeft } from "lucide-react";
 
-type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins";
+type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "online" | "appearance" | "builder";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -47,6 +47,28 @@ function PasswordLoginForm() {
       >
         {loginMutation.isPending ? "ログイン中..." : "ログイン"}
       </Button>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        または
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={() => { window.location.href = "/app-auth?role=user"; }}
+      >
+        一般ユーザーとしてGoogleログイン
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={() => { window.location.href = "/app-auth?role=admin"; }}
+      >
+        管理者としてGoogleログイン
+      </Button>
+      <p className="text-xs text-muted-foreground">@tx-inc.com のアカウントのみ利用できます。</p>
     </div>
   );
 }
@@ -84,6 +106,9 @@ export default function AdminPanel() {
     { id: "checklists" as Tab, label: "チェックリスト", icon: CheckSquare },
     { id: "documents" as Tab, label: "資料", icon: FileText },
     { id: "admins" as Tab, label: "管理者", icon: FileText },
+    { id: "online" as Tab, label: "オンライン", icon: Users },
+    { id: "appearance" as Tab, label: "表示設定", icon: SlidersHorizontal },
+    { id: "builder" as Tab, label: "サイト編集", icon: PanelsTopLeft },
   ];
 
   return (
@@ -117,7 +142,189 @@ export default function AdminPanel() {
       {activeTab === "checklists" && <ChecklistsAdmin />}
       {activeTab === "documents" && <DocumentsAdmin />}
       {activeTab === "admins" && <AdminUsersAdmin />}
+      {activeTab === "online" && <OnlineUsersAdmin />}
+      {activeTab === "appearance" && <AppearanceAdmin />}
+      {activeTab === "builder" && (
+        <section className="cyber-border rounded-lg bg-card p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-foreground">ビジュアルサイト編集</h2>
+            <p className="mt-1 text-sm text-muted-foreground">実際の画面を見ながら、部品をドラッグ・移動・リサイズして編集します。</p>
+          </div>
+          <Button type="button" onClick={() => { window.location.href = "/?visual-edit=1"; }}>
+            <PanelsTopLeft className="mr-2 h-4 w-4" />
+            現在のDashboardを直接編集
+          </Button>
+        </section>
+      )}
     </div>
+  );
+}
+
+const fontSettingDefaults = {
+  fontBodyDesktop: 14,
+  fontBodyMobile: 14,
+  fontPageTitleDesktop: 24,
+  fontPageTitleMobile: 22,
+  fontSectionTitleDesktop: 18,
+  fontSectionTitleMobile: 17,
+  fontNavDesktop: 14,
+  fontNavMobile: 15,
+} as const;
+
+type FontSettingKey = keyof typeof fontSettingDefaults;
+
+const fontSettingLabels: Record<FontSettingKey, string> = {
+  fontBodyDesktop: "本文（PC）",
+  fontBodyMobile: "本文（モバイル）",
+  fontPageTitleDesktop: "ページタイトル（PC）",
+  fontPageTitleMobile: "ページタイトル（モバイル）",
+  fontSectionTitleDesktop: "セクション見出し（PC）",
+  fontSectionTitleMobile: "セクション見出し（モバイル）",
+  fontNavDesktop: "左メニュー（PC）",
+  fontNavMobile: "メニュー（モバイル）",
+};
+
+function AppearanceAdmin() {
+  const utils = trpc.useUtils();
+  const { data: settings = [], isLoading } = trpc.linkSettings.list.useQuery();
+  const [values, setValues] = useState<Record<FontSettingKey, number>>({ ...fontSettingDefaults });
+
+  useEffect(() => {
+    const saved = new Map(settings.map((item) => [item.key, item.url]));
+    setValues(
+      Object.fromEntries(
+        (Object.keys(fontSettingDefaults) as FontSettingKey[]).map((key) => {
+          const parsed = Number(saved.get(`appearance.${key}`));
+          return [key, Number.isFinite(parsed) ? parsed : fontSettingDefaults[key]];
+        })
+      ) as Record<FontSettingKey, number>
+    );
+  }, [settings]);
+
+  const saveMutation = trpc.linkSettings.save.useMutation({
+    onSuccess: async () => {
+      await utils.linkSettings.list.invalidate();
+      toast.success("表示設定を保存しました");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const save = (next: Record<FontSettingKey, number>) => {
+    saveMutation.mutate(
+      (Object.keys(next) as FontSettingKey[]).map((key) => ({
+        key: `appearance.${key}`,
+        label: fontSettingLabels[key],
+        url: String(next[key]),
+      }))
+    );
+  };
+
+  const reset = () => {
+    const defaults = { ...fontSettingDefaults };
+    setValues(defaults);
+    save(defaults);
+  };
+
+  return (
+    <section className="cyber-border rounded-lg bg-card p-4 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-foreground">文字サイズ</h2>
+          <p className="text-xs text-muted-foreground">全端末に反映されます。PCとモバイルは別々に設定できます。</p>
+        </div>
+        <Button type="button" variant="outline" onClick={reset} disabled={saveMutation.isPending}>
+          <RotateCcw className="mr-2 h-4 w-4" />
+          初期値に戻す
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-40 rounded bg-muted animate-pulse" />
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {(Object.keys(fontSettingDefaults) as FontSettingKey[]).map((key) => {
+            const isTitle = key.includes("Title");
+            const min = isTitle ? 16 : 11;
+            const max = key.includes("PageTitle") ? 36 : isTitle ? 28 : 20;
+            return (
+              <label key={key} className="rounded border border-border bg-background p-3 space-y-2">
+                <span className="flex items-center justify-between gap-3 text-sm font-medium">
+                  {fontSettingLabels[key]}
+                  <strong className="text-primary">{values[key]}px</strong>
+                </span>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  step={1}
+                  value={values[key]}
+                  onChange={(event) => setValues((current) => ({ ...current, [key]: Number(event.target.value) }))}
+                  className="w-full accent-primary"
+                />
+              </label>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="rounded border border-border bg-background p-4">
+        <h1 style={{ fontSize: values.fontPageTitleDesktop }}>ページタイトルのプレビュー</h1>
+        <h2 className="mt-3" style={{ fontSize: values.fontSectionTitleDesktop }}>セクション見出しのプレビュー</h2>
+        <p className="mt-2 text-muted-foreground" style={{ fontSize: values.fontBodyDesktop }}>本文テキストの表示例です。</p>
+      </div>
+
+      <Button type="button" onClick={() => save(values)} disabled={saveMutation.isPending}>
+        <Save className="mr-2 h-4 w-4" />
+        {saveMutation.isPending ? "保存中..." : "表示設定を保存"}
+      </Button>
+    </section>
+  );
+}
+
+function OnlineUsersAdmin() {
+  const { data: users = [], isLoading, refetch, isFetching } = trpc.onlineUsers.list.useQuery(undefined, {
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
+
+  return (
+    <section className="cyber-border rounded-lg bg-card p-4 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-foreground">現在ログイン中</h2>
+          <p className="text-xs text-muted-foreground">直近2分以内に通信したユーザーを表示します。</p>
+        </div>
+        <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          更新
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-24 rounded bg-muted animate-pulse" />
+      ) : users.length === 0 ? (
+        <div className="rounded border border-border bg-background p-5 text-sm text-muted-foreground">オンラインユーザーはいません。</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px] text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr><th className="p-2">状態</th><th className="p-2">名前</th><th className="p-2">メール</th><th className="p-2">権限</th><th className="p-2">最終通信</th></tr>
+            </thead>
+            <tbody>
+              {users.map((item) => (
+                <tr key={item.openId} className="border-t border-border">
+                  <td className="p-2"><span className="inline-flex items-center gap-2 font-semibold text-cyber-green"><span className="h-2 w-2 rounded-full bg-cyber-green" />オンライン</span></td>
+                  <td className="p-2 font-medium text-foreground">{item.name || "-"}</td>
+                  <td className="p-2 text-muted-foreground">{item.email || "管理者パスワード"}</td>
+                  <td className="p-2">{item.role === "admin" ? "管理者" : "ユーザー"}</td>
+                  <td className="p-2 whitespace-nowrap text-muted-foreground">{new Date(item.lastActiveAt).toLocaleString("ja-JP")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -641,27 +848,29 @@ function ChecklistsAdmin() {
   const utils = trpc.useUtils();
   const { data: checklists, isLoading } = trpc.checklists.list.useQuery();
   const { data: categories } = trpc.categories.list.useQuery();
+
   const createMutation = trpc.checklists.create.useMutation({
-    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("チェックリストを作成しました"); },
+    onSuccess: () => {
+      utils.checklists.list.invalidate();
+      toast.success("チェックリストを作成しました");
+    },
     onError: (err) => toast.error(err.message),
   });
+
   const updateMutation = trpc.checklists.update.useMutation({
-    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("チェックリストを更新しました"); setEditingId(null); },
+    onSuccess: () => {
+      utils.checklists.list.invalidate();
+      toast.success("チェックリストを更新しました");
+      setEditingId(null);
+    },
     onError: (err) => toast.error(err.message),
   });
+
   const deleteMutation = trpc.checklists.delete.useMutation({
-    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("チェックリストを削除しました"); },
-    onError: (err) => toast.error(err.message),
-  });
-  const createItemMutation = trpc.checklistItems.create.useMutation({
-    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("項目を追加しました"); },
-    onError: (err) => toast.error(err.message),
-  });
-  const deleteItemMutation = trpc.checklistItems.delete.useMutation({
-    onSuccess: () => { utils.checklists.list.invalidate(); toast.success("項目を削除しました"); },
-    onError: (err) => toast.error(err.message),
-  });
-  const uploadAssetMutation = trpc.assets.upload.useMutation({
+    onSuccess: () => {
+      utils.checklists.list.invalidate();
+      toast.success("チェックリストを削除しました");
+    },
     onError: (err) => toast.error(err.message),
   });
 
@@ -669,26 +878,149 @@ function ChecklistsAdmin() {
   const [description, setDescription] = useState("");
   const [checklistFile, setChecklistFile] = useState<File | null>(null);
   const [categoryId, setCategoryId] = useState<number | "">("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [itemContent, setItemContent] = useState("");
-  const [itemFile, setItemFile] = useState<File | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [uploadedPdfMap, setUploadedPdfMap] = useState<Record<string, { fileName: string; fileUrl: string }>>({});
 
-  const { data: itemsData } = trpc.checklistItems.list.useQuery(
-    { checklistId: expandedId! },
-    { enabled: expandedId !== null }
-  );
+  const normalizeChecklistUrl = (url?: string | null) => {
+    const value = url?.trim();
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || categoryId === "") return;
-    createMutation.mutate({ categoryId, title: title.trim(), description: description.trim() || undefined });
-    setTitle(""); setDescription(""); setCategoryId("");
+    if (!value) return "";
+    if (value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://")) return value;
+
+    return `https://${value}`;
   };
 
-  const startEdit = (cl: { id: number; title: string; description: string | null }) => {
+  const isPdfUrl = (url: string) => /\.pdf($|[?#])/i.test(url);
+
+  const getPdfUrl = (cl: any) => {
+    const uploaded = uploadedPdfMap[String(cl.id)];
+    if (uploaded?.fileUrl) return normalizeChecklistUrl(uploaded.fileUrl);
+
+    const fileUrl = normalizeChecklistUrl(cl.fileUrl);
+    if (fileUrl) return fileUrl;
+
+    const descriptionUrl = normalizeChecklistUrl(cl.description);
+    if (descriptionUrl && isPdfUrl(descriptionUrl)) return descriptionUrl;
+
+    return "";
+  };
+
+  const getPdfName = (cl: any) => {
+    return uploadedPdfMap[String(cl.id)]?.fileName || cl.fileName || "";
+  };
+
+  const uploadChecklistPdf = async (checklistId: number | string, file: File) => {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("PDFファイルを選択してください");
+      return null;
+    }
+
+    setUploadingId(String(checklistId));
+
+    try {
+      const response = await fetch(`/api/checklists/${encodeURIComponent(String(checklistId))}/pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          dataUrl: await fileToBase64(file),
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "PDFアップロードに失敗しました");
+      }
+
+      const updated = await response.json();
+
+      setUploadedPdfMap((current) => ({
+        ...current,
+        [String(checklistId)]: {
+          fileName: updated.fileName || file.name,
+          fileUrl: updated.fileUrl,
+        },
+      }));
+
+      await utils.checklists.list.invalidate();
+      toast.success("印刷用PDFをアップロードしました");
+
+      return updated;
+    } catch (error: any) {
+      toast.error(error.message ?? "PDFアップロードに失敗しました");
+      return null;
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  const printPdf = (pdfUrl: string) => {
+    if (!pdfUrl) {
+      toast.error("印刷用PDFが未アップロードです");
+      return;
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.src = pdfUrl;
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.style.opacity = "0.01";
+    iframe.style.border = "0";
+    iframe.style.pointerEvents = "none";
+
+    iframe.onload = () => {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch {
+          window.open(pdfUrl, "_blank", "noopener,noreferrer");
+        }
+
+        setTimeout(() => iframe.remove(), 5000);
+      }, 800);
+    };
+
+    document.body.appendChild(iframe);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!title.trim() || categoryId === "") return;
+
+    try {
+      const created = await createMutation.mutateAsync({
+        categoryId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+      });
+
+      const createdId = (created as any)?.id;
+
+      if (checklistFile && createdId) {
+        await uploadChecklistPdf(createdId, checklistFile);
+      }
+
+      setTitle("");
+      setDescription("");
+      setCategoryId("");
+      setChecklistFile(null);
+
+      const fileInput = document.getElementById("checklist-main-file") as HTMLInputElement | null;
+      if (fileInput) fileInput.value = "";
+    } catch {
+      // createMutation側のonErrorで表示
+    }
+  };
+
+  const startEdit = (cl: { id: number | string; title: string; description: string | null }) => {
     setEditingId(cl.id);
     setEditTitle(cl.title);
     setEditDescription(cl.description || "");
@@ -696,131 +1028,191 @@ function ChecklistsAdmin() {
 
   const handleUpdate = () => {
     if (!editingId || !editTitle.trim()) return;
-    updateMutation.mutate({ id: editingId, title: editTitle.trim(), description: editDescription.trim() || undefined });
+
+    updateMutation.mutate({
+      id: editingId as any,
+      title: editTitle.trim(),
+      description: editDescription.trim() || undefined,
+    });
   };
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!expandedId || !itemContent.trim()) return;
-    let content = itemContent.trim();
-    if (itemFile) {
-      const uploaded = await uploadAssetMutation.mutateAsync({
-        folder: "checklists",
-        fileName: itemFile.name,
-        fileData: await fileToBase64(itemFile),
-        mimeType: itemFile.type || undefined,
-      });
-      content = `${content}\n添付: ${uploaded.url}`;
-    }
-    createItemMutation.mutate({ checklistId: expandedId, content });
-    setItemContent("");
-    setItemFile(null);
-    const input = document.getElementById("checklist-item-file") as HTMLInputElement | null;
-    if (input) input.value = "";
+  const handleExistingPdfUpload = async (cl: any, file?: File | null) => {
+    if (!file) return;
+    await uploadChecklistPdf(cl.id, file);
   };
 
   return (
     <div className="space-y-4">
       <form onSubmit={handleCreate} className="cyber-border rounded-lg p-4 bg-card space-y-3">
-        <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規チェックリスト</h3>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+        <h3 className="font-semibold text-foreground flex items-center gap-2">
+          <Plus className="h-4 w-4 text-primary" />
+          新規チェックリスト
+        </h3>
+
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="表示名"
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="リンクURL"
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
+          required
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        >
           <option value="">カテゴリを選択</option>
-          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+          {categories?.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
         </select>
-        <input id="checklist-main-file" type="file" onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
-          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
-        {checklistFile && <p className="text-xs text-muted-foreground">選択中: {checklistFile.name} ({(checklistFile.size / 1024).toFixed(1)} KB)</p>}
-        <Button type="submit" size="sm" disabled={createMutation.isPending}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
+
+        <input
+          id="checklist-main-file"
+          type="file"
+          accept="application/pdf,.pdf"
+          onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
+          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary"
+        />
+
+        {checklistFile && (
+          <p className="text-xs text-muted-foreground">
+            選択中: {checklistFile.name} ({(checklistFile.size / 1024).toFixed(1)} KB)
+          </p>
+        )}
+
+        <Button type="submit" size="sm" disabled={createMutation.isPending || !!uploadingId}>
+          {createMutation.isPending || uploadingId === "new" ? "作成中..." : "作成"}
+        </Button>
       </form>
 
       {isLoading ? (
-        <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
+        <div className="space-y-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-14 bg-muted rounded animate-pulse" />
+          ))}
+        </div>
       ) : (
         <div className="space-y-2">
-          {checklists?.map((cl) => (
-            <div key={cl.id} className="cyber-border rounded-lg bg-card">
-              {editingId === cl.id ? (
-                <div className="p-3 space-y-2">
-                  <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
-                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}><Save className="h-3 w-3 mr-1" />保存</Button>
-                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)}><X className="h-3 w-3 mr-1" />キャンセル</Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground text-sm truncate">{cl.title}</p>
-                      {cl.description && <p className="text-xs text-muted-foreground truncate">{cl.description}</p>}
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <button onClick={() => setExpandedId(expandedId === cl.id ? null : cl.id)}
-                        className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="項目管理">
-                        {expandedId === cl.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </button>
-                      <button
-                    onClick={() => {
-                      const url = cl.description || `/checklists/${cl.id}`;
-                      const w = window.open(url, "_blank", "noopener,noreferrer");
-                      if (!w) {
-                        alert("ポップアップがブロックされました。リンクを開いてから印刷してください。");
-                      }
-                    }}
-                    className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                    title="印刷"
-                  >
-                    印刷
-                  </button>
-                  <button onClick={() => startEdit(cl)} className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                      <button onClick={() => { if (confirm("削除しますか？")) deleteMutation.mutate({ id: cl.id }); }}
-                        className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
+          {checklists?.map((rawCl: any) => {
+            const cl = rawCl as any;
+            const pdfUrl = getPdfUrl(cl);
+            const pdfName = getPdfName(cl);
+            const isUploading = uploadingId === String(cl.id);
 
-                  {expandedId === cl.id && (
-                    <div className="mt-3 pt-3 border-t border-border space-y-3">
-                      <p className="mono-sub">チェック項目 // ITEMS</p>
-                      {itemsData && itemsData.length > 0 && (
-                        <div className="space-y-1">
-                          {itemsData.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-2 rounded bg-muted/50">
-                              <span className="text-xs text-foreground">{item.content}</span>
-                              <button onClick={() => { if (confirm("項目を削除しますか？")) deleteItemMutation.mutate({ id: item.id }); }}
-                                className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <form onSubmit={handleAddItem} className="grid gap-2 md:grid-cols-[1fr_220px_auto]">
-                        <input type="text" value={itemContent} onChange={(e) => setItemContent(e.target.value)} placeholder="チェック項目"
-                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                        <input id="checklist-item-file" type="file" onChange={(e) => setItemFile(e.target.files?.[0] ?? null)}
-                          className="px-2 py-1.5 rounded bg-input border border-border text-foreground text-xs file:mr-2 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
-                        <Button type="submit" size="sm" disabled={createItemMutation.isPending || uploadAssetMutation.isPending}>
-                          {createItemMutation.isPending || uploadAssetMutation.isPending ? "追加中..." : "追加"}
-                        </Button>
-                      </form>
+            return (
+              <div key={cl.id} className="cyber-border rounded-lg bg-card">
+                {editingId === cl.id ? (
+                  <div className="p-3 space-y-2">
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+
+                    <input
+                      type="text"
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="リンクURL"
+                      className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}>
+                        <Save className="h-3 w-3 mr-1" />
+                        保存
+                      </Button>
+
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
+                        <X className="h-3 w-3 mr-1" />
+                        キャンセル
+                      </Button>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                  </div>
+                ) : (
+                  <div className="p-3">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">{cl.title}</p>
+
+                        {cl.description && (
+                          <p className="text-xs text-muted-foreground truncate">{cl.description}</p>
+                        )}
+
+                        {pdfUrl ? (
+                          <p className="text-xs text-primary truncate">
+                            印刷用PDF: {pdfName || "アップロード済み"}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-yellow-400">
+                            印刷用PDFが未アップロードです
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <label className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background px-2 text-xs font-semibold text-foreground hover:border-primary/50 hover:text-primary">
+                          <Upload className="h-3 w-3 mr-1" />
+                          {isUploading ? "アップロード中" : "PDFアップロード"}
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            className="hidden"
+                            disabled={isUploading}
+                            onChange={(e) => handleExistingPdfUpload(cl, e.target.files?.[0] ?? null)}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          disabled={!pdfUrl}
+                          onClick={() => printPdf(pdfUrl)}
+                          className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground"
+                          title="印刷"
+                        >
+                          印刷
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => startEdit(cl)}
+                          className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                          title="編集"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("削除しますか？")) deleteMutation.mutate({ id: cl.id as any });
+                          }}
+                          className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          title="削除"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -1049,6 +1441,7 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
 
 
 

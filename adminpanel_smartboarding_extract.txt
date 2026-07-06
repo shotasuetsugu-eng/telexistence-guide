@@ -1,0 +1,387 @@
+
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:3:import { Button } from "@/components/ui/button";
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:4:import { useState, type FormEvent } from "react";
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:5:import { toast } from "sonner";
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:6:import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree } from "lucide-react";
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:7:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:8:type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins";
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:9:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:10:function fileToBase64(file: File): Promise<string> {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:11:  return new Promise((resolve, reject) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:12:    const reader = new FileReader();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:13:    reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:78:    );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:79:  }
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:80:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:81:  const tabs = [
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:82:    { id: "categories" as Tab, label: "カテゴリ", icon: Layers },
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:83:    { id: "procedures" as Tab, label: "Smartboarding", icon: BookOpen },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:84:    { id: "checklists" as Tab, label: "チェックリスト", icon: CheckSquare },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:85:    { id: "documents" as Tab, label: "資料", icon: FileText },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:86:    { id: "admins" as Tab, label: "管理者", icon: FileText },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:87:  ];
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:88:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:111:          </button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:112:        ))}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:113:      </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:114:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:115:      {activeTab === "categories" && <CategoriesAdmin />}
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:116:      {activeTab === "procedures" && <ProceduresAdmin />}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:117:      {activeTab === "checklists" && <ChecklistsAdmin />}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:118:      {activeTab === "documents" && <DocumentsAdmin />}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:119:      {activeTab === "admins" && <AdminUsersAdmin />}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:120:    </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:121:  );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:221:      )}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:222:    </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:223:  );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:224:}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:225:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:226:// ===== SMARTBOARDING ADMIN =====
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:227:function ProceduresAdmin() {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:228:  const utils = trpc.useUtils();
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:229:  const { data: procedures, isLoading } = trpc.procedures.list.useQuery();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:230:  const { data: categories } = trpc.categories.list.useQuery();
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:231:  const createMutation = trpc.procedures.create.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:232:    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを作成しました"); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:233:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:234:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:235:  const updateMutation = trpc.procedures.update.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:236:    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを更新しました"); setEditingId(null); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:237:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:238:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:239:  const deleteMutation = trpc.procedures.delete.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:240:    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("Smartboardingリンクを削除しました"); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:241:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:242:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:243:  const createCategoryMutation = trpc.categories.create.useMutation({
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:244:    onSuccess: () => { utils.categories.list.invalidate(); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:245:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:246:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:247:  const updateCategoryMutation = trpc.categories.update.useMutation({
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:248:    onSuccess: () => { utils.categories.list.invalidate(); toast.success("目次を更新しました"); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:249:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:250:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:251:  const deleteCategoryMutation = trpc.categories.delete.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:252:    onSuccess: () => { utils.categories.list.invalidate(); utils.procedures.list.invalidate(); toast.success("目次を削除しました"); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:253:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:254:  });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:255:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:256:  // Steps management
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:257:  const createStepMutation = trpc.procedureSteps.create.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:258:    onSuccess: () => { utils.procedures.list.invalidate(); toast.success("ステップを追加しました"); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:259:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:260:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:261:  const deleteStepMutation = trpc.procedureSteps.delete.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:262:    onSuccess: () => { utils.procedures.list.invalidate(); utils.procedureSteps.list.invalidate(); toast.success("ステップを削除しました"); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:263:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:264:  });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:265:  const updateStepMutation = trpc.procedureSteps.update.useMutation({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:266:    onSuccess: () => { utils.procedureSteps.list.invalidate(); toast.success("ステップを更新しました"); setEditingStepId(null); },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:267:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:268:  });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:269:  const uploadAssetMutation = trpc.assets.upload.useMutation({
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:270:    onError: (err) => toast.error(err.message),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:271:  });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:272:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:273:  const [createRows, setCreateRows] = useState([
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:274:    { id: 1, categoryId: "" as number | "", title: "", description: "", content: "", file: null as File | null },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:275:  ]);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:276:  const [newCategoryName, setNewCategoryName] = useState("");
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:277:  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:278:  const [editCategoryName, setEditCategoryName] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:279:  const [editingId, setEditingId] = useState<number | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:280:  const [editTitle, setEditTitle] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:281:  const [editDescription, setEditDescription] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:282:  const [editContent, setEditContent] = useState("");
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:283:  const [editCategoryId, setEditCategoryId] = useState<number | "">("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:284:  const [expandedProcId, setExpandedProcId] = useState<number | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:285:  const [stepTitle, setStepTitle] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:286:  const [stepDescription, setStepDescription] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:287:  const [stepImageUrl, setStepImageUrl] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:288:  const [stepFile, setStepFile] = useState<File | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:292:  const [editStepImageUrl, setEditStepImageUrl] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:293:  const [editStepFile, setEditStepFile] = useState<File | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:294:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:295:  const updateCreateRow = (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:296:    rowId: number,
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:297:    field: "categoryId" | "title" | "description" | "content" | "file",
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:298:    value: number | "" | string | File | null
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:299:  ) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:300:    setCreateRows((rows) =>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:301:      rows.map((row) => (row.id === rowId ? { ...row, [field]: value } : row))
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:302:    );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:303:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:304:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:305:  const addCreateRow = () => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:306:    setCreateRows((rows) => [
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:307:      ...rows,
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:308:      { id: Date.now(), categoryId: "", title: "", description: "", content: "", file: null },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:309:    ]);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:310:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:311:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:312:  const removeCreateRow = (rowId: number) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:313:    setCreateRows((rows) => rows.filter((row) => row.id !== rowId));
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:314:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:315:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:316:  const createSmartboardingCategory = (e: React.FormEvent) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:317:    e.preventDefault();
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:318:    const name = newCategoryName.trim();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:319:    if (!name) return;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:320:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:321:    createCategoryMutation.mutate({ name });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:322:    setNewCategoryName("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:323:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:324:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:325:  const startCategoryEdit = (category: { id: number; name: string }) => {
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:326:    setEditingCategoryId(category.id);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:327:    setEditCategoryName(category.name);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:328:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:329:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:330:  const saveCategoryEdit = () => {
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:331:    if (!editingCategoryId || !editCategoryName.trim()) return;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:332:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:333:    updateCategoryMutation.mutate({ id: editingCategoryId, name: editCategoryName.trim() });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:334:    setEditingCategoryId(null);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:335:    setEditCategoryName("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:336:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:337:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:338:  const handleCreate = async (e: React.FormEvent, rowId: number) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:339:    e.preventDefault();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:340:    const row = createRows.find((item) => item.id === rowId);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:341:    if (!row?.title.trim() || row.categoryId === "") return;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:342:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:343:    createMutation.mutate({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:344:      categoryId: row.categoryId,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:345:      title: row.title.trim(),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:346:      description: row.description.trim() || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:347:      content: row.content.trim() || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:348:    });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:349:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:352:        item.id === rowId ? { ...item, title: "", description: "", content: "", file: null } : item
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:353:      )
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:354:    );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:355:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:356:
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:357:  const startEdit = (proc: { id: number; categoryId: number; title: string; description: string | null; content: string | null }) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:358:    setEditingId(proc.id);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:359:    setEditCategoryId(proc.categoryId);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:360:    setEditTitle(proc.title);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:361:    setEditDescription(proc.description || "");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:362:    setEditContent(proc.content || "");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:363:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:364:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:365:  const handleUpdate = () => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:366:    if (!editingId || !editTitle.trim()) return;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:367:    updateMutation.mutate({
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:368:      id: editingId,
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:369:      categoryId: editCategoryId === "" ? undefined : editCategoryId,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:370:      title: editTitle.trim(),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:371:      description: editDescription.trim() || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:372:      content: editContent.trim() || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:373:    });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:374:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:375:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:376:  // Get steps for expanded procedure
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:377:  const { data: stepsData } = trpc.procedureSteps.list.useQuery(
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:378:    { procedureId: expandedProcId! },
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:379:    { enabled: expandedProcId !== null }
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:380:  );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:381:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:382:  const handleAddStep = async (e: React.FormEvent) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:384:    if (!expandedProcId || !stepTitle.trim()) return;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:385:    const nextStepNum = (stepsData?.length ?? 0) + 1;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:386:    let uploadedUrl = stepImageUrl.trim();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:387:    if (stepFile) {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:388:      const uploaded = await uploadAssetMutation.mutateAsync({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:389:        folder: "procedures",
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:390:        fileName: stepFile.name,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:391:        fileData: await fileToBase64(stepFile),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:392:        mimeType: stepFile.type || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:393:      });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:394:      uploadedUrl = uploaded.url;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:407:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:408:  const handleUpdateStep = async (stepId: number) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:409:    let uploadedUrl = editStepImageUrl.trim();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:410:    if (editStepFile) {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:411:      const uploaded = await uploadAssetMutation.mutateAsync({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:412:        folder: "procedures",
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:413:        fileName: editStepFile.name,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:414:        fileData: await fileToBase64(editStepFile),
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:415:        mimeType: editStepFile.type || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:416:      });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:417:      uploadedUrl = uploaded.url;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:426:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:427:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:428:  return (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:429:    <div className="space-y-4">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:430:      <div className="cyber-border rounded-lg p-4 bg-card space-y-3">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:431:        <h3 className="font-semibold text-foreground flex items-center gap-2"><ListTree className="h-4 w-4 text-primary" />Smartboarding目次</h3>
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:432:        <form onSubmit={createSmartboardingCategory} className="flex flex-col gap-2 sm:flex-row">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:433:          <input
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:434:            type="text"
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:435:            value={newCategoryName}
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:436:            onChange={(e) => setNewCategoryName(e.target.value)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:437:            placeholder="目次名を追加（例：HW、SW、作業一般）"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:438:            className="min-w-0 flex-1 px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:439:          />
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:440:          <Button type="submit" size="sm" disabled={createCategoryMutation.isPending}>追加</Button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:441:        </form>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:442:        <div className="grid gap-2 md:grid-cols-2">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:443:          {categories?.map((category) => (
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:444:            <div key={category.id} className="rounded-md border border-border/70 bg-muted/20 p-2">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:445:              {editingCategoryId === category.id ? (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:446:                <div className="flex gap-2">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:447:                  <input
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:448:                    type="text"
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:449:                    value={editCategoryName}
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:450:                    onChange={(e) => setEditCategoryName(e.target.value)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:451:                    className="min-w-0 flex-1 px-2 py-1 rounded bg-input border border-border text-sm text-foreground"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:452:                  />
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:453:                  <Button type="button" size="sm" onClick={saveCategoryEdit} disabled={updateCategoryMutation.isPending}>保存</Button>
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:454:                  <Button type="button" size="sm" variant="outline" onClick={() => setEditingCategoryId(null)}>取消</Button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:455:                </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:456:              ) : (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:457:                <div className="flex items-center justify-between gap-2">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:458:                  <span className="text-sm font-medium text-foreground">{category.name}</span>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:459:                  <div className="flex gap-1">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:460:                    <button type="button" onClick={() => startCategoryEdit(category)} className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:461:                      <Edit className="h-4 w-4" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:462:                    </button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:463:                    <button
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:464:                      type="button"
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:465:                      onClick={() => { if (confirm(`${category.name} を削除しますか？`)) deleteCategoryMutation.mutate({ id: category.id }); }}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:466:                      className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:467:                    >
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:468:                      <Trash2 className="h-4 w-4" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:469:                    </button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:470:                  </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:475:        </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:476:      </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:477:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:478:      <div className="cyber-border rounded-lg p-4 bg-card space-y-3">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:479:        <div className="flex items-center justify-between gap-3">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:480:          <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規Smartboarding</h3>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:481:          <Button type="button" size="sm" variant="outline" onClick={addCreateRow}>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:482:            <Plus className="h-4 w-4" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:483:            入力欄を追加
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:484:          </Button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:485:        </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:497:                  <X className="h-3 w-3" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:498:                  削除
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:499:                </button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:500:              )}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:501:            </div>
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:502:            <select value={row.categoryId} onChange={(e) => updateCreateRow(row.id, "categoryId", e.target.value ? Number(e.target.value) : "")}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:503:              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:504:              <option value="">追加先の目次を選択</option>
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:505:              {categories?.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:506:            </select>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:507:            {categories?.length === 0 && (
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:508:              <p className="text-xs text-muted-foreground">先に上の「Smartboarding目次」で HW / SW / 作業一般 などを追加してください。</p>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:509:            )}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:510:            <input type="text" value={row.title} onChange={(e) => updateCreateRow(row.id, "title", e.target.value)} placeholder="表示名"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:511:              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:512:            <input type="text" value={row.description} onChange={(e) => updateCreateRow(row.id, "description", e.target.value)} placeholder="リンクURL"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:513:              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:514:            <textarea value={row.content} onChange={(e) => updateCreateRow(row.id, "content", e.target.value)} placeholder="メモ（任意）" rows={3}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:515:              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:516:            <input id={`procedure-main-file-${row.id}`} type="file" onChange={(e) => updateCreateRow(row.id, "file", e.target.files?.[0] ?? null)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:517:              className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary/20 file:text-primary" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:518:            {row.file && <p className="text-xs text-muted-foreground">選択中: {row.file.name} ({(row.file.size / 1024).toFixed(1)} KB)</p>}
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:519:            <Button type="submit" size="sm" disabled={createMutation.isPending || row.categoryId === ""}>{createMutation.isPending ? "作成中..." : "作成"}</Button>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:520:          </form>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:521:        ))}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:522:      </div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:523:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:524:      {isLoading ? (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:525:        <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:526:      ) : (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:527:        <div className="space-y-2">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:528:          {procedures?.map((proc) => (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:529:            <div key={proc.id} className="cyber-border rounded-lg bg-card">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:530:              {editingId === proc.id ? (
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:531:                <div className="p-3 space-y-2">
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:532:                  <select value={editCategoryId} onChange={(e) => setEditCategoryId(e.target.value ? Number(e.target.value) : "")}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:533:                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:534:                    <option value="">目次を選択</option>
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:535:                    {categories?.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:536:                  </select>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:537:                  <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:538:                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:539:                  <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="リンクURL"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:540:                    className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:666:  });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:667:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:668:  const [title, setTitle] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:669:  const [description, setDescription] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:670:  const [checklistFile, setChecklistFile] = useState<File | null>(null);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:671:  const [categoryId, setCategoryId] = useState<number | "">("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:672:  const [editingId, setEditingId] = useState<number | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:673:  const [editTitle, setEditTitle] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:674:  const [editDescription, setEditDescription] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:675:  const [expandedId, setExpandedId] = useState<number | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:676:  const [itemContent, setItemContent] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:681:    { enabled: expandedId !== null }
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:682:  );
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:683:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:684:  const handleCreate = (e: React.FormEvent) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:685:    e.preventDefault();
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:686:    if (!title.trim() || categoryId === "") return;
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:687:    createMutation.mutate({ categoryId, title: title.trim(), description: description.trim() || undefined });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:688:    setTitle(""); setDescription(""); setCategoryId("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:689:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:690:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:691:  const startEdit = (cl: { id: number; title: string; description: string | null }) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:692:    setEditingId(cl.id);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:693:    setEditTitle(cl.title);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:725:        <h3 className="font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4 text-primary" />新規チェックリスト</h3>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:726:        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="表示名"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:727:          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:728:        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:729:          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:730:        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:731:          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:732:          <option value="">カテゴリを選択</option>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:733:          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:734:        </select>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:735:        <input id="checklist-main-file" type="file" onChange={(e) => setChecklistFile(e.target.files?.[0] ?? null)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:846:  });
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:847:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:848:  const [title, setTitle] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:849:  const [description, setDescription] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:850:  const [checklistFile, setChecklistFile] = useState<File | null>(null);
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:851:  const [categoryId, setCategoryId] = useState<number | "">("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:852:  const [file, setFile] = useState<File | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:853:  const [editingId, setEditingId] = useState<number | null>(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:854:  const [editTitle, setEditTitle] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:855:  const [editDescription, setEditDescription] = useState("");
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:856:
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:857:  const handleUpload = async (e: React.FormEvent) => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:858:    e.preventDefault();
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:859:    if (!title.trim() || categoryId === "" || !file) return;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:860:    const reader = new FileReader();
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:861:    reader.onload = () => {
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:862:      const base64 = (reader.result as string).split(",")[1];
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:863:      uploadMutation.mutate({
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:864:        categoryId, title: title.trim(), description: description.trim() || undefined,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:865:        fileName: file.name, fileData: base64, mimeType: file.type || undefined, fileSize: file.size,
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:866:      });
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:867:      setTitle(""); setDescription(""); setCategoryId(""); setFile(null);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:868:      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:869:      if (fileInput) fileInput.value = "";
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:870:    };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:871:    reader.readAsDataURL(file);
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:872:  };
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:888:        <h3 className="font-semibold text-foreground flex items-center gap-2"><Upload className="h-4 w-4 text-primary" />資料アップロード</h3>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:889:        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="資料表示名"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:890:          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:891:        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="リンクURL"
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:892:          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+> C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:893:        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")} required
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:894:          className="w-full px-3 py-2 rounded-md bg-input border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:895:          <option value="">カテゴリを選択</option>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:896:          {categories?.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:897:        </select>
+  C:\Users\Deploymet_No_01\Downloads\AdminPanel_current.txt:898:        <input id="file-upload" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+
