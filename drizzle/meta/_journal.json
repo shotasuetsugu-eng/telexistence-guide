@@ -8,6 +8,13 @@
       "when": 1780911790240,
       "tag": "0000_flowery_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783309725549,
+      "tag": "0001_fuzzy_arclight",
+      "breakpoints": true
     }
   ]
 }

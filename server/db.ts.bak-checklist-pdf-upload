@@ -1,4 +1,4 @@
-import { eq, like, or, desc, asc, sql, gte } from "drizzle-orm";
+import { eq, like, or, desc, asc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
@@ -14,7 +14,6 @@ import {
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
-let _dbSchemaReady = false;
 
 type UpsertUser = Omit<InsertUser, "role"> & Partial<Pick<InsertUser, "role">>;
 
@@ -26,21 +25,6 @@ export async function getDb() {
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
-    }
-  }
-  if (_db && !_dbSchemaReady) {
-    try {
-      await _db.execute(sql`
-        CREATE TABLE IF NOT EXISTS link_settings (
-          key text PRIMARY KEY NOT NULL,
-          label text NOT NULL,
-          url text NOT NULL,
-          updated_at timestamp DEFAULT now() NOT NULL
-        )
-      `);
-      _dbSchemaReady = true;
-    } catch (error) {
-      console.warn("[Database] Failed to ensure link_settings table:", error);
     }
   }
   return _db;
@@ -366,24 +350,6 @@ export async function listAdminEmails() {
     }));
 }
 
-export async function listOnlineUsers() {
-  const db = await getDb();
-  if (!db) return [];
-
-  const onlineSince = new Date(Date.now() - 2 * 60 * 1000);
-  return db
-    .select({
-      openId: users.openId,
-      name: users.name,
-      email: users.email,
-      role: users.role,
-      lastActiveAt: users.lastSignedIn,
-    })
-    .from(users)
-    .where(gte(users.lastSignedIn, onlineSince))
-    .orderBy(desc(users.lastSignedIn));
-}
-
 export async function addAdminEmail(email: string) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -513,47 +479,6 @@ export async function addSimpleChecklist(data: {
   return item;
 }
 
-
-export async function updateSimpleChecklistPdf(id: string, fileName: string, fileUrl: string) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-
-  const current = await listSimpleChecklists();
-  let updated: SimpleChecklistLink | null = null;
-
-  const next = current.map((item) => {
-    if (String(item.id) !== String(id)) return item;
-
-    updated = {
-      ...item,
-      fileName,
-      fileUrl,
-    };
-
-    return updated;
-  });
-
-  if (!updated) {
-    throw new Error("対象のチェックリストが見つかりません");
-  }
-
-  await db
-    .insert(linkSettings)
-    .values({
-      key: SIMPLE_CHECKLISTS_KEY,
-      label: "Simple Checklists",
-      url: JSON.stringify(next),
-    })
-    .onConflictDoUpdate({
-      target: linkSettings.key,
-      set: {
-        label: "Simple Checklists",
-        url: JSON.stringify(next),
-      },
-    });
-
-  return updated;
-}
 export async function removeSimpleChecklist(id: string) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");

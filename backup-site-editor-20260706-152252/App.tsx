@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch } from "wouter";
 import { lazy, Suspense } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -31,35 +31,25 @@ function SiteEditorRoute() {
   );
 }
 
-function PublicRouter() {
-  return (
-    <Switch>
-      <Route path="/" component={DashboardRenderer} />
-      <Route path="/p/:slug" component={DashboardRenderer} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
-function PrivateRouter() {
+function Router() {
   return (
     <CyberLayout>
       <Switch>
         <Route path="/site-editor" component={SiteEditorRoute} />
+        <Route path="/" component={DashboardRenderer} />
         <Route path="/procedures" component={Procedures} />
         <Route path="/procedures/:id" component={ProcedureDetail} />
         <Route path="/checklists" component={Checklists} />
         <Route path="/checklists/:id" component={ChecklistDetail} />
         <Route path="/documents" component={Documents} />
         <Route path="/search" component={Search} />
-        <Route path="/admin" component={AdminPanel} />
-        <Route path="/map" component={MapPage} />
+        <Route path="/admin" component={AdminPanel} />        <Route path="/map" component={MapPage} />
         <Route path="/shift" component={SpreadsheetPage} />
         <Route path="/stores" component={SpreadsheetPage} />
-        <Route path="/measurement-values" component={MeasurementValuesPage} />
+          <Route path="/measurement-values" component={MeasurementValuesPage} />
         <Route path="/integrations" component={Integrations} />
-        <Route path="/router-setup" component={RouterSetup} />
-        <Route path="/Wifi-setup" component={RouterSetup} />
+          <Route path="/router-setup" component={RouterSetup} />
+          <Route path="/Wifi-setup" component={RouterSetup} />
         <Route path="/deploy-calendar" component={DeployCalendar} />
         <Route path="/fs-team-calendar" component={DeployCalendar} />
         <Route path="/404" component={NotFound} />
@@ -67,13 +57,6 @@ function PrivateRouter() {
       </Switch>
     </CyberLayout>
   );
-}
-
-function Router() {
-  const [location] = useLocation();
-  const isPublicSitePage = location === "/" || location.startsWith("/p/");
-
-  return isPublicSitePage ? <PublicRouter /> : <PrivateRouter />;
 }
 
 function App() {
@@ -90,3 +73,14 @@ function App() {
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
