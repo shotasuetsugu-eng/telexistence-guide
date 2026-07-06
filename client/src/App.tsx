@@ -71,7 +71,7 @@ function PrivateRouter() {
 
 function Router() {
   const [location] = useLocation();
-  const isPublicSitePage = location === "/" || location.startsWith("/p/");
+  const isPublicSitePage = location.startsWith("/p/");
 
   return isPublicSitePage ? <PublicRouter /> : <PrivateRouter />;
 }
@@ -90,4 +90,5 @@ function App() {
 }
 
 export default App;
+
 
