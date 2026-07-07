@@ -375,6 +375,13 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
           </button>
           <button
             type="button"
+            onClick={() => { window.location.href = "/app-auth?role=admin"; }}
+            className="w-full rounded-md border border-accent/50 px-4 py-3 text-sm font-bold text-accent hover:bg-accent/10"
+          >
+            管理者としてGoogleログイン
+          </button>
+          <button
+            type="button"
             onClick={() => setLocation("/admin")}
             className="text-xs text-muted-foreground hover:text-primary"
           >
