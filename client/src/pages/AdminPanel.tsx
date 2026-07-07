@@ -47,6 +47,13 @@ function PasswordLoginForm() {
       >
         {loginMutation.isPending ? "ログイン中..." : "ログイン"}
       </Button>
+      <button
+        type="button"
+        onClick={() => { window.location.href = "/"; }}
+        className="text-xs text-muted-foreground hover:text-primary mt-2"
+      >
+        Googleでログイン
+      </button>
     </div>
   );
 }
@@ -1049,6 +1056,7 @@ function AdminUsersAdmin() {
     </div>
   );
 }
+
 
 
 
