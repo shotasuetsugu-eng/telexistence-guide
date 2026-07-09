@@ -45,7 +45,7 @@ const publicNavItems = [
 ];
 
 const integrationNavItems = [
-    { path: "/Wifi-setup", label: "ルーター設定", icon: Wifi },
+    { path: "/router-setup-entry.html", label: "ルーター設定", icon: Wifi },
   { icon: FileText, label: "メジャメント数値", path: "/measurement-values" },
 { icon: LayoutDashboard, label: "Shift", path: "/shift" },
 	  { icon: HardDrive, label: "店舗一覧", path: "/stores" },
@@ -382,6 +382,13 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
           </button>
           <button
             type="button"
+            onClick={() => { window.location.href = "/router-setup-entry.html"; }}
+            className="w-full rounded-md border border-primary/40 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10"
+          >
+            ルーター設定
+          </button>
+          <button
+            type="button"
             onClick={() => setLocation("/admin")}
             className="text-xs text-muted-foreground hover:text-primary"
           >
@@ -461,7 +468,13 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
             return (
               <button
                 key={item.path}
-                onClick={() => setLocation(item.path)}
+                onClick={() => {
+                  if (item.path.endsWith(".html")) {
+                    window.location.href = item.path;
+                    return;
+                  }
+                  setLocation(item.path);
+                }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/30 neon-cyan"
@@ -583,7 +596,14 @@ export default function CyberLayout({ children }: { children: React.ReactNode })
               return (
                 <button
                   key={item.path}
-                  onClick={() => { setLocation(item.path); setMobileMenuOpen(false); }}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (item.path.endsWith(".html")) {
+                      window.location.href = item.path;
+                      return;
+                    }
+                    setLocation(item.path);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm ${
                     isActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
                   }`}
