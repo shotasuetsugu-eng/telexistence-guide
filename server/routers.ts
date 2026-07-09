@@ -351,7 +351,7 @@ export const appRouter = router({
   // ===== ASSETS =====
   assets: router({
     upload: adminProcedure.input(z.object({
-      folder: z.enum(["procedures", "checklists"]).default("procedures"),
+      folder: z.enum(["procedures", "checklists", "site-builder"]).default("procedures"),
       fileName: z.string().min(1),
       fileData: z.string(),
       mimeType: z.string().optional(),
