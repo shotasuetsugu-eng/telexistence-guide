@@ -1,0 +1,4 @@
+"ServiceName","ServiceType","Key","ValueMasked"
+"txo-public-site","web_service","DATABASE_URL","postgresql://neondb_owner:****@ep-solitary-shape-at2tjcxw.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
+"telexistence-guide-v3","web_service","DATABASE_URL","postgresql://telexistence_db_user:****@dpg-d8frnsf40ujc73bcisf0-a.oregon-postgres.render.com/telexistence_db?sslmode=require"
+"telexistence-guide","web_service","DATABASE_URL","postgresql://neondb_owner:****@ep-solitary-shape-at2tjcxw.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"

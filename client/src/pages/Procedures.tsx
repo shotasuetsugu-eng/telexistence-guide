@@ -57,10 +57,15 @@ export default function Procedures() {
   }, [groupKey]);
 
   const toggleGroup = (groupId: number) => {
-    setOpenGroups((current) => ({
-      ...current,
-      [groupId]: !(current[groupId] ?? false),
-    }));
+    setOpenGroups((current) => {
+      const isCurrentlyOpen = current[groupId] ?? false;
+      const next: Record<number, boolean> = {};
+      procedureGroups.forEach((group) => {
+        next[group.id] = false;
+      });
+      next[groupId] = !isCurrentlyOpen;
+      return next;
+    });
   };
 
   const openAndScrollToGroup = (groupId: number) => {
