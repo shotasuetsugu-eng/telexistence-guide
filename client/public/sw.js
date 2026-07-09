@@ -11,5 +11,5 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", () => {
-  // Service Worker disabled. Do not intercept requests.
+  // disabled
 });
