@@ -2,6 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, ExternalLink, Link as LinkIcon, ListTree } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
+const CATEGORY_COLORS = [
+  { text: "text-cyan-400", border: "border-cyan-400" },
+  { text: "text-purple-400", border: "border-purple-400" },
+  { text: "text-amber-400", border: "border-amber-400" },
+  { text: "text-emerald-400", border: "border-emerald-400" },
+  { text: "text-pink-400", border: "border-pink-400" },
+];
+function getGroupColor(index: number) {
+  return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+}
+
 function normalizeUrl(url?: string | null) {
   const value = url?.trim();
 
@@ -104,12 +115,12 @@ export default function Procedures() {
               目次
             </div>
             <div className="space-y-1">
-              {procedureGroups.map((group) => (
+              {procedureGroups.map((group, groupIndex) => (
                 <button
                   key={group.id}
                   type="button"
                   onClick={() => openAndScrollToGroup(group.id)}
-                  className="w-full text-left flex items-center justify-between rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                  className={`w-full text-left flex items-center justify-between rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-primary/10 hover:text-primary border-l-4 ${getGroupColor(groupIndex).border}`}
                 >
                   <span>{group.name}</span>
                   <span className="text-xs opacity-70">{group.items.length}</span>
@@ -119,7 +130,7 @@ export default function Procedures() {
           </nav>
 
           <div className="space-y-5">
-            {procedureGroups.map((group) => {
+            {procedureGroups.map((group, groupIndex) => {
               const isOpen = openGroups[group.id] ?? false;
 
               return (
@@ -131,11 +142,11 @@ export default function Procedures() {
                   <button
                     type="button"
                     onClick={() => toggleGroup(group.id)}
-                    className="w-full cyber-border rounded-lg bg-card px-4 py-3 flex items-center justify-between text-left hover:bg-primary/10 transition-colors"
+                    className={`w-full cyber-border rounded-lg bg-card px-4 py-3 flex items-center justify-between text-left hover:bg-primary/10 transition-colors border-l-4 ${getGroupColor(groupIndex).border}`}
                   >
                     <div className="flex items-center gap-2">
                       <ChevronRight
-                        className={`h-4 w-4 text-primary transition-transform ${
+                        className={`h-4 w-4 ${getGroupColor(groupIndex).text} transition-transform ${
                           isOpen ? "rotate-90" : ""
                         }`}
                       />
@@ -163,7 +174,7 @@ export default function Procedures() {
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <LinkIcon className="h-5 w-5 text-primary shrink-0" />
+                              <LinkIcon className={`h-5 w-5 ${getGroupColor(groupIndex).text} shrink-0`} />
                               <div className="min-w-0">
                                 <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                                   {item.title}
