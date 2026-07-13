@@ -5,7 +5,9 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Layers, BookOpen, CheckSquare, FileText, Plus, Trash2, Edit, Upload, Save, X, ChevronDown, ChevronUp, ListTree } from "lucide-react";
 
-type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins";
+type Tab = "categories" | "procedures" | "checklists" | "documents" | "admins" | "stores";
+
+import StoreImportAdmin from "./StoreImportAdmin";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -91,6 +93,7 @@ export default function AdminPanel() {
     { id: "checklists" as Tab, label: "チェックリスト", icon: CheckSquare },
     { id: "documents" as Tab, label: "資料", icon: FileText },
     { id: "admins" as Tab, label: "管理者", icon: FileText },
+  { id: "stores" as Tab, label: "店舗取込", icon: Upload },
   ];
 
   return (
@@ -124,6 +127,7 @@ export default function AdminPanel() {
       {activeTab === "checklists" && <ChecklistsAdmin />}
       {activeTab === "documents" && <DocumentsAdmin />}
       {activeTab === "admins" && <AdminUsersAdmin />}
+      {activeTab === "stores" && <StoreImportAdmin />}
     </div>
   );
 }
